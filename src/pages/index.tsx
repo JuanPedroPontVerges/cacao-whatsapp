@@ -2,7 +2,10 @@ import type { NextPage } from "next";
 import Head from "next/head";
 import { useState } from "react";
 import Button from "../components/Button";
+import LoginForm from "../components/LoginForm";
 import Modal from "../components/Modal";
+import RegisterForm from "../components/RegisterForm";
+
 // import { trpc } from "../utils/trpc";
 
 const Home: NextPage = () => {
@@ -14,14 +17,14 @@ const Home: NextPage = () => {
   //   userMutation.mutate({ name: 'Juan Pedro', email: 'jppontverges@gmail.com' })
   // }
 
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(true)
-  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(true)
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false)
+  const [isRegisterModalOpen, setIsRegisterModalOpen] = useState(false)
 
-  const toogleLoginModal = () => {
+  const toggleLoginModal = () => {
     setIsLoginModalOpen(!isLoginModalOpen)
   }
 
-  const toogleRegisterModal = () => {
+  const toggleRegisterModal = () => {
     setIsRegisterModalOpen(!isRegisterModalOpen)
   }
 
@@ -37,44 +40,22 @@ const Home: NextPage = () => {
         <h1 className="text-5xl md:text-[5rem] leading-normal font-extrabold text-gray-700">
           Cacao
         </h1>
-        <Modal isOpen={isLoginModalOpen} toogleVisibility={toogleLoginModal} />
-        <Modal isOpen={isRegisterModalOpen} toogleVisibility={toogleRegisterModal} />
         <div className="pt-3 mt-3 text-center">
-          <Button onClick={toogleLoginModal}>Iniciar sesión</Button>
+          <Button onClick={toggleLoginModal} className={'w-[200px]'}>Log in</Button>
         </div>
         <div className="pt-3 mt-3 text-center">
-          <Button onClick={toogleRegisterModal}>Registrarme</Button>
+          <Button onClick={toggleRegisterModal} className={'w-[200px]'}>Registrarme</Button>
         </div>
+        {/* Modals */}
+        <Modal title="Bienvenido" isOpen={isLoginModalOpen} toggleVisibility={toggleLoginModal} >
+          <LoginForm toggleModalVisibility={toggleLoginModal} />
+        </Modal>
+        <Modal title="Registro" isOpen={isRegisterModalOpen} toggleVisibility={toggleRegisterModal}>
+          <RegisterForm toggleModalVisibility={toggleRegisterModal} />
+        </Modal>
       </main>
     </>
   );
 };
 
 export default Home;
-
-type TechnologyCardProps = {
-  name: string;
-  description: string;
-  documentation: string;
-};
-
-const TechnologyCard = ({
-  name,
-  description,
-  documentation,
-}: TechnologyCardProps) => {
-  return (
-    <section className="flex flex-col justify-center p-6 duration-500 border-2 border-gray-500 rounded shadow-xl motion-safe:hover:scale-105">
-      <h2 className="text-lg text-gray-700">{name}</h2>
-      <p className="text-sm text-gray-600">{description}</p>
-      <a
-        className="mt-3 text-sm underline text-violet-500 decoration-dotted underline-offset-2"
-        href={documentation}
-        target="_blank"
-        rel="noreferrer"
-      >
-        Documentation
-      </a>
-    </section>
-  );
-};
