@@ -23,6 +23,9 @@ const AutoCompleteLocationOptions: React.FC<{ name?: string }> = () => {
                 // setAddress(place.vicinity)
                 setValue('address', place.vicinity)
             }
+            if (place.name) {
+                setValue('name', place.name)
+            }
         });
 
     };
@@ -43,11 +46,11 @@ const AutoCompleteLocationOptions: React.FC<{ name?: string }> = () => {
                     Nombre de su negocio
                 </label>
                 <input
+                    {...register('name')}
                     autoComplete='off'
                     onChange={onChange}
                     ref={autoCompleteRef}
                     type="text"
-                    name="street-address"
                     id="street-address"
                     className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                 />
