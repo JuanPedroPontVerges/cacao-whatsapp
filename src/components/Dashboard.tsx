@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { Disclosure, Menu, Transition } from '@headlessui/react'
 import { Bars3Icon, BellIcon, XMarkIcon, ArrowLeftCircleIcon } from '@heroicons/react/24/outline'
 import { Fragment } from "react";
-import { signOut, useSession } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import Link from 'next/link';
-import { url } from 'inspector';
 
 const user = {
     name: 'Tom Cook',
@@ -67,7 +66,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                                                         )}
                                                         aria-current={item.current ? 'page' : undefined}
                                                     >
-                                                        <div onClick={() => setCurrent(index)}>
+                                                        <div onClick={() => setCurrent(index)} className={'cursor-pointer'}>
                                                             {item.name}
                                                         </div>
                                                     </Link>

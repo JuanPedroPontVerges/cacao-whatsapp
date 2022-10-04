@@ -11,7 +11,14 @@ export const userRouter = createProtectedRouter()
           where: {
             id: input.id
           },
-          select: { venue: true }
+          select: {
+            venueId: true,
+            venue: {
+              select: {
+                menus: true
+              }
+            }
+          }
         });
         return user;
       }

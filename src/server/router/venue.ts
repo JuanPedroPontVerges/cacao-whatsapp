@@ -12,15 +12,20 @@ export const venueRouter = createProtectedRouter()
     }),
     async resolve({ ctx, input }) {
       const { name, address, googlePlaceId, userId } = input;
-      await ctx.prisma.venue.create({ data: {
-        name,
-        address,
-        googlePlaceId,
-        users: {
-          connect: {
-            id: userId,
+      await ctx.prisma.venue.create({
+        data: {
+          name,
+          address,
+          googlePlaceId,
+          users: {
+            connect: {
+              id: userId,
+            }
+          },
+          menus: {
+            create: {}
           }
-        }
-      } })
+        },
+      })
     },
   });

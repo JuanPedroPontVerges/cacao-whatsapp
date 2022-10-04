@@ -1,36 +1,54 @@
 import { Disclosure, Switch } from "@headlessui/react";
-import { ChevronUpIcon } from "@heroicons/react/24/outline";
+import { ChevronUpIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
 import type { GetServerSideProps, GetServerSidePropsContext, NextPage } from "next";
+import { useSession } from "next-auth/react";
 import Head from "next/head";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Button from "../components/Button";
 import Form from "../components/Form";
 import Modal from "../components/Modal";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
+import { trpc } from "../utils/trpc";
+
 
 const Catalog: NextPage = () => {
-    const categoryForm = useForm();
+    const { data } = useSession();
+    const categoryMutation = trpc.useMutation(["categoryRouter.create"]);
+    const optionGroupMutation = trpc.useMutation(["optionGroupRouter.create"]);
+    const userQuery = trpc.useQuery(["userRouter.getVenues", { id: data?.user?.id }]);
+    const categoryQuery = trpc.useQuery(["categoryRouter.findCategoriesByMenuId", { id: userQuery.data?.venue?.menus[0]?.id }])
+    const optionGroupQuery = trpc.useQuery(["optionGroupRouter.findOptionGroupsByMenuId", { id: userQuery.data?.venue?.menus[0]?.id }])
+    const categoryForm = useForm<{ name: string }>();
     const { register } = categoryForm;
     const [enabled, setEnabled] = useState(false)
-    const [isCreateCategoryModalOpen, setIsCreateCategoryModalOpen] = useState(false)
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
     const buttonClass = 'flex w-full justify-between rounded-lg bg-wapi-light-blue px-4 py-2 text-left text-sm font-medium  hover:bg-purple-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75'
-    const categories = [{
-        id: 1,
-        name: 'Combos',
-    },
-    {
-        id: 2,
-        name: 'Sushis',
-    }]
+    const [selectedTab, setSelectedTab] = useState<'category' | 'optionGroup'>('category')
+    const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string }>();
+    const [selectedOptionGroup, setSelectedOptionGroup] = useState<{ id: string; name: string }>();
 
-    const toggleCreateCategoryModal = () => {
-        setIsCreateCategoryModalOpen(!isCreateCategoryModalOpen);
+    const toggleModal = () => {
+        setIsCreateModalOpen(!isCreateModalOpen);
     }
 
-    const onSubmitCategoryForm: SubmitHandler<any> = async (input) => {
-        console.log('input', input);
-        return;
+    const onSubmitCategoryForm: SubmitHandler<{ name: string }> = async ({ name }) => {
+        if (userQuery.data?.venue?.menus[0]?.id) {
+            categoryMutation.mutate({ name, menuId: userQuery.data.venue.menus[0].id })
+            toggleModal()
+        }
+    }
+
+    const onSubmitOptionGroupForm: SubmitHandler<{ name: string }> = async ({ name }) => {
+        if (userQuery.data?.venue?.menus[0]?.id) {
+            optionGroupMutation.mutate({ name, menuId: userQuery.data.venue.menus[0].id })
+            optionGroupQuery.refetch();
+            toggleModal()
+        }
+    }
+
+    const parseName = (name: 'category' | 'optionGroup') => {
+        return name === 'category' ? 'Categoría' : 'Grupo de opción';
     }
 
     return (
@@ -44,10 +62,22 @@ const Catalog: NextPage = () => {
                 <div className="h-96 rounded-lg border-4 border-dashed border-gray-200 basis-1/4">
                     <div className="w-full">
                         <div className="mx-auto w-full max-w-md rounded-2xl bg-white p-2">
+                            <div className="my-3">
+                                <button
+                                    onClick={toggleModal}
+                                    className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-wapi-blue hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                                >
+                                    Crear {parseName(selectedTab)}
+                                </button>
+                            </div>
                             <Disclosure>
                                 {({ open }) => (
                                     <>
-                                        <Disclosure.Button className={buttonClass}>
+                                        <Disclosure.Button
+                                            className={buttonClass}
+                                            onClick={() => {
+                                                setSelectedTab('category')
+                                            }}>
                                             <span>Categorías</span>
                                             <ChevronUpIcon
                                                 className={`${open ? 'rotate-180 transform' : ''
@@ -55,12 +85,16 @@ const Catalog: NextPage = () => {
                                             />
                                         </Disclosure.Button>
                                         {
-                                            categories.map((category) => {
+                                            categoryQuery?.data?.map(({ id, name }) => {
                                                 return (
                                                     <Disclosure.Panel
-                                                        key={category.id}
-                                                        className="px-4 pt-4 pb-2 text-sm text-gray-500">
-                                                        {category.name}
+                                                        onClick={() => {
+                                                            setSelectedOptionGroup(undefined)
+                                                            setSelectedCategory({ id, name })
+                                                        }}
+                                                        key={id}
+                                                        className="px-4 pt-4 pb-2 text-sm text-gray-500 cursor-pointer hover:bg-wapi-blue hover:text-white">
+                                                        {name}
                                                     </Disclosure.Panel>
                                                 )
                                             })
@@ -71,16 +105,32 @@ const Catalog: NextPage = () => {
                             <Disclosure as="div" className="mt-2">
                                 {({ open }) => (
                                     <>
-                                        <Disclosure.Button className={buttonClass}>
+                                        <Disclosure.Button
+                                            className={buttonClass}
+                                            onClick={() => {
+                                                setSelectedTab('optionGroup')
+                                            }}>
                                             <span>Grupo de Opciónes</span>
                                             <ChevronUpIcon
                                                 className={`${open ? 'rotate-180 transform' : ''
                                                     } h-5 w-5 text-purple-500`}
                                             />
                                         </Disclosure.Button>
-                                        <Disclosure.Panel className="px-4 pt-4 pb-2 text-sm text-gray-500">
-                                            No.
-                                        </Disclosure.Panel>
+                                        {
+                                            optionGroupQuery?.data?.map(({ id, name }) => {
+                                                return (
+                                                    <Disclosure.Panel
+                                                        onClick={() => {
+                                                            setSelectedOptionGroup({ id, name })
+                                                            setSelectedCategory(undefined)
+                                                        }}
+                                                        key={id}
+                                                        className="px-4 pt-4 pb-2 text-sm text-gray-500 cursor-pointer hover:bg-wapi-blue hover:text-white">
+                                                        {name}
+                                                    </Disclosure.Panel>
+                                                )
+                                            })
+                                        }
                                     </>
                                 )}
                             </Disclosure>
@@ -90,22 +140,28 @@ const Catalog: NextPage = () => {
                 <div className="rounded-lg border-4 border-dashed border-gray-200 basis-3/4">
                     <div className="flex p-4 items-center">
                         <div className={'flex basis-2/4 justify-start gap-x-4 items-center'}>
-                            <h4>Categoria seleccionada</h4>
+                            <div>
+                                <h4>{selectedCategory?.name ? selectedCategory.name : selectedOptionGroup?.name}</h4>
+                            </div>
                             <div>
                                 <button
-                                    onClick={toggleCreateCategoryModal}
+                                    onClick={toggleModal}
                                     className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-wapi-blue hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                 >
-                                    Crear categoría
+                                    Crear {selectedCategory?.name ? selectedCategory?.name : selectedOptionGroup?.name}
                                 </button>
                             </div>
                         </div>
                         <div className={'flex basis-2/4 justify-end gap-x-4 items-center'}>
                             <div>
-                                <button>Editar</button>
+                                <button>
+                                    <PencilIcon className="h-5 w-5" />
+                                </button>
                             </div>
                             <div>
-                                <button>Borrar</button>
+                                <button>
+                                    <TrashIcon className="h-5 w-5" />
+                                </button>
                             </div>
                             <Switch
                                 checked={enabled}
@@ -121,8 +177,8 @@ const Catalog: NextPage = () => {
                         </div>
                     </div>
                 </div>
-                <Modal title="Crear categoría" isOpen={isCreateCategoryModalOpen} onClose={toggleCreateCategoryModal}>
-                    <Form form={categoryForm} onSubmitForm={onSubmitCategoryForm}>
+                <Modal title={`Crear ${parseName(selectedTab)}`} isOpen={isCreateModalOpen} onClose={toggleModal}>
+                    <Form form={categoryForm} onSubmitForm={selectedTab === 'category' ? onSubmitCategoryForm : onSubmitOptionGroupForm}>
                         <label htmlFor="street-address" className="block text-sm font-medium text-gray-700">
                             Nombre
                         </label>
@@ -132,7 +188,7 @@ const Catalog: NextPage = () => {
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                         />
                         <div className="flex justify-end mt-2">
-                            <Button type={'submit'}>Crear categoría</Button>
+                            <Button type={'submit'}>Crear {selectedTab === 'category' ? 'Categoría' : 'Grupo de opción'}</Button>
                         </div>
                     </Form>
                 </Modal>
