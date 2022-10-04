@@ -4,9 +4,9 @@ import { createProtectedRouter } from "./context";
 // Example router with queries that can only be hit if the user requesting is signed in
 export const userRouter = createProtectedRouter()
   .query("getVenues", {
-    input: z.object({ id: z.string().nullish() }),
+    input: z.object({ id: z.string().nullish() }).nullish(),
     async resolve({ ctx, input }) {
-      if (input.id) {
+      if (input && input.id != null) {
         const user = await ctx.prisma.user.findFirst({
           where: {
             id: input.id

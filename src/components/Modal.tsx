@@ -1,10 +1,18 @@
 import React, { Fragment, ReactNode } from "react"
 import { Dialog, Transition } from '@headlessui/react'
 
-const Modal: React.FC<{ isOpen: boolean; toggleVisibility: () => void; title: string; children: ReactNode }> = ({ isOpen, toggleVisibility, title, children }) => {
+type ModalProps = {
+    isOpen: boolean;
+    title: string;
+    children: ReactNode
+    onClose?: () => void;
+};
+
+const Modal: React.FC<ModalProps> = ({ isOpen, title, children, onClose }) => {
+    /* We are making onClose an empty arround function, because we want total control over the Modal visibility */
     return (
         <Transition appear show={isOpen} as={Fragment}>
-            <Dialog as="div" className="relative z-10" onClose={toggleVisibility}>
+            <Dialog as="div" className="relative z-10" onClose={onClose ? onClose :(() => ({}))}>
                 <Transition.Child
                     as={Fragment}
                     enter="ease-out duration-300"
