@@ -58,15 +58,14 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                                                     <Link
                                                         key={item.name}
                                                         href={item.href}
-                                                        className={classNames(
+                                                        aria-current={item.current ? 'page' : undefined}
+                                                    >
+                                                        <div onClick={() => setCurrent(index)} className={`cursor-pointer ${classNames(
                                                             item.current
                                                                 ? 'bg-gray-900 text-white'
                                                                 : 'text-gray-300 hover:bg-gray-700 hover:text-white',
                                                             'px-3 py-2 rounded-md text-sm font-medium'
-                                                        )}
-                                                        aria-current={item.current ? 'page' : undefined}
-                                                    >
-                                                        <div onClick={() => setCurrent(index)} className={'cursor-pointer'}>
+                                                        )}`}>
                                                             {item.name}
                                                         </div>
                                                     </Link>

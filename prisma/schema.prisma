@@ -107,6 +107,7 @@ model Category {
     id        String    @id @default(cuid())
     menuId    String
     name      String
+    enabled   Boolean   @default(true)
     createdAt DateTime  @default(now())
     updatedAt DateTime? @updatedAt
     menu      Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
@@ -116,7 +117,24 @@ model OptionGroup {
     id        String    @id @default(cuid())
     menuId    String
     name      String
+    enabled   Boolean   @default(true)
     createdAt DateTime  @default(now())
     updatedAt DateTime? @updatedAt
     menu      Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
+    options   Option[]
+}
+
+model Option {
+    id            String      @id @default(cuid())
+    optionGroupId String
+    name          String
+    description   String?
+    imageUrl      String?
+    price         Int?
+    maxAmount     Int?
+    index         Int?
+    enabled       Boolean     @default(true)
+    createdAt     DateTime    @default(now())
+    updatedAt     DateTime?   @updatedAt
+    optionGroup   OptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
 }

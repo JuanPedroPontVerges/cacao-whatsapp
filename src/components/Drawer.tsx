@@ -7,9 +7,10 @@ import { Fragment } from "react";
 type DrawerProps = {
     children: React.ReactNode;
     isOpen: boolean;
+    title: string;
     toggleDrawer: () => void;
 }
-const Drawer: React.FC<DrawerProps> = ({ children, toggleDrawer, isOpen }) => {
+const Drawer: React.FC<DrawerProps> = ({ children, isOpen, title, toggleDrawer }) => {
     return (
         <>
             <Transition.Root show={isOpen} as={Fragment}>
@@ -61,9 +62,9 @@ const Drawer: React.FC<DrawerProps> = ({ children, toggleDrawer, isOpen }) => {
                                         </Transition.Child>
                                         <div className="flex h-full flex-col overflow-y-scroll bg-white py-6 shadow-xl">
                                             <div className="px-4 sm:px-6">
-                                                <Dialog.Title className="text-lg font-medium text-gray-900">Panel title</Dialog.Title>
+                                                <Dialog.Title className="text-lg font-medium text-gray-900">{title}</Dialog.Title>
                                             </div>
-                                            <div className="relative mt-6 flex-1 px-4 sm:px-6">
+                                            <div className="relative flex-1 px-4 sm:px-6">
                                                 {/* Replace with your content */}
                                                 <div className="absolute inset-0 px-4 sm:px-6">
                                                     {children}

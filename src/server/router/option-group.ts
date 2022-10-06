@@ -19,6 +19,44 @@ export const optionGroupRouter = createProtectedRouter()
       return category
     },
   })
+  .mutation("update", {
+    input: z.object({
+      name: z.string().nullish(),
+      enabled: z.boolean().nullish(),
+      optionGroupId: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      const { name, optionGroupId, enabled } = input;
+      if (typeof name === 'string') {
+        return await ctx.prisma.optionGroup.update({
+          where: { id: optionGroupId },
+          data: {
+            name,
+          },
+        })
+      } else if (typeof enabled === 'boolean') {
+        return await ctx.prisma.optionGroup.update({
+          where: { id: optionGroupId },
+          data: {
+            enabled,
+          },
+        })
+      }
+
+    },
+  })
+  .mutation("delete", {
+    input: z.object({
+      optionGroupId: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      const { optionGroupId } = input;
+      return await ctx.prisma.optionGroup.delete({
+        where: { id: optionGroupId },
+      })
+
+    },
+  })
   .query("findOptionGroupsByMenuId", {
     input: z.object({ id: z.string().nullish() }).nullish(),
     async resolve({ ctx, input }) {

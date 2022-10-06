@@ -10,13 +10,50 @@ export const categoryRouter = createProtectedRouter()
     }),
     async resolve({ ctx, input }) {
       const { name, menuId } = input;
-      const category = await ctx.prisma.category.create({
+      return await ctx.prisma.category.create({
         data: {
           name,
           menuId
         },
       })
-      return category
+    },
+  })
+  .mutation("update", {
+    input: z.object({
+      name: z.string().nullish(),
+      enabled: z.boolean().nullish(),
+      categoryId: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      const { name, enabled, categoryId } = input;
+      if (typeof name === 'string') {
+        return await ctx.prisma.category.update({
+          where: { id: categoryId },
+          data: {
+            name,
+          },
+        })
+      } else if (typeof enabled === 'boolean') {
+        return await ctx.prisma.category.update({
+          where: { id: categoryId },
+          data: {
+            enabled,
+          },
+        })
+      }
+
+    },
+  })
+  .mutation("delete", {
+    input: z.object({
+      categoryId: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      const { categoryId } = input;
+      return await ctx.prisma.category.delete({
+        where: { id: categoryId },
+      })
+
     },
   })
   .query("findCategoriesByMenuId", {
