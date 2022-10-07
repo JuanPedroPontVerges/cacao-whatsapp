@@ -9,6 +9,8 @@ import type { AppRouter } from "../server/router";
 import type { Session } from "next-auth";
 import "../styles/globals.css";
 import Dashboard from "../components/Dashboard";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { DndProvider } from "react-dnd";
 
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
@@ -17,7 +19,9 @@ const MyApp: AppType<{ session: Session | null }> = ({
   return (
     <SessionProvider session={session}>
       <Dashboard>
-        <Component {...pageProps} />
+        <DndProvider backend={HTML5Backend}>
+          <Component {...pageProps} />
+        </DndProvider>
       </Dashboard>
     </SessionProvider>
   );

@@ -1,9 +1,9 @@
 import { Disclosure, Switch } from "@headlessui/react";
-import { ChevronUpIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
+import { ChevronUpIcon, TrashIcon, PencilIcon, HandRaisedIcon } from "@heroicons/react/24/outline";
 import type { GetServerSideProps, GetServerSidePropsContext, NextPage } from "next";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Button from "../components/Button";
 import Drawer from "../components/Drawer";
@@ -13,39 +13,69 @@ import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
 import {
     ColumnDef,
-    createColumnHelper,
     flexRender,
     getCoreRowModel,
+    Row,
     useReactTable,
 } from '@tanstack/react-table'
+import { useDrag, useDrop } from 'react-dnd'
 
 type Option = {
     id: string;
     name: string;
+    enabled: boolean;
     description: string | null;
     price: number | null;
     maxAmount?: number | null;
 }
 
-const columnHelper = createColumnHelper<Option>()
-
-const columns = [
-    columnHelper.accessor('name', {
+const defaultColumns: ColumnDef<Option>[] = [
+    {
+        accessorKey: 'name',
         cell: info => info.getValue(),
-    }),
-    columnHelper.accessor(row => row.description, {
+    },
+    {
+        accessorFn: row => row.description,
         id: 'description',
-        cell: info => <i>{info.getValue()}</i>,
-        header: () => <span>Descripción</span>,
-    }),
-    columnHelper.accessor('price', {
-        cell: info => info.renderValue(),
-        header: () => 'Precio',
-    }),
-    columnHelper.display({
+        cell: info => info.getValue(),
+        header: () => <span>description</span>,
+    },
+    {
+        header: 'Precio',
+        accessorKey: 'price',
+    },
+    {
+        header: 'Acciones',
         id: 'actions',
-        cell: props => <span>ACCIÓNNNN</span>
-    }),
+        accessorFn: ((record, index) => {
+            return (
+                <div className="flex gap-x-4 align-middle">
+                    <button onClick={() => {
+                        console.log('value', record.id);
+                    }}>
+                        <PencilIcon className="h-5 w-5" />
+                    </button>
+                    <button onClick={() => {
+                        console.log('value', record);
+                    }}>
+                        <TrashIcon className="h-5 w-5" />
+                    </button>
+                    <Switch
+                        checked={record.enabled}
+                        // onChange={onChangeSwitch}
+                        className={`${record.enabled ? 'bg-blue-600' : 'bg-gray-200'
+                            } relative inline-flex h-6 w-11 items-center rounded-full`}
+                    >
+                        <span
+                            className={`${record.enabled ? 'translate-x-6' : 'translate-x-1'
+                                } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                        />
+                    </Switch>
+                </div>
+            )
+        }),
+        cell: (value) => value.renderValue(),
+    },
 ]
 
 type OptionFormInput = {
@@ -60,8 +90,6 @@ type ProductFormInput = {
     description: string;
     price: number;
 }
-
-type columns = ColumnDef<Option | undefined>[] | undefined
 
 const Catalog: NextPage = () => {
     const { data } = useSession();
@@ -91,12 +119,12 @@ const Catalog: NextPage = () => {
             categoryQuery.refetch();
         }
     });
-
     const optionGroupUpdate = trpc.useMutation(["optionGroupRouter.update"], {
         onSuccess: () => {
             optionGroupQuery.refetch();
         }
     });
+    const optionUpdateIndexes = trpc.useMutation(["optionRouter.indexes"]);
     /* Deletes */
     const categoryDelete = trpc.useMutation(["categoryRouter.delete"], {
         onSuccess: () => {
@@ -108,25 +136,26 @@ const Catalog: NextPage = () => {
             optionGroupQuery.refetch();
         }
     });
-
+    const [selectedOptionGroup, setSelectedOptionGroup] = useState<{ id: string; name: string }>();
+    const optionQuery = trpc.useQuery(["optionRouter.findOptionsByOptionGroupId", { id: selectedOptionGroup?.id }])
     const productForm = useForm<ProductFormInput>();
     const optionForm = useForm<OptionFormInput>();
     const form = useForm<{ name: string }>();
-    const [options, setOptions] = useState<Option[]>([]);
+    const [options, setOptions] = React.useState(() => optionQuery.data ? [...optionQuery.data] : [])
     const [enabled, setEnabled] = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const buttonClass = 'flex w-full justify-between rounded-lg bg-wapi-light-blue px-4 py-2 text-left text-sm font-medium  hover:bg-purple-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75'
     const [selectedTab, setSelectedTab] = useState<'category' | 'optionGroup'>('category')
     const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string }>();
-    const [selectedOptionGroup, setSelectedOptionGroup] = useState<{ id: string; name: string }>();
-    const optionQuery = trpc.useQuery(["optionRouter.findOptionsByOptionGroupId", { id: selectedOptionGroup?.id }])
     const [isEdit, setIsEdit] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isProductDrawerOpen, setIsProductDrawerOpen] = useState(false);
     const [isOptionDrawerOpen, setIsOptionDrawerOpen] = useState(false);
+    const [columns] = React.useState(() => [...defaultColumns])
     const table = useReactTable({
-        data: optionQuery.data ? optionQuery.data : options,
+        data: options,
         columns,
+        getRowId: row => row.id,
         getCoreRowModel: getCoreRowModel(),
     })
     useEffect(() => {
@@ -138,6 +167,17 @@ const Catalog: NextPage = () => {
 
     if (categoryQuery.isLoading) return (<>Loading...</>)
     else if (categoryQuery.error) return (<>Error!</>)
+
+    const reorderRow = (draggedRowIndex: number, targetRowIndex: number) => {
+        if (options) {
+            options.splice(targetRowIndex, 0, options.splice(draggedRowIndex, 1)[0] as Option)
+            setOptions(() => {
+                const ids = options.map(({ id }) => { return id })
+                optionUpdateIndexes.mutate(ids);
+                return [...options];
+            })
+        }
+    }
 
     const toggleProductDrawer = () => {
         setIsProductDrawerOpen(!isProductDrawerOpen)
@@ -332,7 +372,7 @@ const Catalog: NextPage = () => {
                         <div className={'flex basis-2/4 justify-end gap-x-4 items-center'}>
                             <div>
                                 <button onClick={handleOnClickEdit} disabled={(selectedCategory || selectedOptionGroup) ? false : true}>
-                                    <PencilIcon className="h-5 w-5 disabled:bg-gray-300 " />
+                                    <PencilIcon className="h-5 w-5 disabled:bg-gray-300" />
                                 </button>
                             </div>
                             <div>
@@ -354,51 +394,48 @@ const Catalog: NextPage = () => {
                         </div>
                     </div>
                     {/* Items Table */}
-                    <table>
-                        <thead>
-                            {table.getHeaderGroups().map(headerGroup => (
-                                <tr key={headerGroup.id}>
-                                    {headerGroup.headers.map(header => (
-                                        <th key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                )}
-                                        </th>
-                                    ))}
-                                </tr>
-                            ))}
-                        </thead>
-                        <tbody>
-                            {table.getRowModel().rows.map(row => (
-                                <tr key={row.id}>
-                                    {row.getVisibleCells().map(cell => (
-                                        <td key={cell.id}>
-                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                                        </td>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tbody>
-                        <tfoot>
-                            {table.getFooterGroups().map(footerGroup => (
-                                <tr key={footerGroup.id}>
-                                    {footerGroup.headers.map(header => (
-                                        <th key={header.id}>
-                                            {header.isPlaceholder
-                                                ? null
-                                                : flexRender(
-                                                    header.column.columnDef.footer,
-                                                    header.getContext()
-                                                )}
-                                        </th>
-                                    ))}
-                                </tr>
-                            ))}
-                        </tfoot>
-                    </table>
+                    <div className="flex">
+                        <table className="w-full text-left">
+                            <thead>
+                                {table.getHeaderGroups().map(headerGroup => (
+                                    <tr key={headerGroup.id}>
+                                        <th />
+                                        {headerGroup.headers.map(header => (
+                                            <th key={header.id} colSpan={header.colSpan}>
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                        header.column.columnDef.header,
+                                                        header.getContext()
+                                                    )}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </thead>
+                            <tbody>
+                                {table.getRowModel().rows.map(row => (
+                                    <DraggableRow key={row.id} row={row} reorderRow={reorderRow} />
+                                ))}
+                            </tbody>
+                            <tfoot>
+                                {table.getFooterGroups().map(footerGroup => (
+                                    <tr key={footerGroup.id}>
+                                        {footerGroup.headers.map(header => (
+                                            <th key={header.id} colSpan={header.colSpan}>
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                        header.column.columnDef.footer,
+                                                        header.getContext()
+                                                    )}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                ))}
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
                 {/** Modals */}
                 {/* Create and Edit Modal*/}
@@ -529,3 +566,39 @@ export const getServerSideProps: GetServerSideProps = async (ctx: GetServerSideP
 }
 
 export default Catalog;
+
+const DraggableRow: React.FC<{
+    row: Row<Option>
+    reorderRow: (draggedRowIndex: number, targetRowIndex: number) => void
+}> = ({ row, reorderRow }) => {
+    const [, dropRef] = useDrop({
+        accept: 'row',
+        drop: (draggedRow: Row<Option>) => reorderRow(draggedRow.index, row.index),
+    })
+
+    const [{ isDragging }, dragRef, previewRef] = useDrag({
+        collect: (monitor: any) => ({
+            isDragging: monitor.isDragging(),
+        }),
+        item: () => row,
+        type: 'row',
+    })
+
+    return (
+        <tr
+            ref={previewRef} //previewRef could go here
+            style={{ opacity: isDragging ? 0.5 : 1 }}
+        >
+            <td ref={dropRef}>
+                <button ref={dragRef} className={'cursor-grab mx-4'}>
+                    <HandRaisedIcon className="h-5 w-5" />
+                </button>
+            </td>
+            {row.getVisibleCells().map(cell => (
+                <td key={cell.id}>
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+            ))}
+        </tr>
+    )
+}

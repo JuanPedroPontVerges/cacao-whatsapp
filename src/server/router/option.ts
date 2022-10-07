@@ -46,6 +46,14 @@ export const optionRouter = createProtectedRouter()
 
     },
   })
+  .mutation("indexes", {
+    input: z.array(z.string()), /* array of options id's */
+    async resolve({ ctx, input }) {
+      for (let index = 0; index < input.length; index++) {
+        await ctx.prisma.option.update({ where: { id: input[index] }, data: { index } })
+      }
+    },
+  })
   .mutation("delete", {
     input: z.object({
       optionId: z.string(),
@@ -62,13 +70,14 @@ export const optionRouter = createProtectedRouter()
     input: z.object({ id: z.string().nullish() }).nullish(),
     async resolve({ ctx, input }) {
       if (input && input.id != null) {
-        console.log('input', input);
         const response = await ctx.prisma.option.findMany({
           where: {
             optionGroupId: input.id
+          },
+          orderBy: {
+            index: 'asc'
           }
         });
-        console.log('response', response);
         return response;
       }
     },
