@@ -9,34 +9,68 @@ import Button from "../components/Button";
 import Drawer from "../components/Drawer";
 import Form from "../components/Form";
 import Modal from "../components/Modal";
-import Table from "../components/Table";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
+import {
+    ColumnDef,
+    createColumnHelper,
+    flexRender,
+    getCoreRowModel,
+    useReactTable,
+} from '@tanstack/react-table'
 
-const productColumns = [
-    { title: 'Nombre', dataIndex: 'name' },
-    { title: 'Apellido', dataIndex: 'name' }
+type Option = {
+    id: string;
+    name: string;
+    description: string | null;
+    price: number | null;
+    maxAmount?: number | null;
+}
+
+const columnHelper = createColumnHelper<Option>()
+
+const columns = [
+    columnHelper.accessor('name', {
+        cell: info => info.getValue(),
+    }),
+    columnHelper.accessor(row => row.description, {
+        id: 'description',
+        cell: info => <i>{info.getValue()}</i>,
+        header: () => <span>Descripción</span>,
+    }),
+    columnHelper.accessor('price', {
+        cell: info => info.renderValue(),
+        header: () => 'Precio',
+    }),
+    columnHelper.display({
+        id: 'actions',
+        cell: props => <span>ACCIÓNNNN</span>
+    }),
 ]
 
-const dataSource = [
-    { title: 'Juan Pedro' },
-    { title: 'Juan Pedro' },
-    { title: 'Juan Pedro' },
-    { title: 'Juan Pedro' },
-]
+type OptionFormInput = {
+    name: string;
+    description: string;
+    price?: number;
+    maxAmount?: number
+}
 
+type ProductFormInput = {
+    name: string;
+    description: string;
+    price: number;
+}
+
+type columns = ColumnDef<Option | undefined>[] | undefined
 
 const Catalog: NextPage = () => {
     const { data } = useSession();
+    /* Queries */
     const userQuery = trpc.useQuery(["userRouter.getVenues", { id: data?.user?.id }]);
     const categoryQuery = trpc.useQuery(["categoryRouter.findCategoriesByMenuId", { id: userQuery.data?.venue?.menus[0]?.id }])
     const optionGroupQuery = trpc.useQuery(["optionGroupRouter.findOptionGroupsByMenuId", { id: userQuery.data?.venue?.menus[0]?.id }])
+    /* Creations */
     const categoryMutation = trpc.useMutation(["categoryRouter.create"], {
-        onSuccess: () => {
-            categoryQuery.refetch();
-        }
-    });
-    const categoryUpdate = trpc.useMutation(["categoryRouter.update"], {
         onSuccess: () => {
             categoryQuery.refetch();
         }
@@ -46,11 +80,24 @@ const Catalog: NextPage = () => {
             optionGroupQuery.refetch();
         }
     });
+    const optionMutation = trpc.useMutation(["optionRouter.create"], {
+        onSuccess: () => {
+            optionQuery.refetch();
+        }
+    })
+    /* Updates */
+    const categoryUpdate = trpc.useMutation(["categoryRouter.update"], {
+        onSuccess: () => {
+            categoryQuery.refetch();
+        }
+    });
+
     const optionGroupUpdate = trpc.useMutation(["optionGroupRouter.update"], {
         onSuccess: () => {
             optionGroupQuery.refetch();
         }
     });
+    /* Deletes */
     const categoryDelete = trpc.useMutation(["categoryRouter.delete"], {
         onSuccess: () => {
             categoryQuery.refetch();
@@ -61,22 +108,38 @@ const Catalog: NextPage = () => {
             optionGroupQuery.refetch();
         }
     });
-    const productForm = useForm<{ name: string; description: string; price: number; }>();
-    const optionForm = useForm<{ name: string; description: string; price?: number; maxAmount?: number }>();
+
+    const productForm = useForm<ProductFormInput>();
+    const optionForm = useForm<OptionFormInput>();
     const form = useForm<{ name: string }>();
+    const [options, setOptions] = useState<Option[]>([]);
     const [enabled, setEnabled] = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const buttonClass = 'flex w-full justify-between rounded-lg bg-wapi-light-blue px-4 py-2 text-left text-sm font-medium  hover:bg-purple-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75'
     const [selectedTab, setSelectedTab] = useState<'category' | 'optionGroup'>('category')
     const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string }>();
     const [selectedOptionGroup, setSelectedOptionGroup] = useState<{ id: string; name: string }>();
+    const optionQuery = trpc.useQuery(["optionRouter.findOptionsByOptionGroupId", { id: selectedOptionGroup?.id }])
     const [isEdit, setIsEdit] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isProductDrawerOpen, setIsProductDrawerOpen] = useState(false);
     const [isOptionDrawerOpen, setIsOptionDrawerOpen] = useState(false);
+    const table = useReactTable({
+        data: optionQuery.data ? optionQuery.data : options,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+    })
+    useEffect(() => {
+        console.log('optionQuery.data', optionQuery.data);
+        if (optionQuery.data) {
+            setOptions(optionQuery.data);
+        }
+    }, [optionQuery.data])
+
+    if (categoryQuery.isLoading) return (<>Loading...</>)
+    else if (categoryQuery.error) return (<>Error!</>)
 
     const toggleProductDrawer = () => {
-        console.log('toggle');
         setIsProductDrawerOpen(!isProductDrawerOpen)
     };
 
@@ -122,6 +185,12 @@ const Catalog: NextPage = () => {
         }
         toggleModal()
     }
+
+    const onSubmitOptionForm: SubmitHandler<OptionFormInput> = async (input) => {
+        if (selectedOptionGroup) {
+            optionMutation.mutate({ ...input, optionGroupId: selectedOptionGroup.id });
+        }
+    };
 
     const onChangeSwitch = (enabled: boolean) => {
         setEnabled(enabled)
@@ -229,6 +298,7 @@ const Catalog: NextPage = () => {
                                                             setIsEdit(false)
                                                             setSelectedOptionGroup({ id, name })
                                                             setSelectedCategory(undefined)
+                                                            console.log('a');
                                                         }}
                                                         key={id}
                                                         className="px-4 pt-4 pb-2 text-sm text-gray-500 cursor-pointer hover:bg-wapi-blue hover:text-white">
@@ -284,9 +354,51 @@ const Catalog: NextPage = () => {
                         </div>
                     </div>
                     {/* Items Table */}
-                    <div>
-                        <Table isCategoryOrOptionGroup={selectedCategory ? selectedCategory : selectedOptionGroup} columns={productColumns} />
-                    </div>
+                    <table>
+                        <thead>
+                            {table.getHeaderGroups().map(headerGroup => (
+                                <tr key={headerGroup.id}>
+                                    {headerGroup.headers.map(header => (
+                                        <th key={header.id}>
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                    header.column.columnDef.header,
+                                                    header.getContext()
+                                                )}
+                                        </th>
+                                    ))}
+                                </tr>
+                            ))}
+                        </thead>
+                        <tbody>
+                            {table.getRowModel().rows.map(row => (
+                                <tr key={row.id}>
+                                    {row.getVisibleCells().map(cell => (
+                                        <td key={cell.id}>
+                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+                        </tbody>
+                        <tfoot>
+                            {table.getFooterGroups().map(footerGroup => (
+                                <tr key={footerGroup.id}>
+                                    {footerGroup.headers.map(header => (
+                                        <th key={header.id}>
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                    header.column.columnDef.footer,
+                                                    header.getContext()
+                                                )}
+                                        </th>
+                                    ))}
+                                </tr>
+                            ))}
+                        </tfoot>
+                    </table>
                 </div>
                 {/** Modals */}
                 {/* Create and Edit Modal*/}
@@ -340,7 +452,7 @@ const Catalog: NextPage = () => {
                             Precio
                         </label>
                         <input
-                            {...productForm.register('price')}
+                            {...productForm.register('price', { valueAsNumber: true })}
                             type="number"
                             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                         />
@@ -350,8 +462,8 @@ const Catalog: NextPage = () => {
                     </Form>
                 </Drawer>
                 {/* Option Drawer */}
-                <Drawer title={'Crear opción'} isOpen={isOptionDrawerOpen} toggleDrawer={toggleOptionDrawer}>
-                    <Form form={optionForm} onSubmitForm={selectedTab === 'category' ? onSubmitCategoryForm : onSubmitOptionGroupForm}>
+                <Drawer title={`Crear opción`} isOpen={isOptionDrawerOpen} toggleDrawer={toggleOptionDrawer}>
+                    <Form form={optionForm} onSubmitForm={onSubmitOptionForm}>
                         <div>
                             <label htmlFor="name" className="block text-sm font-medium text-gray-700">
                                 Nombre
@@ -377,7 +489,7 @@ const Catalog: NextPage = () => {
                                 Precio
                             </label>
                             <input
-                                {...optionForm.register('price')}
+                                {...optionForm.register('price', { valueAsNumber: true })}
                                 type="number"
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             />
@@ -387,7 +499,7 @@ const Catalog: NextPage = () => {
                                 Máximo seleccionable
                             </label>
                             <input
-                                {...optionForm.register('maxAmount')}
+                                {...optionForm.register('maxAmount', { valueAsNumber: true })}
                                 type="number"
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             />
