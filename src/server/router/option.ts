@@ -23,16 +23,22 @@ export const optionRouter = createProtectedRouter()
   .mutation("update", {
     input: z.object({
       name: z.string().nullish(),
+      description: z.string().nullish(),
+      maxAmount: z.number().nullish(),
+      price: z.number().nullish(),
       enabled: z.boolean().nullish(),
       optionId: z.string(),
     }),
     async resolve({ ctx, input }) {
-      const { name, optionId, enabled } = input;
+      const { name, optionId, enabled, description, maxAmount, price } = input;
       if (typeof name === 'string') {
         return await ctx.prisma.option.update({
           where: { id: optionId },
           data: {
             name,
+            description, 
+            maxAmount, 
+            price
           },
         })
       } else if (typeof enabled === 'boolean') {

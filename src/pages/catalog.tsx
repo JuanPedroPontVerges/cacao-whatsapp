@@ -1,5 +1,5 @@
 import { Disclosure, Switch } from "@headlessui/react";
-import { ChevronUpIcon, TrashIcon, PencilIcon, HandRaisedIcon } from "@heroicons/react/24/outline";
+import { ChevronUpIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
 import type { GetServerSideProps, GetServerSidePropsContext, NextPage } from "next";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
@@ -13,12 +13,10 @@ import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
 import {
     ColumnDef,
-    flexRender,
     getCoreRowModel,
-    Row,
     useReactTable,
 } from '@tanstack/react-table'
-import { useDrag, useDrop } from 'react-dnd'
+import Table from "../components/Table";
 
 type Option = {
     id: string;
@@ -28,55 +26,6 @@ type Option = {
     price: number | null;
     maxAmount?: number | null;
 }
-
-const defaultColumns: ColumnDef<Option>[] = [
-    {
-        accessorKey: 'name',
-        cell: info => info.getValue(),
-    },
-    {
-        accessorFn: row => row.description,
-        id: 'description',
-        cell: info => info.getValue(),
-        header: () => <span>description</span>,
-    },
-    {
-        header: 'Precio',
-        accessorKey: 'price',
-    },
-    {
-        header: 'Acciones',
-        id: 'actions',
-        accessorFn: ((record, index) => {
-            return (
-                <div className="flex gap-x-4 align-middle">
-                    <button onClick={() => {
-                        console.log('value', record.id);
-                    }}>
-                        <PencilIcon className="h-5 w-5" />
-                    </button>
-                    <button onClick={() => {
-                        console.log('value', record);
-                    }}>
-                        <TrashIcon className="h-5 w-5" />
-                    </button>
-                    <Switch
-                        checked={record.enabled}
-                        // onChange={onChangeSwitch}
-                        className={`${record.enabled ? 'bg-blue-600' : 'bg-gray-200'
-                            } relative inline-flex h-6 w-11 items-center rounded-full`}
-                    >
-                        <span
-                            className={`${record.enabled ? 'translate-x-6' : 'translate-x-1'
-                                } inline-block h-4 w-4 transform rounded-full bg-white transition`}
-                        />
-                    </Switch>
-                </div>
-            )
-        }),
-        cell: (value) => value.renderValue(),
-    },
-]
 
 type OptionFormInput = {
     name: string;
@@ -125,6 +74,11 @@ const Catalog: NextPage = () => {
         }
     });
     const optionUpdateIndexes = trpc.useMutation(["optionRouter.indexes"]);
+    const optionUpdate = trpc.useMutation(["optionRouter.update"], {
+        onSuccess: () => {
+            optionQuery.refetch();
+        }
+    });
     /* Deletes */
     const categoryDelete = trpc.useMutation(["categoryRouter.delete"], {
         onSuccess: () => {
@@ -136,22 +90,80 @@ const Catalog: NextPage = () => {
             optionGroupQuery.refetch();
         }
     });
-    const [selectedOptionGroup, setSelectedOptionGroup] = useState<{ id: string; name: string }>();
+    const optionDelete = trpc.useMutation(["optionRouter.delete"], {
+        onSuccess: () => {
+            optionQuery.refetch();
+        }
+    });
+    const defaultColumns: ColumnDef<Option>[] = [
+        {
+            accessorKey: 'name',
+            cell: info => info.getValue(),
+        },
+        {
+            accessorFn: row => row.description,
+            id: 'description',
+            cell: info => info.getValue(),
+            header: () => <span>description</span>,
+        },
+        {
+            header: 'Precio',
+            accessorKey: 'price',
+        },
+        {
+            header: 'Acciones',
+            id: 'actions',
+            accessorFn: ((record) => {
+                return (
+                    <div className="flex gap-x-4 align-middle">
+                        <button onClick={() => {
+                            toggleOptionDrawer(record)
+                        }}>
+                            <PencilIcon className="h-5 w-5" />
+                        </button>
+                        <button onClick={() => {
+                            handleOnClickDeleteOption(record)
+                        }}>
+                            <TrashIcon className="h-5 w-5" />
+                        </button>
+                        <Switch
+                            checked={record.enabled}
+                            onChange={(input: boolean) => {
+                                onChangeOptionGroupSwitch(input, record.id);
+                            }}
+                            className={`${record.enabled ? 'bg-blue-600' : 'bg-gray-200'
+                                } relative inline-flex h-6 w-11 items-center rounded-full`}
+                        >
+                            <span
+                                className={`${record.enabled ? 'translate-x-6' : 'translate-x-1'
+                                    } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                            />
+                        </Switch>
+                    </div>
+                )
+            }),
+            cell: (value) => value.renderValue(),
+        },
+    ]
+    const [selectedOptionGroup, setSelectedOptionGroup] = useState<{ id: string; name: string; enabled: boolean }>();
     const optionQuery = trpc.useQuery(["optionRouter.findOptionsByOptionGroupId", { id: selectedOptionGroup?.id }])
     const productForm = useForm<ProductFormInput>();
     const optionForm = useForm<OptionFormInput>();
     const form = useForm<{ name: string }>();
     const [options, setOptions] = React.useState(() => optionQuery.data ? [...optionQuery.data] : [])
-    const [enabled, setEnabled] = useState(false)
     const [isModalOpen, setIsModalOpen] = useState(false)
     const buttonClass = 'flex w-full justify-between rounded-lg bg-wapi-light-blue px-4 py-2 text-left text-sm font-medium  hover:bg-purple-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75'
     const [selectedTab, setSelectedTab] = useState<'category' | 'optionGroup'>('category')
-    const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string }>();
+    const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; enabled: boolean }>();
     const [isEdit, setIsEdit] = useState(false);
+    const [selectedOption, setSelectedOption] = useState<{ isEdit: boolean; option?: Option }>({ isEdit: false, option: undefined });
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [isOptionDeleteModalOpen, setIsOptionDeleteModalOpen] = useState(false);
     const [isProductDrawerOpen, setIsProductDrawerOpen] = useState(false);
     const [isOptionDrawerOpen, setIsOptionDrawerOpen] = useState(false);
     const [columns] = React.useState(() => [...defaultColumns])
+
+    const isEnabled = selectedCategory ? selectedCategory.enabled : selectedOptionGroup ? selectedOptionGroup.enabled : false;
     const table = useReactTable({
         data: options,
         columns,
@@ -159,7 +171,6 @@ const Catalog: NextPage = () => {
         getCoreRowModel: getCoreRowModel(),
     })
     useEffect(() => {
-        console.log('optionQuery.data', optionQuery.data);
         if (optionQuery.data) {
             setOptions(optionQuery.data);
         }
@@ -170,7 +181,7 @@ const Catalog: NextPage = () => {
 
     const reorderRow = (draggedRowIndex: number, targetRowIndex: number) => {
         if (options) {
-            options.splice(targetRowIndex, 0, options.splice(draggedRowIndex, 1)[0] as Option)
+            options.splice(targetRowIndex, 0, options.splice(draggedRowIndex, 1)[0] as any)
             setOptions(() => {
                 const ids = options.map(({ id }) => { return id })
                 optionUpdateIndexes.mutate(ids);
@@ -179,13 +190,32 @@ const Catalog: NextPage = () => {
         }
     }
 
-    const toggleProductDrawer = () => {
+    function toggleProductDrawer() {
         setIsProductDrawerOpen(!isProductDrawerOpen)
-    };
+    }
 
-    const toggleOptionDrawer = () => {
+    function onChangeOptionGroupSwitch(enabled: boolean, childId: string) {
+        optionUpdate.mutate({ optionId: childId, enabled });
+    }
+
+    function toggleOptionDrawer(option?: Option) {
+        if (isOptionDrawerOpen) {
+            optionForm.resetField('name')
+            optionForm.resetField('description')
+            optionForm.resetField('price')
+            optionForm.resetField('maxAmount')
+            setSelectedOption({ isEdit: false, option: undefined })
+        }
+        if (option) {
+            setSelectedOption({ isEdit: true, option });
+            const { name, description, maxAmount, price } = option;
+            optionForm.setValue('name', name)
+            optionForm.setValue('description', description ?? '')
+            optionForm.setValue('price', price ?? 0)
+            optionForm.setValue('maxAmount', maxAmount ?? 0)
+        }
         setIsOptionDrawerOpen(!isOptionDrawerOpen)
-    };
+    }
 
     const toggleModal = () => {
         if (isModalOpen) form.reset({ name: '' });
@@ -194,6 +224,10 @@ const Catalog: NextPage = () => {
 
     const toggleDeleteModal = () => {
         setIsDeleteModalOpen(!isDeleteModalOpen);
+    }
+
+    function toggleOptionDeleteModal() {
+        setIsOptionDeleteModalOpen(!isOptionDeleteModalOpen);
     }
 
     const onSubmitCategoryForm: SubmitHandler<{ name: string }> = async ({ name }) => {
@@ -227,21 +261,52 @@ const Catalog: NextPage = () => {
     }
 
     const onSubmitOptionForm: SubmitHandler<OptionFormInput> = async (input) => {
+        /* Update */
+        const maxAmount = input.maxAmount ? input.maxAmount : 0;
+        const price = input.price ? input.price : 0;
+        if (selectedOption.isEdit && selectedOption.option) {
+            const { id } = selectedOption.option
+            optionUpdate.mutate({ ...input, maxAmount, price, optionId: id })
+            toggleOptionDrawer()
+            return;
+        }
+        /* Creation */
         if (selectedOptionGroup) {
-            optionMutation.mutate({ ...input, optionGroupId: selectedOptionGroup.id });
+            optionMutation.mutate({ ...input, maxAmount, price, optionGroupId: selectedOptionGroup.id });
+            toggleOptionDrawer()
+            return;
         }
     };
 
     const onChangeSwitch = (enabled: boolean) => {
-        setEnabled(enabled)
-        if (selectedCategory) categoryUpdate.mutate({ enabled, categoryId: selectedCategory.id })
-        else if (selectedOptionGroup) optionGroupUpdate.mutate({ enabled, optionGroupId: selectedOptionGroup.id })
+        if (selectedCategory) {
+            setSelectedCategory({ ...selectedCategory, enabled })
+            categoryUpdate.mutate({ enabled, categoryId: selectedCategory.id })
+        }
+        else if (selectedOptionGroup) {
+            setSelectedOptionGroup({ ...selectedOptionGroup, enabled })
+            optionGroupUpdate.mutate({ enabled, optionGroupId: selectedOptionGroup.id })
+        }
     }
 
     const handleOnClickEdit = () => {
         setIsEdit(true)
         form.setValue('name', selectedCategory?.name ? selectedCategory?.name : selectedOptionGroup?.name ? selectedOptionGroup?.name : '');
         toggleModal();
+    }
+
+    function handleOnClickDeleteOption(option: Option) {
+        setSelectedOption({ isEdit: false, option })
+        toggleOptionDeleteModal();
+    }
+
+    const onDeleteOption = () => {
+        if (selectedOption.option && !selectedOption.isEdit) {
+            const { id } = selectedOption.option;
+            optionDelete.mutate({ optionId: id });
+            setSelectedOption({ isEdit: false, option: undefined });
+            toggleOptionDeleteModal();
+        }
     }
 
     const handleOnClickDelete = async () => {
@@ -298,13 +363,13 @@ const Catalog: NextPage = () => {
                                             />
                                         </Disclosure.Button>
                                         {
-                                            categoryQuery?.data?.map(({ id, name }) => {
+                                            categoryQuery?.data?.map(({ id, name, enabled }) => {
                                                 return (
                                                     <Disclosure.Panel
                                                         onClick={() => {
                                                             setIsEdit(false)
                                                             setSelectedOptionGroup(undefined)
-                                                            setSelectedCategory({ id, name })
+                                                            setSelectedCategory({ id, name, enabled })
                                                         }}
                                                         key={id}
                                                         className="px-4 pt-4 pb-2 text-sm text-gray-500 cursor-pointer hover:bg-wapi-blue hover:text-white">
@@ -331,12 +396,12 @@ const Catalog: NextPage = () => {
                                             />
                                         </Disclosure.Button>
                                         {
-                                            optionGroupQuery?.data?.map(({ id, name }) => {
+                                            optionGroupQuery?.data?.map(({ id, name, enabled }) => {
                                                 return (
                                                     <Disclosure.Panel
                                                         onClick={() => {
                                                             setIsEdit(false)
-                                                            setSelectedOptionGroup({ id, name })
+                                                            setSelectedOptionGroup({ id, name, enabled })
                                                             setSelectedCategory(undefined)
                                                             console.log('a');
                                                         }}
@@ -362,7 +427,7 @@ const Catalog: NextPage = () => {
                             <div>
                                 <button
                                     disabled={(selectedCategory || selectedOptionGroup) ? false : true}
-                                    onClick={selectedCategory ? toggleProductDrawer : selectedOptionGroup ? toggleOptionDrawer : () => ({})}
+                                    onClick={selectedCategory ? toggleProductDrawer : selectedOptionGroup ? () => { toggleOptionDrawer() } : () => ({})}
                                     className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-wapi-blue hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                 >
                                     Crear {selectedCategory?.name ? selectedCategory?.name : selectedOptionGroup?.name}
@@ -381,61 +446,20 @@ const Catalog: NextPage = () => {
                                 </button>
                             </div>
                             <Switch
-                                checked={enabled}
+                                checked={isEnabled}
                                 onChange={onChangeSwitch}
-                                className={`${enabled ? 'bg-blue-600' : 'bg-gray-200'
+                                className={`${isEnabled ? 'bg-blue-600' : 'bg-gray-200'
                                     } relative inline-flex h-6 w-11 items-center rounded-full`}
                             >
                                 <span
-                                    className={`${enabled ? 'translate-x-6' : 'translate-x-1'
+                                    className={`${isEnabled ? 'translate-x-6' : 'translate-x-1'
                                         } inline-block h-4 w-4 transform rounded-full bg-white transition`}
                                 />
                             </Switch>
                         </div>
                     </div>
                     {/* Items Table */}
-                    <div className="flex">
-                        <table className="w-full text-left">
-                            <thead>
-                                {table.getHeaderGroups().map(headerGroup => (
-                                    <tr key={headerGroup.id}>
-                                        <th />
-                                        {headerGroup.headers.map(header => (
-                                            <th key={header.id} colSpan={header.colSpan}>
-                                                {header.isPlaceholder
-                                                    ? null
-                                                    : flexRender(
-                                                        header.column.columnDef.header,
-                                                        header.getContext()
-                                                    )}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </thead>
-                            <tbody>
-                                {table.getRowModel().rows.map(row => (
-                                    <DraggableRow key={row.id} row={row} reorderRow={reorderRow} />
-                                ))}
-                            </tbody>
-                            <tfoot>
-                                {table.getFooterGroups().map(footerGroup => (
-                                    <tr key={footerGroup.id}>
-                                        {footerGroup.headers.map(header => (
-                                            <th key={header.id} colSpan={header.colSpan}>
-                                                {header.isPlaceholder
-                                                    ? null
-                                                    : flexRender(
-                                                        header.column.columnDef.footer,
-                                                        header.getContext()
-                                                    )}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                ))}
-                            </tfoot>
-                        </table>
-                    </div>
+                    <Table table={table} reorderRow={reorderRow} />
                 </div>
                 {/** Modals */}
                 {/* Create and Edit Modal*/}
@@ -463,6 +487,16 @@ const Catalog: NextPage = () => {
                     <div className="flex justify-around mt-6">
                         <button className="py-2 px-4 bg-black text-white rounded-md" onClick={toggleDeleteModal}>Cancelar</button>
                         <button className="py-2 px-4 bg-red-500 text-white rounded-md" onClick={handleOnClickDelete}>Eliminar</button>
+                    </div>
+                </Modal>
+                <Modal
+                    title={`¿Estas seguro que desea eliminar ${selectedOption.option?.name}?`}
+                    isOpen={isOptionDeleteModalOpen}
+                    onClose={toggleOptionDeleteModal}
+                >
+                    <div className="flex justify-around mt-6">
+                        <button className="py-2 px-4 bg-black text-white rounded-md" onClick={toggleOptionDeleteModal}>Cancelar</button>
+                        <button className="py-2 px-4 bg-red-500 text-white rounded-md" onClick={onDeleteOption}>Eliminar</button>
                     </div>
                 </Modal>
                 {/** Drawers */}
@@ -566,39 +600,3 @@ export const getServerSideProps: GetServerSideProps = async (ctx: GetServerSideP
 }
 
 export default Catalog;
-
-const DraggableRow: React.FC<{
-    row: Row<Option>
-    reorderRow: (draggedRowIndex: number, targetRowIndex: number) => void
-}> = ({ row, reorderRow }) => {
-    const [, dropRef] = useDrop({
-        accept: 'row',
-        drop: (draggedRow: Row<Option>) => reorderRow(draggedRow.index, row.index),
-    })
-
-    const [{ isDragging }, dragRef, previewRef] = useDrag({
-        collect: (monitor: any) => ({
-            isDragging: monitor.isDragging(),
-        }),
-        item: () => row,
-        type: 'row',
-    })
-
-    return (
-        <tr
-            ref={previewRef} //previewRef could go here
-            style={{ opacity: isDragging ? 0.5 : 1 }}
-        >
-            <td ref={dropRef}>
-                <button ref={dragRef} className={'cursor-grab mx-4'}>
-                    <HandRaisedIcon className="h-5 w-5" />
-                </button>
-            </td>
-            {row.getVisibleCells().map(cell => (
-                <td key={cell.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-            ))}
-        </tr>
-    )
-}
