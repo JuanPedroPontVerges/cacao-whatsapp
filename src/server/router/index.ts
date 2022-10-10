@@ -7,6 +7,7 @@ import { venueRouter } from "./venue";
 import { categoryRouter } from "./category";
 import { optionGroupRouter } from "./option-group";
 import { optionRouter } from "./option";
+import { displayTypeRouter } from "./display-type";
 
 export const appRouter = createRouter()
   .transformer(superjson)
@@ -15,7 +16,8 @@ export const appRouter = createRouter()
   .merge("venueRouter.", venueRouter)
   .merge("categoryRouter.", categoryRouter)
   .merge("optionGroupRouter.", optionGroupRouter)
-  .merge("optionRouter.", optionRouter);
+  .merge("optionRouter.", optionRouter)
+  .merge("displayTypeRouter.", displayTypeRouter);
 
 // export type definition of API
 export type AppRouter = typeof appRouter;

@@ -111,30 +111,89 @@ model Category {
     createdAt DateTime  @default(now())
     updatedAt DateTime? @updatedAt
     menu      Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
+    products  Product[]
+}
+
+model Product {
+    id           String        @id @default(cuid())
+    categoryId   String
+    name         String
+    description  String?
+    imageUrl     String?
+    price        Int?
+    index        Int?
+    enabled      Boolean       @default(true)
+    createdAt    DateTime      @default(now())
+    updatedAt    DateTime?     @updatedAt
+    productStore ProductStore?
+    category     Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+}
+
+model ProductStore {
+    id                         String                      @id @default(cuid())
+    productId                  String                      @unique
+    createdAt                  DateTime                    @default(now())
+    updatedAt                  DateTime?                   @updatedAt
+    product                    Product                     @relation(fields: [productId], references: [id], onDelete: Cascade)
+    productStoreToOptionGroups ProductStoreToOptionGroup[]
+}
+
+model ProductStoreToOptionGroup {
+    id             String          @id @default(cuid())
+    productStoreId String
+    optionGroupId  String
+    displayTypeId  String
+    multipleUnits  Boolean
+    amount         Int?
+    createdAt      DateTime        @default(now())
+    updatedAt      DateTime?       @updatedAt
+    displayType    DisplayType     @relation(fields: [displayTypeId], references: [id], onDelete: Cascade)
+    productStore   ProductStore    @relation(fields: [productStoreId], references: [id], onDelete: Cascade)
+    optionGroup    OptionGroup     @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+    productOptions ProductOption[]
+}
+
+model ProductOption {
+    id                          String                    @id @default(cuid())
+    optionId                    String
+    productStoreToOptionGroupId String
+    enabled                     Boolean
+    createdAt                   DateTime                  @default(now())
+    updatedAt                   DateTime?                 @updatedAt
+    option                      Option                    @relation(fields: [optionId], references: [id], onDelete: Cascade)
+    productStoreToOptionGroup   ProductStoreToOptionGroup @relation(fields: [productStoreToOptionGroupId], references: [id], onDelete: Cascade)
+}
+
+model DisplayType {
+    id                         String                      @id @default(cuid())
+    name                       String
+    productStoreToOptionGroups ProductStoreToOptionGroup[]
 }
 
 model OptionGroup {
-    id        String    @id @default(cuid())
-    menuId    String
-    name      String
-    enabled   Boolean   @default(true)
-    createdAt DateTime  @default(now())
-    updatedAt DateTime? @updatedAt
-    menu      Menu      @relation(fields: [menuId], references: [id], onDelete: Cascade)
-    options   Option[]
+    id                         String                      @id @default(cuid())
+    menuId                     String
+    name                       String
+    enabled                    Boolean                     @default(true)
+    createdAt                  DateTime                    @default(now())
+    updatedAt                  DateTime?                   @updatedAt
+    menu                       Menu                        @relation(fields: [menuId], references: [id], onDelete: Cascade)
+    options                    Option[]
+    productStoreToOptionGroups ProductStoreToOptionGroup[]
 }
 
 model Option {
-    id            String      @id @default(cuid())
-    optionGroupId String
-    name          String
-    description   String?
-    imageUrl      String?
-    price         Int?
-    maxAmount     Int?
-    index         Int?
-    enabled       Boolean     @default(true)
-    createdAt     DateTime    @default(now())
-    updatedAt     DateTime?   @updatedAt
-    optionGroup   OptionGroup @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+    id             String          @id @default(cuid())
+    optionGroupId  String
+    name           String
+    description    String?
+    imageUrl       String?
+    price          Int?
+    maxAmount      Int?
+    index          Int?
+    enabled        Boolean         @default(true)
+    createdAt      DateTime        @default(now())
+    updatedAt      DateTime?       @updatedAt
+    optionGroup    OptionGroup     @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
+    productOptions ProductOption[]
 }

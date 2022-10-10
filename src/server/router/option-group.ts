@@ -65,6 +65,12 @@ export const optionGroupRouter = createProtectedRouter()
           where: {
             menuId: input.id
           },
+          select: {
+            id: true,
+            name: true,
+            enabled: true,
+            options: true,
+          }
         });
       }
     },

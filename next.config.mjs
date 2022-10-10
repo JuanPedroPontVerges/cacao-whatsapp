@@ -20,4 +20,12 @@ export default defineNextConfig({
     locales: ["en"],
     defaultLocale: "en",
   },
+  images:{
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'cacao-whatsapp-tesis.s3.amazonaws.com'
+      }
+    ]
+  }
 });

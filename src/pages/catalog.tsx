@@ -17,6 +17,8 @@ import {
     useReactTable,
 } from '@tanstack/react-table'
 import Table from "../components/Table";
+import Upload from "../components/Upload";
+import List from "../components/List";
 
 type Option = {
     id: string;
@@ -38,6 +40,11 @@ type ProductFormInput = {
     name: string;
     description: string;
     price: number;
+    maxAmount?: number;
+    imageUrl?: string;
+    displayTypeId: string;
+    optionGroups: string[];
+    options: Record<string, string | string[]>
 }
 
 const Catalog: NextPage = () => {
@@ -46,6 +53,7 @@ const Catalog: NextPage = () => {
     const userQuery = trpc.useQuery(["userRouter.getVenues", { id: data?.user?.id }]);
     const categoryQuery = trpc.useQuery(["categoryRouter.findCategoriesByMenuId", { id: userQuery.data?.venue?.menus[0]?.id }])
     const optionGroupQuery = trpc.useQuery(["optionGroupRouter.findOptionGroupsByMenuId", { id: userQuery.data?.venue?.menus[0]?.id }])
+    const displayTypeQuery = trpc.useQuery(["displayTypeRouter.get"])
     /* Creations */
     const categoryMutation = trpc.useMutation(["categoryRouter.create"], {
         onSuccess: () => {
@@ -148,6 +156,8 @@ const Catalog: NextPage = () => {
     const [selectedOptionGroup, setSelectedOptionGroup] = useState<{ id: string; name: string; enabled: boolean }>();
     const optionQuery = trpc.useQuery(["optionRouter.findOptionsByOptionGroupId", { id: selectedOptionGroup?.id }])
     const productForm = useForm<ProductFormInput>();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    const optionGroupsWatcher = productForm.watch('optionGroups') || []
     const optionForm = useForm<OptionFormInput>();
     const form = useForm<{ name: string }>();
     const [options, setOptions] = React.useState(() => optionQuery.data ? [...optionQuery.data] : [])
@@ -176,8 +186,12 @@ const Catalog: NextPage = () => {
         }
     }, [optionQuery.data])
 
-    if (categoryQuery.isLoading) return (<>Loading...</>)
-    else if (categoryQuery.error) return (<>Error!</>)
+    useEffect(() => {
+        console.log('optionGroupsWatcher', optionGroupsWatcher);
+    }, [optionGroupsWatcher])
+
+    if (categoryQuery.isLoading || optionGroupQuery.isLoading) return (<>Loading...</>)
+    else if (categoryQuery.error || optionGroupQuery.error) return (<>Error!</>)
 
     const reorderRow = (draggedRowIndex: number, targetRowIndex: number) => {
         if (options) {
@@ -191,6 +205,7 @@ const Catalog: NextPage = () => {
     }
 
     function toggleProductDrawer() {
+        optionGroupQuery.refetch();
         setIsProductDrawerOpen(!isProductDrawerOpen)
     }
 
@@ -243,6 +258,10 @@ const Catalog: NextPage = () => {
             categoryMutation.mutate({ name, menuId: userQuery.data.venue.menus[0].id })
         }
         toggleModal()
+    }
+
+    const onSubmitProductForm: SubmitHandler<ProductFormInput> = async (input) => {
+        console.log('input', input);
     }
 
     const onSubmitOptionGroupForm: SubmitHandler<{ name: string }> = async ({ name }) => {
@@ -502,33 +521,111 @@ const Catalog: NextPage = () => {
                 {/** Drawers */}
                 {/* Product Drawer */}
                 <Drawer title={'Crear producto'} isOpen={isProductDrawerOpen} toggleDrawer={toggleProductDrawer}>
-                    <Form form={productForm} onSubmitForm={selectedTab === 'category' ? onSubmitCategoryForm : onSubmitOptionGroupForm}>
-                        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
-                            Nombre
-                        </label>
-                        <input
-                            {...productForm.register('name')}
-                            type="text"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        />
-                        <label htmlFor="description" className="block text-sm font-medium text-gray-700">
-                            Descripción
-                        </label>
-                        <input
-                            {...productForm.register('description')}
-                            type="text"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        />
-                        <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                            Precio
-                        </label>
-                        <input
-                            {...productForm.register('price', { valueAsNumber: true })}
-                            type="number"
-                            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                        />
-                        <div className="flex justify-end mt-2">
-                            <Button type={'submit'}>{parseModalTitle()} {selectedTab === 'category' ? 'Categoría' : 'Grupo de opción'}</Button>
+                    <Form form={productForm} onSubmitForm={onSubmitProductForm}>
+                        <div>
+                            <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                                Nombre
+                            </label>
+                            <input
+                                {...productForm.register('name')}
+                                type="text"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            />
+                        </div>
+                        <div className="mt-3">
+                            <label htmlFor="description" className="block text-sm font-medium text-gray-700">
+                                Descripción
+                            </label>
+                            <input
+                                {...productForm.register('description')}
+                                type="text"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            />
+                        </div>
+                        <div className="mt-3">
+                            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                                Precio
+                            </label>
+                            <input
+                                {...productForm.register('price', { valueAsNumber: true })}
+                                type="number"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            />
+                        </div>
+                        <div className="mt-3">
+                            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
+                                Máximo seleccionable
+                            </label>
+                            <input
+                                {...productForm.register('maxAmount', { valueAsNumber: true })}
+                                type="number"
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                            />
+                        </div>
+                        <div className="mt-3">
+
+                        </div>
+                        <div className="mt-3">
+                            <label className="block text-sm font-medium text-gray-700">
+                                Grupo de opciones
+                            </label>
+                            <fieldset className="m-4">
+                                {
+                                    optionGroupQuery.data?.map(({ id, name, options }) => {
+                                        console.log('displayTypeQuery.data', displayTypeQuery.data);
+                                        return (
+                                            <div className="mt-4 space-y-4 rounded-md border-2 border-dashed border-gray-300 p-4" key={id}>
+                                                <div className="flex flex-col">
+                                                    <List name='displayTypeId' form={productForm} options={displayTypeQuery.data?.map(({ id, name }) => ({ id, name }))} />
+                                                </div>
+                                                <div className="flex items-start">
+                                                    <div className="flex items-center h-6">
+                                                        <input
+                                                            {...productForm.register(`optionGroups`)}
+                                                            type="checkbox"
+                                                            value={id}
+                                                            className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                                        />
+                                                    </div>
+                                                    <div className="ml-3 text-sm min-h-6">
+                                                        <label htmlFor="comments" className="font-medium text-gray-700">
+                                                            {name}
+                                                        </label>
+                                                        <p className="text-gray-500">Items: {options.length}</p>
+                                                        <div className='m-2 flex items-start'>
+                                                            {optionGroupsWatcher?.includes(id) ? (
+                                                                <div className="flex flex-col gap-y-2">
+                                                                    {options.map((option) => {
+                                                                        return (
+                                                                            <div key={option.id} className='flex align-middle gap-2'>
+                                                                                <input
+                                                                                    {...productForm.register(`options.${id}`)}
+                                                                                    type="checkbox"
+                                                                                    value={option.id}
+                                                                                    className="rounded border-gray-300 h-4 w-4 text-indigo-600 focus:ring-indigo-500"
+                                                                                />
+                                                                                <label htmlFor="comments" className="font-medium text-gray-700">
+                                                                                    {option.name}
+                                                                                </label>
+                                                                            </div>
+                                                                        )
+                                                                    })}
+                                                                </div>
+                                                            ) : null}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )
+                                    })
+                                }
+                            </fieldset>
+                        </div>
+                        <div className={'my-3'}>
+                            <Upload label={'Foto'} form={productForm} />
+                        </div>
+                        <div className="flex justify-end mt-3">
+                            <Button type={'submit'}>Crear producto</Button>
                         </div>
                     </Form>
                 </Drawer>

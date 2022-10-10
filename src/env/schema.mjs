@@ -10,6 +10,10 @@ export const serverSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]),
   NEXTAUTH_SECRET: z.string(),
   NEXTAUTH_URL: z.string().url(),
+  AWS_PUBLIC_BUCKET_NAME: z.string(),
+  AWS_REGION: z.string(),
+  AWS_ACCESS_KEY_ID: z.string(),
+  AWS_SECRET_ACCESS_KEY: z.string(),
 });
 
 /**
