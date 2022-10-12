@@ -153,13 +153,16 @@ const Catalog: NextPage = () => {
             cell: (value) => value.renderValue(),
         },
     ]
+    /**
+     * TODO
+     * [] filter unwanted input in form submit, and send correct data to db.
+     */
     const [selectedOptionGroup, setSelectedOptionGroup] = useState<{ id: string; name: string; enabled: boolean }>();
     const optionQuery = trpc.useQuery(["optionRouter.findOptionsByOptionGroupId", { id: selectedOptionGroup?.id }])
     // const productForm = useForm<ProductFormInput>();
     const productForm = useForm<any>();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    // const optionGroupsWatcher = productForm.watch(optionGroupQuery.data?.map(({ id }) => (`catalog.optionGroups.${id}`)) || [])
-    // console.log('optionGroupsWatcher', optionGroupsWatcher);
+    const optionGroupsWatcher = productForm.watch(optionGroupQuery.data?.map(({ id }) => (`optionGroups.${id}.enabled`)) || [])
     const optionForm = useForm<OptionFormInput>();
     const form = useForm<{ name: string }>();
     const [options, setOptions] = React.useState(() => optionQuery.data ? [...optionQuery.data] : [])
@@ -188,9 +191,9 @@ const Catalog: NextPage = () => {
         }
     }, [optionQuery.data])
 
-    // useEffect(() => {
-    //     console.log('optionGroupsWatcher', optionGroupsWatcher);
-    // }, [optionGroupsWatcher])
+    useEffect(() => {
+        console.log('optionGroupsWatcher', optionGroupsWatcher);
+    }, [optionGroupsWatcher])
 
     if (categoryQuery.isLoading || optionGroupQuery.isLoading) return (<>Loading...</>)
     else if (categoryQuery.error || optionGroupQuery.error) return (<>Error!</>)
@@ -235,7 +238,11 @@ const Catalog: NextPage = () => {
     }
 
     const toggleModal = () => {
-        if (isModalOpen) form.reset({ name: '' });
+        if (isModalOpen) {
+            setIsEdit(false)
+            form.reset({ name: '' })
+
+        }
         setIsModalOpen(!isModalOpen);
     }
 
@@ -575,29 +582,27 @@ const Catalog: NextPage = () => {
                                                     }
                                                 </div>
                                                 <div className="flex items-start">
-                                                    {/* <div className="flex items-center h-6">
+                                                    <div className="flex items-center h-6">
                                                         <input
-                                                            {...productForm.register(`optionGroups.${index}`)}
+                                                            {...productForm.register(`optionGroups.${id}.enabled`)}
                                                             type="checkbox"
-                                                            value={id}
                                                             className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                                         />
-                                                    </div> */}
+                                                    </div>
                                                     <div className="ml-3 text-sm min-h-6">
                                                         <label htmlFor="comments" className="font-medium text-gray-700">
                                                             {name}
                                                         </label>
                                                         <p className="text-gray-500">Items: {options.length}</p>
-                                                        {/* <div className='m-2 flex items-start'>
-                                                            {optionGroupsWatcher?.includes(id) ? (
+                                                        <div className='m-2 flex items-start'>
+                                                            {optionGroupsWatcher[index] ? (
                                                                 <div className="flex flex-col gap-y-2">
                                                                     {options.map((option) => {
                                                                         return (
                                                                             <div key={option.id} className='flex align-middle gap-2'>
                                                                                 <input
-                                                                                    {...productForm.register(`catalog.optionGroups.${id}.${option.id}`)}
+                                                                                    {...productForm.register(`optionGroups.${id}.options.${option.id}`)}
                                                                                     type="checkbox"
-                                                                                    value={option.id}
                                                                                     className="rounded border-gray-300 h-4 w-4 text-indigo-600 focus:ring-indigo-500"
                                                                                 />
                                                                                 <label htmlFor="comments" className="font-medium text-gray-700">
@@ -608,7 +613,7 @@ const Catalog: NextPage = () => {
                                                                     })}
                                                                 </div>
                                                             ) : null}
-                                                        </div> */}
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

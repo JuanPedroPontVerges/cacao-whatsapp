@@ -13,6 +13,11 @@ const List: React.FC<ListProps> = ({ name, options, form }) => {
     const [selectedId, setSelectedId] = useState(options[0].id)
     const selected = options?.find(({ id }) => id == selectedId)
 
+    useEffect(() => {
+        console.log('options', options);
+        form.setValue(name, options[0].id)
+    }, [options])
+
     return (
         <div>
             <label htmlFor={name} className="block text-sm font-medium text-gray-700">
