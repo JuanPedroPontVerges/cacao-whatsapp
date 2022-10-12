@@ -155,9 +155,11 @@ const Catalog: NextPage = () => {
     ]
     const [selectedOptionGroup, setSelectedOptionGroup] = useState<{ id: string; name: string; enabled: boolean }>();
     const optionQuery = trpc.useQuery(["optionRouter.findOptionsByOptionGroupId", { id: selectedOptionGroup?.id }])
-    const productForm = useForm<ProductFormInput>();
+    // const productForm = useForm<ProductFormInput>();
+    const productForm = useForm<any>();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const optionGroupsWatcher = productForm.watch('optionGroups') || []
+    // const optionGroupsWatcher = productForm.watch(optionGroupQuery.data?.map(({ id }) => (`catalog.optionGroups.${id}`)) || [])
+    // console.log('optionGroupsWatcher', optionGroupsWatcher);
     const optionForm = useForm<OptionFormInput>();
     const form = useForm<{ name: string }>();
     const [options, setOptions] = React.useState(() => optionQuery.data ? [...optionQuery.data] : [])
@@ -186,9 +188,9 @@ const Catalog: NextPage = () => {
         }
     }, [optionQuery.data])
 
-    useEffect(() => {
-        console.log('optionGroupsWatcher', optionGroupsWatcher);
-    }, [optionGroupsWatcher])
+    // useEffect(() => {
+    //     console.log('optionGroupsWatcher', optionGroupsWatcher);
+    // }, [optionGroupsWatcher])
 
     if (categoryQuery.isLoading || optionGroupQuery.isLoading) return (<>Loading...</>)
     else if (categoryQuery.error || optionGroupQuery.error) return (<>Error!</>)
@@ -553,53 +555,47 @@ const Catalog: NextPage = () => {
                             />
                         </div>
                         <div className="mt-3">
-                            <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-                                Máximo seleccionable
-                            </label>
-                            <input
-                                {...productForm.register('maxAmount', { valueAsNumber: true })}
-                                type="number"
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                            />
-                        </div>
-                        <div className="mt-3">
-
-                        </div>
-                        <div className="mt-3">
                             <label className="block text-sm font-medium text-gray-700">
                                 Grupo de opciones
                             </label>
                             <fieldset className="m-4">
                                 {
-                                    optionGroupQuery.data?.map(({ id, name, options }) => {
-                                        console.log('displayTypeQuery.data', displayTypeQuery.data);
+                                    optionGroupQuery.data?.map(({ id, name, options }, index) => {
                                         return (
-                                            <div className="mt-4 space-y-4 rounded-md border-2 border-dashed border-gray-300 p-4" key={id}>
+                                            <div className="mt-4 space-y-4 rounded-md border-2 border-dashed border-gray-300 p-4" key={index}>
                                                 <div className="flex flex-col">
-                                                    <List name='displayTypeId' form={productForm} options={displayTypeQuery.data?.map(({ id, name }) => ({ id, name }))} />
+                                                    {
+                                                        displayTypeQuery.data ? (
+                                                            <List
+                                                                name={`optionGroups.${id}.displayType`}
+                                                                form={productForm}
+                                                                options={displayTypeQuery.data.map(({ id, name }) => ({ id, name }))}
+                                                            />
+                                                        ) : ('...Loading')
+                                                    }
                                                 </div>
                                                 <div className="flex items-start">
-                                                    <div className="flex items-center h-6">
+                                                    {/* <div className="flex items-center h-6">
                                                         <input
-                                                            {...productForm.register(`optionGroups`)}
+                                                            {...productForm.register(`optionGroups.${index}`)}
                                                             type="checkbox"
                                                             value={id}
                                                             className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                                         />
-                                                    </div>
+                                                    </div> */}
                                                     <div className="ml-3 text-sm min-h-6">
                                                         <label htmlFor="comments" className="font-medium text-gray-700">
                                                             {name}
                                                         </label>
                                                         <p className="text-gray-500">Items: {options.length}</p>
-                                                        <div className='m-2 flex items-start'>
+                                                        {/* <div className='m-2 flex items-start'>
                                                             {optionGroupsWatcher?.includes(id) ? (
                                                                 <div className="flex flex-col gap-y-2">
                                                                     {options.map((option) => {
                                                                         return (
                                                                             <div key={option.id} className='flex align-middle gap-2'>
                                                                                 <input
-                                                                                    {...productForm.register(`options.${id}`)}
+                                                                                    {...productForm.register(`catalog.optionGroups.${id}.${option.id}`)}
                                                                                     type="checkbox"
                                                                                     value={option.id}
                                                                                     className="rounded border-gray-300 h-4 w-4 text-indigo-600 focus:ring-indigo-500"
@@ -612,7 +608,7 @@ const Catalog: NextPage = () => {
                                                                     })}
                                                                 </div>
                                                             ) : null}
-                                                        </div>
+                                                        </div> */}
                                                     </div>
                                                 </div>
                                             </div>
@@ -624,7 +620,7 @@ const Catalog: NextPage = () => {
                         <div className={'my-3'}>
                             <Upload label={'Foto'} form={productForm} />
                         </div>
-                        <div className="flex justify-end mt-3">
+                        <div className="flex justify-end my-4">
                             <Button type={'submit'}>Crear producto</Button>
                         </div>
                     </Form>
@@ -667,7 +663,7 @@ const Catalog: NextPage = () => {
                                 Máximo seleccionable
                             </label>
                             <input
-                                {...optionForm.register('maxAmount', { valueAsNumber: true })}
+                                {...optionForm.register('maxAmount', { valueAsNumber: true, min: 0 })}
                                 type="number"
                                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             />
