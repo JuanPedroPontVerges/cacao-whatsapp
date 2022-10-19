@@ -14,8 +14,9 @@ const List: React.FC<ListProps> = ({ name, options, form }) => {
     const selected = options?.find(({ id }) => id == selectedId)
 
     useEffect(() => {
-        console.log('options', options);
-        form.setValue(name, options[0].id)
+        if (!form.getValues(name) && options[0]) {
+            form.setValue(name, options[0].id)
+        }
     }, [options])
 
     return (

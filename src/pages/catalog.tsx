@@ -40,11 +40,13 @@ type ProductFormInput = {
     name: string;
     description: string;
     price: number;
-    maxAmount?: number;
     imageUrl?: string;
-    displayTypeId: string;
-    optionGroups: string[];
-    options: Record<string, string | string[]>
+    optionGroups: Record<string, {
+        displayTypeId: string;
+        enabled: boolean;
+        maxAmount: number;
+        options: Record<string, boolean>
+    }>
 }
 
 const Catalog: NextPage = () => {
@@ -54,6 +56,7 @@ const Catalog: NextPage = () => {
     const categoryQuery = trpc.useQuery(["categoryRouter.findCategoriesByMenuId", { id: userQuery.data?.venue?.menus[0]?.id }])
     const optionGroupQuery = trpc.useQuery(["optionGroupRouter.findOptionGroupsByMenuId", { id: userQuery.data?.venue?.menus[0]?.id }])
     const displayTypeQuery = trpc.useQuery(["displayTypeRouter.get"])
+    const productQuery = trpc.useQuery(["productRouter.findByCategoryId"])
     /* Creations */
     const categoryMutation = trpc.useMutation(["categoryRouter.create"], {
         onSuccess: () => {
@@ -68,6 +71,11 @@ const Catalog: NextPage = () => {
     const optionMutation = trpc.useMutation(["optionRouter.create"], {
         onSuccess: () => {
             optionQuery.refetch();
+        }
+    })
+    const productMutation = trpc.useMutation(["productRouter.create"], {
+        onSuccess: () => {
+            productQuery.refetch();
         }
     })
     /* Updates */
@@ -163,6 +171,7 @@ const Catalog: NextPage = () => {
     const productForm = useForm<any>();
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const optionGroupsWatcher = productForm.watch(optionGroupQuery.data?.map(({ id }) => (`optionGroups.${id}.enabled`)) || [])
+    const displayTypeWatcher: any = productForm.watch(`optionGroups` || [])
     const optionForm = useForm<OptionFormInput>();
     const form = useForm<{ name: string }>();
     const [options, setOptions] = React.useState(() => optionQuery.data ? [...optionQuery.data] : [])
@@ -177,7 +186,7 @@ const Catalog: NextPage = () => {
     const [isProductDrawerOpen, setIsProductDrawerOpen] = useState(false);
     const [isOptionDrawerOpen, setIsOptionDrawerOpen] = useState(false);
     const [columns] = React.useState(() => [...defaultColumns])
-
+    const fixedAmountDisplayTypeId = displayTypeQuery?.data?.find((displayType) => displayType.name == 'Cantidad Fija')?.id
     const isEnabled = selectedCategory ? selectedCategory.enabled : selectedOptionGroup ? selectedOptionGroup.enabled : false;
     const table = useReactTable({
         data: options,
@@ -191,12 +200,8 @@ const Catalog: NextPage = () => {
         }
     }, [optionQuery.data])
 
-    useEffect(() => {
-        console.log('optionGroupsWatcher', optionGroupsWatcher);
-    }, [optionGroupsWatcher])
-
-    if (categoryQuery.isLoading || optionGroupQuery.isLoading) return (<>Loading...</>)
-    else if (categoryQuery.error || optionGroupQuery.error) return (<>Error!</>)
+    if (categoryQuery.isLoading || optionGroupQuery.isLoading || displayTypeQuery.isLoading) return (<>Loading...</>)
+    else if (categoryQuery.error || optionGroupQuery.error || displayTypeQuery.error) return (<>Error!</>)
 
     const reorderRow = (draggedRowIndex: number, targetRowIndex: number) => {
         if (options) {
@@ -271,6 +276,13 @@ const Catalog: NextPage = () => {
 
     const onSubmitProductForm: SubmitHandler<ProductFormInput> = async (input) => {
         console.log('input', input);
+        const { name, description, price, optionGroups, imageUrl } = input
+        if (selectedCategory) {
+            productMutation.mutate({ name, description, price, imageUrl, index: productQuery.data?.length || 1, categoryId: selectedCategory.id })
+            for (const optionGroup in optionGroups) {
+                console.log('optionGroup', optionGroup);
+            }
+        }
     }
 
     const onSubmitOptionGroupForm: SubmitHandler<{ name: string }> = async ({ name }) => {
@@ -431,7 +443,6 @@ const Catalog: NextPage = () => {
                                                             setIsEdit(false)
                                                             setSelectedOptionGroup({ id, name, enabled })
                                                             setSelectedCategory(undefined)
-                                                            console.log('a');
                                                         }}
                                                         key={id}
                                                         className="px-4 pt-4 pb-2 text-sm text-gray-500 cursor-pointer hover:bg-wapi-blue hover:text-white">
@@ -574,13 +585,28 @@ const Catalog: NextPage = () => {
                                                     {
                                                         displayTypeQuery.data ? (
                                                             <List
-                                                                name={`optionGroups.${id}.displayType`}
+                                                                name={`optionGroups.${id}.displayTypeId`}
                                                                 form={productForm}
                                                                 options={displayTypeQuery.data.map(({ id, name }) => ({ id, name }))}
                                                             />
                                                         ) : ('...Loading')
                                                     }
                                                 </div>
+                                                {
+                                                    displayTypeWatcher?.[id]?.['displayTypeId'] == fixedAmountDisplayTypeId ? (
+                                                        <div className="flex flex-col justify-start">
+                                                            <label htmlFor="optionGroups" className="text-sm font-medium text-gray-700">
+                                                                Cantidad
+                                                            </label>
+                                                            <input
+                                                                {...productForm.register(`optionGroups.${id}.maxAmount`, { valueAsNumber: true, min: 0 })}
+                                                                type="number"
+                                                                className="mt-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                                            />
+                                                        </div>
+                                                    ) : null
+                                                }
+
                                                 <div className="flex items-start">
                                                     <div className="flex items-center h-6">
                                                         <input
