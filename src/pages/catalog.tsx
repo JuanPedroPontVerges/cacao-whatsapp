@@ -19,7 +19,6 @@ import {
 import Table from "../components/Table";
 import Upload from "../components/Upload";
 import List from "../components/List";
-
 type Option = {
     id: string;
     name: string;
@@ -27,6 +26,14 @@ type Option = {
     description: string | null;
     price: number | null;
     maxAmount?: number | null;
+}
+
+type Product = {
+    id: string;
+    name: string;
+    enabled: boolean;
+    description: string | null;
+    price: number | null;
 }
 
 type OptionFormInput = {
@@ -45,6 +52,7 @@ type ProductFormInput = {
         displayTypeId: string;
         enabled: boolean;
         maxAmount: number;
+        multipleUnits: boolean;
         options: Record<string, boolean>
     }>
 }
@@ -77,11 +85,8 @@ const Catalog: NextPage = () => {
             productQuery.refetch();
         }
     })
-    const productStoreToOptionGroupMutation = trpc.useMutation(["productStoreToOptionGroupRouter.create"], {
-        // onSuccess: () => {
-        //     productQuery.refetch();
-        // }
-    })
+    const productStoreToOptionGroupMutation = trpc.useMutation(["productStoreToOptionGroupRouter.create"])
+    const productOptionMutation = trpc.useMutation(["productOptionRouter.create"])
     /* Updates */
     const categoryUpdate = trpc.useMutation(["categoryRouter.update"], {
         onSuccess: () => {
@@ -115,7 +120,57 @@ const Catalog: NextPage = () => {
             optionQuery.refetch();
         }
     });
-    const defaultColumns: ColumnDef<Option>[] = [
+    const optionDefaultColumns: ColumnDef<Option>[] = [
+        {
+            accessorKey: 'name',
+            cell: info => info.getValue(),
+        },
+        {
+            accessorFn: row => row.description,
+            id: 'description',
+            cell: info => info.getValue(),
+            header: () => <span>description</span>,
+        },
+        {
+            header: 'Precio',
+            accessorKey: 'price',
+        },
+        {
+            header: 'Acciones',
+            id: 'actions',
+            accessorFn: ((record) => {
+                return (
+                    <div className="flex gap-x-4 align-middle">
+                        <button onClick={() => {
+                            toggleOptionDrawer(record)
+                        }}>
+                            <PencilIcon className="h-5 w-5" />
+                        </button>
+                        <button onClick={() => {
+                            handleOnClickDeleteOption(record)
+                        }}>
+                            <TrashIcon className="h-5 w-5" />
+                        </button>
+                        <Switch
+                            checked={record.enabled}
+                            onChange={(input: boolean) => {
+                                onChangeOptionGroupSwitch(input, record.id);
+                            }}
+                            className={`${record.enabled ? 'bg-blue-600' : 'bg-gray-200'
+                                } relative inline-flex h-6 w-11 items-center rounded-full`}
+                        >
+                            <span
+                                className={`${record.enabled ? 'translate-x-6' : 'translate-x-1'
+                                    } inline-block h-4 w-4 transform rounded-full bg-white transition`}
+                            />
+                        </Switch>
+                    </div>
+                )
+            }),
+            cell: (value) => value.renderValue(),
+        },
+    ]
+    const productDefaultColumns: ColumnDef<Product>[] = [
         {
             accessorKey: 'name',
             cell: info => info.getValue(),
@@ -173,13 +228,17 @@ const Catalog: NextPage = () => {
     const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; enabled: boolean }>();
     const productQuery = trpc.useQuery(["productRouter.findByCategoryId", { id: selectedCategory?.id }])
     const optionQuery = trpc.useQuery(["optionRouter.findOptionsByOptionGroupId", { id: selectedOptionGroup?.id }])
-    // const productForm = useForm<ProductFormInput>();
-    const productForm = useForm<any>();
+    const productForm = useForm<ProductFormInput>();
+    // const productForm = useForm<any>();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    const optionGroupsWatcher = productForm.watch(optionGroupQuery.data?.map(({ id }) => (`optionGroups.${id}.enabled`)) || [])
+    /* 
+        
+    */
+    const optionGroupsWatcher = productForm.watch(optionGroupQuery.data?.map(({ id }) => (`optionGroups.${id}.enabled`) as any) || [])
     const displayTypeWatcher: any = productForm.watch(`optionGroups` || [])
     const optionForm = useForm<OptionFormInput>();
     const form = useForm<{ name: string }>();
+    const [products, setProducts] = React.useState(() => productQuery.data ? [...productQuery.data] : [])
     const [options, setOptions] = React.useState(() => optionQuery.data ? [...optionQuery.data] : [])
     const [isModalOpen, setIsModalOpen] = useState(false)
     const buttonClass = 'flex w-full justify-between rounded-lg bg-wapi-light-blue px-4 py-2 text-left text-sm font-medium  hover:bg-purple-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75'
@@ -190,12 +249,19 @@ const Catalog: NextPage = () => {
     const [isOptionDeleteModalOpen, setIsOptionDeleteModalOpen] = useState(false);
     const [isProductDrawerOpen, setIsProductDrawerOpen] = useState(false);
     const [isOptionDrawerOpen, setIsOptionDrawerOpen] = useState(false);
-    const [columns] = React.useState(() => [...defaultColumns])
+    const [optionColumns] = React.useState(() => [...optionDefaultColumns])
+    const [productColumns] = React.useState(() => [...productDefaultColumns])
     const fixedAmountDisplayTypeId = displayTypeQuery?.data?.find((displayType) => displayType.name == 'Cantidad Fija')?.id
     const isEnabled = selectedCategory ? selectedCategory.enabled : selectedOptionGroup ? selectedOptionGroup.enabled : false;
-    const table = useReactTable({
+    const optionsTable = useReactTable({
         data: options,
-        columns,
+        columns: optionColumns,
+        getRowId: row => row.id,
+        getCoreRowModel: getCoreRowModel(),
+    })
+    const productsTable = useReactTable({
+        data: products,
+        columns: productColumns,
         getRowId: row => row.id,
         getCoreRowModel: getCoreRowModel(),
     })
@@ -205,16 +271,32 @@ const Catalog: NextPage = () => {
         }
     }, [optionQuery.data])
 
+    useEffect(() => {
+        if (productQuery.data) {
+            setProducts(productQuery.data);
+        }
+    }, [productQuery.data])
+
     if (categoryQuery.isLoading || optionGroupQuery.isLoading || displayTypeQuery.isLoading) return (<>Loading...</>)
     else if (categoryQuery.error || optionGroupQuery.error || displayTypeQuery.error) return (<>Error!</>)
 
-    const reorderRow = (draggedRowIndex: number, targetRowIndex: number) => {
+    const reorderOptionsRow = (draggedRowIndex: number, targetRowIndex: number) => {
         if (options) {
             options.splice(targetRowIndex, 0, options.splice(draggedRowIndex, 1)[0] as any)
             setOptions(() => {
                 const ids = options.map(({ id }) => { return id })
                 optionUpdateIndexes.mutate(ids);
                 return [...options];
+            })
+        }
+    }
+    const reorderProductsRow = (draggedRowIndex: number, targetRowIndex: number) => {
+        if (products) {
+            products.splice(targetRowIndex, 0, products.splice(draggedRowIndex, 1)[0] as any)
+            setProducts(() => {
+                const ids = products.map(({ id }) => { return id })
+                // productUpdateIndexes.mutate(ids);
+                return [...products];
             })
         }
     }
@@ -283,19 +365,28 @@ const Catalog: NextPage = () => {
         const { name, description, price, optionGroups, imageUrl } = input
         if (selectedCategory) {
             productMutation.mutate({ name, description, price, imageUrl, index: productQuery.data?.length || 1, categoryId: selectedCategory.id }, {
-                onSuccess: ({ productStore }) => {
+                onSuccess: async ({ productStore }) => {
                     if (productStore) {
                         for (const optionGroupId in optionGroups) {
                             if (optionGroupId) {
                                 const productStoreToOptionGroup = optionGroups[optionGroupId]
-                                console.log(optionGroups[optionGroupId]);
                                 if (productStoreToOptionGroup) {
-                                    productStoreToOptionGroupMutation.mutate({
+                                    const { id: productStoreToOptionGroupId } = await productStoreToOptionGroupMutation.mutateAsync({
                                         optionGroupId,
                                         productStoreId: productStore.id,
                                         displayTypeId: productStoreToOptionGroup?.displayTypeId,
-                                        enabled: productStoreToOptionGroup.enabled
+                                        enabled: productStoreToOptionGroup.enabled,
+                                        multipleUnits: productStoreToOptionGroup.multipleUnits,
                                     })
+                                    if (productStoreToOptionGroup.options) {
+                                        for (const optionId in productStoreToOptionGroup.options) {
+                                            const enabled = productStoreToOptionGroup.options[optionId]
+                                            if (typeof enabled === 'boolean') {
+                                                await productOptionMutation.mutateAsync({ productStoreToOptionGroupId, optionId, enabled })
+                                            }
+
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -517,8 +608,14 @@ const Catalog: NextPage = () => {
                             </Switch>
                         </div>
                     </div>
-                    {/* Items Table */}
-                    <Table table={table} reorderRow={reorderRow} />
+                    {/* Tables */}
+                    {
+                        selectedCategory ? (
+                            <Table table={productsTable} reorderRow={reorderProductsRow} />
+                        ) : (
+                            <Table table={optionsTable} reorderRow={reorderOptionsRow} />
+                        )
+                    }
                 </div>
                 {/** Modals */}
                 {/* Create and Edit Modal*/}
@@ -626,6 +723,16 @@ const Catalog: NextPage = () => {
                                                         </div>
                                                     ) : null
                                                 }
+                                                <div className="flex items-center gap-x-3">
+                                                    <label htmlFor={`optionGroups.${id}.multipleUnits`} className="text-sm font-medium text-gray-700">
+                                                        Múltiples unidades por item
+                                                    </label>
+                                                    <input
+                                                        {...productForm.register(`optionGroups.${id}.multipleUnits`)}
+                                                        type="checkbox"
+                                                        className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mt-2"
+                                                    />
+                                                </div>
 
                                                 <div className="flex items-start">
                                                     <div className="flex items-center h-6">

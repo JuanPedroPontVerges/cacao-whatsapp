@@ -1,49 +1,33 @@
 import { z } from "zod";
 import { createProtectedRouter } from "./context";
 
-export const productStoreToOptionGroupRouter = createProtectedRouter()
+export const productOptionRouter = createProtectedRouter()
   .mutation("create", {
     input: z.object({
+      optionId: z.string(),
+      productStoreToOptionGroupId: z.string(),
       enabled: z.boolean(),
-      amount: z.number().nullish(),
-      multipleUnits: z.boolean().nullish(),
-      displayTypeId: z.string(),
-      optionGroupId: z.string(),
-      productStoreId: z.string(),
     }),
     async resolve({ ctx, input }) {
       const {
-        enabled,
-        amount,
-        multipleUnits,
-        displayTypeId,
-        optionGroupId,
-        productStoreId,
+        optionId,
+        productStoreToOptionGroupId,
+        enabled
       } = input;
-      return await ctx.prisma.productStoreToOptionGroup.create({
+      return await ctx.prisma.productOption.create({
         data: {
-          productStore: {
-            connect: {
-              id: productStoreId
-            }
-          },
-          displayType: {
-            connect: {
-              id: displayTypeId
-            }
-          },
-          optionGroup: {
-            connect: {
-              id: optionGroupId
-            }
-          },
           enabled,
-          amount,
-          multipleUnits: multipleUnits || false,
+          option: {
+            connect: {
+              id: optionId
+            }
+          },
+          productStoreToOptionGroup: {
+            connect: {
+              id: productStoreToOptionGroupId
+            }
+          },
         },
-        select: {
-          id: true,
-        }
       })
     },
   })
@@ -51,20 +35,20 @@ export const productStoreToOptionGroupRouter = createProtectedRouter()
   //   input: z.object({
   //     name: z.string().nullish(),
   //     enabled: z.boolean().nullish(),
-  //     productStoreToOptionGroupId: z.string(),
+  //     productOptionId: z.string(),
   //   }),
   //   async resolve({ ctx, input }) {
-  //     const { name, enabled, productStoreToOptionGroupId } = input;
+  //     const { name, enabled, productOptionId } = input;
   //     if (typeof name === 'string') {
-  //       return await ctx.prisma.productStoreToOptionGroup.update({
-  //         where: { id: productStoreToOptionGroupId },
+  //       return await ctx.prisma.productOption.update({
+  //         where: { id: productOptionId },
   //         data: {
   //           name,
   //         },
   //       })
   //     } else if (typeof enabled === 'boolean') {
-  //       return await ctx.prisma.productStoreToOptionGroup.update({
-  //         where: { id: productStoreToOptionGroupId },
+  //       return await ctx.prisma.productOption.update({
+  //         where: { id: productOptionId },
   //         data: {
   //           enabled,
   //         },
@@ -90,7 +74,7 @@ export const productStoreToOptionGroupRouter = createProtectedRouter()
     async resolve({ ctx, input }) {
       console.log('input', input);
       if (input && input.id != null) {
-        // return await ctx.prisma.productStoreToOptionGroup.findMany({
+        // return await ctx.prisma.productOption.findMany({
         //   where: {
         //     category: {
         //       id: input.id
