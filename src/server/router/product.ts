@@ -36,6 +36,9 @@ export const productRouter = createProtectedRouter()
             }
           }
         },
+        select: {
+          productStore: true,
+        }
       })
     },
   })
@@ -80,6 +83,7 @@ export const productRouter = createProtectedRouter()
   .query("findByCategoryId", {
     input: z.object({ id: z.string().nullish() }).nullish(),
     async resolve({ ctx, input }) {
+      console.log('input', input);
       if (input && input.id != null) {
         return await ctx.prisma.product.findMany({
           where: {

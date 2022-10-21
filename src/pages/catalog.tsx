@@ -56,7 +56,6 @@ const Catalog: NextPage = () => {
     const categoryQuery = trpc.useQuery(["categoryRouter.findCategoriesByMenuId", { id: userQuery.data?.venue?.menus[0]?.id }])
     const optionGroupQuery = trpc.useQuery(["optionGroupRouter.findOptionGroupsByMenuId", { id: userQuery.data?.venue?.menus[0]?.id }])
     const displayTypeQuery = trpc.useQuery(["displayTypeRouter.get"])
-    const productQuery = trpc.useQuery(["productRouter.findByCategoryId"])
     /* Creations */
     const categoryMutation = trpc.useMutation(["categoryRouter.create"], {
         onSuccess: () => {
@@ -77,6 +76,11 @@ const Catalog: NextPage = () => {
         onSuccess: () => {
             productQuery.refetch();
         }
+    })
+    const productStoreToOptionGroupMutation = trpc.useMutation(["productStoreToOptionGroupRouter.create"], {
+        // onSuccess: () => {
+        //     productQuery.refetch();
+        // }
     })
     /* Updates */
     const categoryUpdate = trpc.useMutation(["categoryRouter.update"], {
@@ -166,6 +170,8 @@ const Catalog: NextPage = () => {
      * [] filter unwanted input in form submit, and send correct data to db.
      */
     const [selectedOptionGroup, setSelectedOptionGroup] = useState<{ id: string; name: string; enabled: boolean }>();
+    const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; enabled: boolean }>();
+    const productQuery = trpc.useQuery(["productRouter.findByCategoryId", { id: selectedCategory?.id }])
     const optionQuery = trpc.useQuery(["optionRouter.findOptionsByOptionGroupId", { id: selectedOptionGroup?.id }])
     // const productForm = useForm<ProductFormInput>();
     const productForm = useForm<any>();
@@ -178,7 +184,6 @@ const Catalog: NextPage = () => {
     const [isModalOpen, setIsModalOpen] = useState(false)
     const buttonClass = 'flex w-full justify-between rounded-lg bg-wapi-light-blue px-4 py-2 text-left text-sm font-medium  hover:bg-purple-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75'
     const [selectedTab, setSelectedTab] = useState<'category' | 'optionGroup'>('category')
-    const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; enabled: boolean }>();
     const [isEdit, setIsEdit] = useState(false);
     const [selectedOption, setSelectedOption] = useState<{ isEdit: boolean; option?: Option }>({ isEdit: false, option: undefined });
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -275,13 +280,28 @@ const Catalog: NextPage = () => {
     }
 
     const onSubmitProductForm: SubmitHandler<ProductFormInput> = async (input) => {
-        console.log('input', input);
         const { name, description, price, optionGroups, imageUrl } = input
         if (selectedCategory) {
-            productMutation.mutate({ name, description, price, imageUrl, index: productQuery.data?.length || 1, categoryId: selectedCategory.id })
-            for (const optionGroup in optionGroups) {
-                console.log('optionGroup', optionGroup);
-            }
+            productMutation.mutate({ name, description, price, imageUrl, index: productQuery.data?.length || 1, categoryId: selectedCategory.id }, {
+                onSuccess: ({ productStore }) => {
+                    if (productStore) {
+                        for (const optionGroupId in optionGroups) {
+                            if (optionGroupId) {
+                                const productStoreToOptionGroup = optionGroups[optionGroupId]
+                                console.log(optionGroups[optionGroupId]);
+                                if (productStoreToOptionGroup) {
+                                    productStoreToOptionGroupMutation.mutate({
+                                        optionGroupId,
+                                        productStoreId: productStore.id,
+                                        displayTypeId: productStoreToOptionGroup?.displayTypeId,
+                                        enabled: productStoreToOptionGroup.enabled
+                                    })
+                                }
+                            }
+                        }
+                    }
+                }
+            })
         }
     }
 
