@@ -1,6 +1,5 @@
 import { Disclosure, Switch } from "@headlessui/react";
 import { ChevronUpIcon, TrashIcon, PencilIcon } from "@heroicons/react/24/outline";
-import type { GetServerSideProps, GetServerSidePropsContext, NextPage } from "next";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
 import React, { useEffect, useState } from "react";
@@ -9,7 +8,6 @@ import Button from "../components/Button";
 import Drawer from "../components/Drawer";
 import Form from "../components/Form";
 import Modal from "../components/Modal";
-import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
 import {
     ColumnDef,
@@ -19,6 +17,10 @@ import {
 import Table from "../components/Table";
 import Upload from "../components/Upload";
 import List from "../components/List";
+import Dashboard from "../components/layouts/Dashboard";
+import { NextPageWithLayout } from "./_app";
+import { GetServerSideProps, GetServerSidePropsContext } from "next";
+import { getServerAuthSession } from "../server/common/get-server-auth-session";
 type Option = {
     id: string;
     name: string;
@@ -57,7 +59,7 @@ type ProductFormInput = {
     }>
 }
 
-const Catalog: NextPage = () => {
+const Catalog: NextPageWithLayout = () => {
     const { data } = useSession();
     /* Queries */
     const userQuery = trpc.useQuery(["userRouter.getVenues", { id: data?.user?.id }]);
@@ -98,8 +100,17 @@ const Catalog: NextPage = () => {
             optionGroupQuery.refetch();
         }
     });
+    /* Indexes */
     const optionUpdateIndexes = trpc.useMutation(["optionRouter.indexes"]);
+    const productUpdateIndexes = trpc.useMutation(["productRouter.indexes"]);
+
     const optionUpdate = trpc.useMutation(["optionRouter.update"], {
+        onSuccess: () => {
+            optionQuery.refetch();
+        }
+    });
+
+    const productUpdate = trpc.useMutation(["productRouter.update"], {
         onSuccess: () => {
             optionQuery.refetch();
         }
@@ -118,6 +129,11 @@ const Catalog: NextPage = () => {
     const optionDelete = trpc.useMutation(["optionRouter.delete"], {
         onSuccess: () => {
             optionQuery.refetch();
+        }
+    });
+    const productDelete = trpc.useMutation(["productRouter.delete"], {
+        onSuccess: () => {
+            productQuery.refetch();
         }
     });
     const optionDefaultColumns: ColumnDef<Option>[] = [
@@ -154,7 +170,7 @@ const Catalog: NextPage = () => {
                         <Switch
                             checked={record.enabled}
                             onChange={(input: boolean) => {
-                                onChangeOptionGroupSwitch(input, record.id);
+                                onChangeOptionSwitch(input, record.id);
                             }}
                             className={`${record.enabled ? 'bg-blue-600' : 'bg-gray-200'
                                 } relative inline-flex h-6 w-11 items-center rounded-full`}
@@ -192,19 +208,19 @@ const Catalog: NextPage = () => {
                 return (
                     <div className="flex gap-x-4 align-middle">
                         <button onClick={() => {
-                            toggleOptionDrawer(record)
+                            toggleProductDrawer(record)
                         }}>
                             <PencilIcon className="h-5 w-5" />
                         </button>
                         <button onClick={() => {
-                            handleOnClickDeleteOption(record)
+                            handleOnClickDeleteProduct(record)
                         }}>
                             <TrashIcon className="h-5 w-5" />
                         </button>
                         <Switch
                             checked={record.enabled}
                             onChange={(input: boolean) => {
-                                onChangeOptionGroupSwitch(input, record.id);
+                                onChangeProductSwitch(input, record.id);
                             }}
                             className={`${record.enabled ? 'bg-blue-600' : 'bg-gray-200'
                                 } relative inline-flex h-6 w-11 items-center rounded-full`}
@@ -220,20 +236,12 @@ const Catalog: NextPage = () => {
             cell: (value) => value.renderValue(),
         },
     ]
-    /**
-     * TODO
-     * [] filter unwanted input in form submit, and send correct data to db.
-     */
     const [selectedOptionGroup, setSelectedOptionGroup] = useState<{ id: string; name: string; enabled: boolean }>();
     const [selectedCategory, setSelectedCategory] = useState<{ id: string; name: string; enabled: boolean }>();
     const productQuery = trpc.useQuery(["productRouter.findByCategoryId", { id: selectedCategory?.id }])
     const optionQuery = trpc.useQuery(["optionRouter.findOptionsByOptionGroupId", { id: selectedOptionGroup?.id }])
     const productForm = useForm<ProductFormInput>();
-    // const productForm = useForm<any>();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    /* 
-        
-    */
     const optionGroupsWatcher = productForm.watch(optionGroupQuery.data?.map(({ id }) => (`optionGroups.${id}.enabled`) as any) || [])
     const displayTypeWatcher: any = productForm.watch(`optionGroups` || [])
     const optionForm = useForm<OptionFormInput>();
@@ -245,8 +253,10 @@ const Catalog: NextPage = () => {
     const [selectedTab, setSelectedTab] = useState<'category' | 'optionGroup'>('category')
     const [isEdit, setIsEdit] = useState(false);
     const [selectedOption, setSelectedOption] = useState<{ isEdit: boolean; option?: Option }>({ isEdit: false, option: undefined });
+    const [selectedProduct, setSelectedProduct] = useState<{ isEdit: boolean; product?: Product }>({ isEdit: false, product: undefined });
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [isOptionDeleteModalOpen, setIsOptionDeleteModalOpen] = useState(false);
+    const [isProductDeleteModalOpen, setIsProductDeleteModalOpen] = useState(false);
     const [isProductDrawerOpen, setIsProductDrawerOpen] = useState(false);
     const [isOptionDrawerOpen, setIsOptionDrawerOpen] = useState(false);
     const [optionColumns] = React.useState(() => [...optionDefaultColumns])
@@ -295,19 +305,35 @@ const Catalog: NextPage = () => {
             products.splice(targetRowIndex, 0, products.splice(draggedRowIndex, 1)[0] as any)
             setProducts(() => {
                 const ids = products.map(({ id }) => { return id })
-                // productUpdateIndexes.mutate(ids);
+                productUpdateIndexes.mutate(ids);
                 return [...products];
             })
         }
     }
 
-    function toggleProductDrawer() {
-        optionGroupQuery.refetch();
-        setIsProductDrawerOpen(!isProductDrawerOpen)
+    function onChangeOptionSwitch(enabled: boolean, optionId: string) {
+        optionUpdate.mutate({ optionId, enabled });
     }
 
-    function onChangeOptionGroupSwitch(enabled: boolean, childId: string) {
-        optionUpdate.mutate({ optionId: childId, enabled });
+    function onChangeProductSwitch(enabled: boolean, productId: string) {
+        productUpdate.mutate({ productId, enabled });
+    }
+
+    function toggleProductDrawer(product?: Product) {
+        if (isProductDrawerOpen) {
+            productForm.resetField('name')
+            productForm.resetField('description')
+            productForm.resetField('price')
+            setSelectedProduct({ isEdit: false, product: undefined })
+        }
+        if (product) {
+            setSelectedProduct({ isEdit: true, product });
+            const { name, description, price } = product;
+            productForm.setValue('name', name)
+            productForm.setValue('description', description ?? '')
+            productForm.setValue('price', price ?? 0)
+        }
+        setIsProductDrawerOpen(!isProductDrawerOpen)
     }
 
     function toggleOptionDrawer(option?: Option) {
@@ -346,6 +372,10 @@ const Catalog: NextPage = () => {
         setIsOptionDeleteModalOpen(!isOptionDeleteModalOpen);
     }
 
+    function toggleProductDeleteModal() {
+        setIsProductDeleteModalOpen(!isProductDeleteModalOpen);
+    }
+
     const onSubmitCategoryForm: SubmitHandler<{ name: string }> = async ({ name }) => {
         if (isEdit) {
             if (selectedCategory) {
@@ -375,6 +405,7 @@ const Catalog: NextPage = () => {
                                         optionGroupId,
                                         productStoreId: productStore.id,
                                         displayTypeId: productStoreToOptionGroup?.displayTypeId,
+                                        amount: productStoreToOptionGroup.maxAmount,
                                         enabled: productStoreToOptionGroup.enabled,
                                         multipleUnits: productStoreToOptionGroup.multipleUnits,
                                     })
@@ -457,6 +488,20 @@ const Catalog: NextPage = () => {
             optionDelete.mutate({ optionId: id });
             setSelectedOption({ isEdit: false, option: undefined });
             toggleOptionDeleteModal();
+        }
+    }
+
+    function handleOnClickDeleteProduct(product: Product) {
+        setSelectedProduct({ isEdit: false, product })
+        toggleProductDeleteModal();
+    }
+
+    const onDeleteProduct = () => {
+        if (selectedProduct.product && !selectedProduct.isEdit) {
+            const { id } = selectedProduct.product;
+            productDelete.mutate({ productId: id });
+            setSelectedProduct({ isEdit: false, product: undefined });
+            toggleProductDeleteModal();
         }
     }
 
@@ -577,7 +622,7 @@ const Catalog: NextPage = () => {
                             <div>
                                 <button
                                     disabled={(selectedCategory || selectedOptionGroup) ? false : true}
-                                    onClick={selectedCategory ? toggleProductDrawer : selectedOptionGroup ? () => { toggleOptionDrawer() } : () => ({})}
+                                    onClick={selectedCategory ? () => { toggleProductDrawer() } : selectedOptionGroup ? () => { toggleOptionDrawer() } : () => ({})}
                                     className="inline-flex justify-center rounded-md border border-transparent bg-blue-100 px-4 py-2 text-sm font-medium text-wapi-blue hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                 >
                                     Crear {selectedCategory?.name ? selectedCategory?.name : selectedOptionGroup?.name}
@@ -653,6 +698,16 @@ const Catalog: NextPage = () => {
                     <div className="flex justify-around mt-6">
                         <button className="py-2 px-4 bg-black text-white rounded-md" onClick={toggleOptionDeleteModal}>Cancelar</button>
                         <button className="py-2 px-4 bg-red-500 text-white rounded-md" onClick={onDeleteOption}>Eliminar</button>
+                    </div>
+                </Modal>
+                <Modal
+                    title={`¿Estas seguro que desea eliminar ${selectedProduct.product?.name}?`}
+                    isOpen={isProductDeleteModalOpen}
+                    onClose={toggleProductDeleteModal}
+                >
+                    <div className="flex justify-around mt-6">
+                        <button className="py-2 px-4 bg-black text-white rounded-md" onClick={toggleProductDeleteModal}>Cancelar</button>
+                        <button className="py-2 px-4 bg-red-500 text-white rounded-md" onClick={onDeleteProduct}>Eliminar</button>
                     </div>
                 </Modal>
                 {/** Drawers */}
@@ -838,7 +893,6 @@ const Catalog: NextPage = () => {
 
 export const getServerSideProps: GetServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const session = await getServerAuthSession(ctx);
-
     if (!session) {
         return {
             redirect: { destination: "/api/auth/signin", permanent: false },
@@ -848,6 +902,15 @@ export const getServerSideProps: GetServerSideProps = async (ctx: GetServerSideP
     return {
         props: session
     }
+}
+
+
+Catalog.getLayout = function getLayout(page: any) {
+    return (
+        <Dashboard>
+            {page}
+        </Dashboard>
+    )
 }
 
 export default Catalog;

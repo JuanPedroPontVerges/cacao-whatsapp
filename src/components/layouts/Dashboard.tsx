@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
 import { Disclosure, Menu, Transition } from '@headlessui/react'
-import { Bars3Icon, BellIcon, XMarkIcon, ArrowLeftCircleIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, BellIcon, XMarkIcon, ArrowLeftCircleIcon, BuildingStorefrontIcon } from '@heroicons/react/24/outline'
 import { Fragment } from "react";
-import { signOut } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
+import { DndProvider } from 'react-dnd';
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { trpc } from '../../utils/trpc';
 
 const user = {
     name: 'Tom Cook',
@@ -30,14 +33,15 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
     const killSession = () => {
         signOut({ callbackUrl: 'localhost:3000' });
     }
+    const session = useSession();
+    const venueQuery = trpc.useQuery(["storeRouter.getVenueByUser", { id: session.data?.user?.id }])
     const navigation = [
         { name: 'Inicio', href: '/', current: current == 0 ? true : false },
         { name: 'Catálogo', href: '/catalog', current: current == 1 ? true : false },
         { name: 'Reports', href: '/reports', current: current == 2 ? true : false },
     ]
-
     return (
-        <>
+        <DndProvider backend={HTML5Backend}>
             <div className="min-h-full">
                 <Disclosure as="nav" className="bg-gray-800">
                     {({ open }) => (
@@ -75,11 +79,13 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                                     </div>
                                     <div className="hidden md:block">
                                         <div className="ml-4 flex items-center md:ml-6">
+                                            <Link href={`/store/${venueQuery.data?.venue?.menus[0]?.id}`}>
+                                                <BuildingStorefrontIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
+                                            </Link>
                                             <button
                                                 type="button"
                                                 className="rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                                             >
-                                                <span className="sr-only">View notifications</span>
                                                 <ArrowLeftCircleIcon onClick={killSession} className="h-6 w-6" aria-hidden="true" />
                                             </button>
 
@@ -202,7 +208,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                     </div>
                 </main>
             </div>
-        </>
+        </DndProvider>
     )
 }
 

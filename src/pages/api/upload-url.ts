@@ -24,6 +24,5 @@ export default async function handler(
   })
 
   const response = res.status(200).json(post)
-  console.log('response', response);
   return response
 }

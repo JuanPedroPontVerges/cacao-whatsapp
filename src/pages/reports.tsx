@@ -1,8 +1,10 @@
-import type { GetServerSideProps, GetServerSidePropsContext, NextPage } from "next";
+import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import Head from "next/head";
+import Dashboard from "../components/layouts/Dashboard";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
+import { NextPageWithLayout } from "./_app";
 
-const Reports: NextPage = () => {
+const Reports: NextPageWithLayout = () => {
     return (
         <>
             <Head>
@@ -16,6 +18,14 @@ const Reports: NextPage = () => {
         </>
     );
 };
+
+Reports.getLayout = function getLayout(page) {
+    return (
+        <Dashboard>
+            {page}
+        </Dashboard>
+    )
+}
 
 export const getServerSideProps: GetServerSideProps = async (ctx: GetServerSidePropsContext) => {
     const session = await getServerAuthSession(ctx);

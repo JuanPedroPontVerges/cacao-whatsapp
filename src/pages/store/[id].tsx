@@ -1,0 +1,156 @@
+import { NextPageWithLayout } from "../_app";
+import StoreNav from "../../components/layouts/StoreNav";
+import { trpc } from "../../utils/trpc";
+import { GetServerSideProps, GetServerSidePropsContext } from "next";
+import { useState } from 'react'
+import { Disclosure } from '@headlessui/react'
+import { Bars3Icon, ShoppingCartIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import Image from "next/image";
+import Link from "next/link";
+import Cursed from 'public/assets/alien.png'
+
+function classNames(...classes: string[]) {
+    return classes.filter(Boolean).join(' ')
+}
+
+const Store: NextPageWithLayout = ({ id }) => {
+    // const [open, setOpen] = useState(false);
+    const { data } = trpc.useQuery(["storeRouter.getCategoriesByMenuId", { id }]);
+    const [selectedCategory, setSelectedCategory] = useState(data?.[0]);
+    if (!data) return (<>Loading...</>)
+    const onClickCategory = (categoryId: string) => {
+        const category = data?.find((category) => category.id === categoryId);
+        setSelectedCategory(category);
+    }
+    return (
+        <div className="bg-white">
+            <Disclosure as="nav" className="bg-gray-800">
+                {({ open }) => (
+                    <>
+                        <div className="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+                            <div className="relative flex h-16 items-center justify-between">
+                                <div className="absolute inset-y-0 left-0 flex items-center sm:hidden">
+                                    {/* Mobile menu button*/}
+                                    <Disclosure.Button className="inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white">
+                                        <span className="sr-only">Open main menu</span>
+                                        {open ? (
+                                            <XMarkIcon className="block h-6 w-6" aria-hidden="true" />
+                                        ) : (
+                                            <Bars3Icon className="block h-6 w-6" aria-hidden="true" />
+                                        )}
+                                    </Disclosure.Button>
+                                </div>
+                                <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
+                                    <div className="flex flex-shrink-0 items-center">
+                                        {/* <img
+                                            className="block h-8 w-auto lg:hidden"
+                                            src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
+                                            alt="Your Company"
+                                        />
+                                        <img
+                                            className="hidden h-8 w-auto lg:block"
+                                            src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
+                                            alt="Your Company"
+                                        /> */}
+                                        <span className={'text-white'}>
+                                            WAPI
+                                        </span>
+                                    </div>
+                                    <div className="hidden sm:ml-6 sm:block">
+                                        <div className="flex space-x-4">
+                                            {data?.map((item) => (
+                                                <a
+                                                    onClick={() => onClickCategory(item.id)}
+                                                    key={item.name}
+                                                    className={classNames(
+                                                        item.id === selectedCategory?.id ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                                                        'px-3 py-2 rounded-md text-sm font-medium'
+                                                    )}
+                                                    aria-current={item.id === selectedCategory?.id ? 'page' : undefined}
+                                                >
+                                                    {item.name}
+                                                </a>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+                                    <button
+                                        type="button"
+                                        className="rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                                    >
+                                        <ShoppingCartIcon className="h-6 w-6" aria-hidden="true" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <Disclosure.Panel className="sm:hidden">
+                            <div className="space-y-1 px-2 pt-2 pb-3">
+                                {data?.map((item) => (
+                                    <Disclosure.Button
+                                        key={item.name}
+                                        as="a"
+                                        onClick={() => onClickCategory(item.id)}
+                                        // href={item.href}
+                                        className={classNames(
+                                            item.id === selectedCategory?.id ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                                            'block px-3 py-2 rounded-md text-base font-medium'
+                                        )}
+                                        aria-current={item.id === selectedCategory?.id ? 'page' : undefined}
+                                    >
+                                        {item.name}
+                                    </Disclosure.Button>
+                                ))}
+                            </div>
+                        </Disclosure.Panel>
+                    </>
+                )}
+            </Disclosure>
+            <header className="relative bg-white">
+                <p className="flex h-10 items-center justify-center bg-indigo-600 px-4 text-sm font-medium text-white sm:px-6 lg:px-8">
+                    Recomendanos con tus amigos y gana $100
+                </p>
+            </header>
+            <div className="mx-auto max-w-2xl py-16 px-4 sm:py-24 sm:px-6 lg:max-w-7xl lg:px-8">
+                <div className="grid grid-cols-2 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
+                    {
+                        selectedCategory?.products.map((product) => {
+                            return (
+                                <Link key={product.id} href={`product/${product.id}`}>
+                                    <div className="group">
+                                        <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-200 xl:aspect-w-7 xl:aspect-h-8">
+                                            <Image
+                                                layout={'fill'}
+                                                src={product.imageUrl || Cursed}
+                                                alt={`Imagen de ${product.name}`}
+                                                className="h-full w-full object-cover object-center group-hover:opacity-75"
+                                            />
+                                        </div>
+                                        <h3 className="mt-4 text-sm text-gray-700">{product.name}</h3>
+                                        <p className="mt-1 text-lg font-medium text-gray-900">{product.price}</p>
+                                    </div>
+                                </Link>
+                            )
+                        })
+                    }
+                </div>
+            </div>
+        </div>
+    )
+}
+
+Store.getLayout = function getLayout(page) {
+    return (
+        <StoreNav>
+            {page}
+        </StoreNav>
+    )
+}
+
+export const getServerSideProps: GetServerSideProps = async (ctx: GetServerSidePropsContext) => {
+    return {
+        props: ctx.params || {}
+    }
+}
+
+export default Store;

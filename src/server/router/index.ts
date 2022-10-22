@@ -11,6 +11,7 @@ import { displayTypeRouter } from "./display-type";
 import { productRouter } from "./product";
 import { productStoreToOptionGroupRouter } from "./product-store-to-option-group";
 import { productOptionRouter } from "./product-option";
+import { storeRouter } from "./store";
 
 export const appRouter = createRouter()
   .transformer(superjson)
@@ -23,7 +24,9 @@ export const appRouter = createRouter()
   .merge("displayTypeRouter.", displayTypeRouter)
   .merge("productRouter.", productRouter)
   .merge("productStoreToOptionGroupRouter.", productStoreToOptionGroupRouter)
-  .merge("productOptionRouter.", productOptionRouter);
+  .merge("productOptionRouter.", productOptionRouter)
+  .merge("storeRouter.", storeRouter);
+  
 
 
 // export type definition of API

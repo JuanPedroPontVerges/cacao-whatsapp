@@ -2,30 +2,48 @@
 import { httpBatchLink } from "@trpc/client/links/httpBatchLink";
 import { loggerLink } from "@trpc/client/links/loggerLink";
 import { withTRPC } from "@trpc/next";
-import { SessionProvider } from "next-auth/react";
 import superjson from "superjson";
-import type { AppType } from "next/app";
+import type { ReactElement, ReactNode } from 'react'
+import type { NextPage } from "next";
+import type { AppType, AppProps } from "next/app";
 import type { AppRouter } from "../server/router";
 import type { Session } from "next-auth";
 import "../styles/globals.css";
-import Dashboard from "../components/Dashboard";
-import { HTML5Backend } from "react-dnd-html5-backend";
-import { DndProvider } from "react-dnd";
+import { SessionProvider } from "next-auth/react";
 
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type NextPageWithLayout = NextPage & {
+  getLayout?: (page: ReactElement) => ReactNode;
+};
+type AppPropsWithLayout = AppProps & {
+  Component: NextPageWithLayout
+}
 const MyApp: AppType<{ session: Session | null }> = ({
   Component,
   pageProps: { session, ...pageProps },
-}) => {
+}: AppPropsWithLayout) => {
+  const getLayout = Component.getLayout ?? ((page) => page)
   return (
     <SessionProvider session={session}>
-      <Dashboard>
-        <DndProvider backend={HTML5Backend}>
-          <Component {...pageProps} />
-        </DndProvider>
-      </Dashboard>
-    </SessionProvider>
-  );
-};
+      {getLayout(<Component {...pageProps} />) as ReactElement<any, any> | null}
+    </SessionProvider>)
+}
+// const MyApp: AppType<{ session: Session | null }> = ({
+//   Component,
+//   pageProps: { session, ...pageProps },
+// }) => {
+//   return (
+//     <SessionProvider session={session}>
+//       <Dashboard>
+//         <DndProvider backend={HTML5Backend}>
+//           <Component {...pageProps} />
+//         </DndProvider>
+//       </Dashboard>
+//     </SessionProvider>
+//   );
+// };
+
+
 
 const getBaseUrl = () => {
   if (typeof window !== "undefined") return ""; // browser should use relative url

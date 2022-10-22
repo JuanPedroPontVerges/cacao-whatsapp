@@ -1,13 +1,15 @@
-import type { GetServerSideProps, GetServerSidePropsContext, NextPage } from "next";
+import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
+import Dashboard from "../components/layouts/Dashboard";
 import Form from "../components/Form";
 import GoogleAutoComplete from "../components/GoogleAutoComplete";
 import Modal from "../components/Modal";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
+import { NextPageWithLayout } from "./_app";
 
 
 export interface ICreateVenueFormValues {
@@ -15,7 +17,7 @@ export interface ICreateVenueFormValues {
   address: string;
   googlePlaceId: string;
 }
-const Index: NextPage = () => {
+const Index: NextPageWithLayout = () => {
   const form = useForm<ICreateVenueFormValues>();
   const { data } = useSession();
   const userQuery = trpc.useQuery(["userRouter.getVenues", { id: data?.user?.id }]);
@@ -81,18 +83,27 @@ const Index: NextPage = () => {
   );
 };
 
+Index.getLayout = function getLayout(page) {
+  return (
+    <Dashboard>
+      {page}
+    </Dashboard>
+  )
+}
+
 export const getServerSideProps: GetServerSideProps = async (ctx: GetServerSidePropsContext) => {
   const session = await getServerAuthSession(ctx);
 
   if (!session) {
-    return {
-      redirect: { destination: "/api/auth/signin", permanent: false },
-    }
+      return {
+          redirect: { destination: "/api/auth/signin", permanent: false },
+      }
   }
 
   return {
-    props: session
+      props: session
   }
 }
+
 
 export default Index;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useForm, FormProvider, SubmitHandler } from 'react-hook-form';
+import { useForm, FormProvider } from 'react-hook-form';
 
 type LoginFormProps = {
     toggleModalVisibility: () => void;
@@ -12,15 +12,6 @@ export interface ILoginFormValues {
 
 const LoginForm: React.FC<LoginFormProps> = ({ toggleModalVisibility }) => {
     const form = useForm<ILoginFormValues>()
-    const { register, handleSubmit } = form
-
-    const onSubmitForm: SubmitHandler<ILoginFormValues> = (input) => {
-        console.log('input', input);
-        return;
-        // userMutation.mutate({ name: 'Juan Pedro', email: 'jppontverges@gmail.com' })
-        // toggleModalVisibility();
-    }
-
     return (
         <>
             <div>
@@ -33,7 +24,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ toggleModalVisibility }) => {
                     <div className="md:grid md:grid-cols-2 md:gap-6">
                         <div className="mt-5 md:col-span-2 md:mt-0">
                             <FormProvider {...form}>
-                                <form action="#" method="POST" onSubmit={handleSubmit(onSubmitForm)}>
+                                <form>
                                     <div className="overflow-hidden shadow sm:rounded-md">
                                         <div className="bg-white px-4 py-5 sm:p-6">
                                             <div className="grid grid-cols-1 gap-6">
@@ -42,7 +33,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ toggleModalVisibility }) => {
                                                         Email
                                                     </label>
                                                     <input
-                                                        {...register('email')}
                                                         type="email"
                                                         id="first-name"
                                                         autoComplete="email"
@@ -55,7 +45,6 @@ const LoginForm: React.FC<LoginFormProps> = ({ toggleModalVisibility }) => {
                                                         Contraseña
                                                     </label>
                                                     <input
-                                                        {...register('password')}
                                                         type="text"
                                                         id="last-name"
                                                         autoComplete="password"
