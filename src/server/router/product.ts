@@ -65,7 +65,7 @@ export const productRouter = createProtectedRouter()
           where: { id: productId },
           data: {
             name,
-            description, 
+            description,
             price
           },
         })
@@ -102,6 +102,18 @@ export const productRouter = createProtectedRouter()
               id: input.id
             }
           },
+          include: {
+            productStore: {
+              select: {
+                productStoreToOptionGroups: {
+                  include: {
+                    optionGroup: true,
+                    productOptions: true
+                  }
+                }
+              }
+            }
+          }
         });
       }
     },

@@ -26,7 +26,6 @@ const List: React.FC<ListProps> = ({ name, options, form }) => {
             </label>
             <Controller
                 {...form.register(name)}
-                defaultValue={selectedId}
                 control={form.control}
                 render={({ field }) => (
                     <Listbox value={field.value} onChange={((id) => { field.onChange(id); setSelectedId(id) })}>

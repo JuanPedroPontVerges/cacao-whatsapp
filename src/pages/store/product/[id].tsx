@@ -1,17 +1,37 @@
 import { Disclosure } from "@headlessui/react";
-import { Bars3Icon, ShoppingCartIcon, XMarkIcon, ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
+import { ShoppingCartIcon, ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 import { NextPage, GetServerSideProps, GetServerSidePropsContext } from "next";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { trpc } from "../../../utils/trpc";
 import Cursed from 'public/assets/alien.png'
 import ProductDetailAction from "../../../components/ProductDetailAction";
+import Button from "../../../components/Button";
+import { DisplayType } from "@prisma/client";
+import { useForm } from "react-hook-form";
+import Form from "../../../components/Form";
 const ProductDetail: NextPage = ({ id }) => {
     const router = useRouter()
     const { data } = trpc.useQuery(["storeRouter.getProductDetails", { id }]);
+    const form = useForm();
     if (!data) return (<>No data</>)
-    console.log('data', data);
     const product = data[0]?.productStore.product
+    const handleDescriptionText = (displayType: DisplayType, amount: number | null): string => {
+        if (displayType && amount) {
+            if (displayType.name.includes('Fija') && amount > 1) {
+                return `Seleccioná ${amount} opciones`;
+            } else if (displayType.name.includes('Fija') && amount === 1) {
+                return 'Seleccioná 1 opcion';
+            }
+        } else {
+            return 'Seleccioná las opciones que quieras';
+        }
+        return 'Seleccioná las opciones que quieras';
+    };
+
+    const onSubmitForm = (input: any) => {
+        console.log('input', input);
+    }
     return (
         <>
             <Disclosure as="nav" className="bg-gray-800">
@@ -57,8 +77,8 @@ const ProductDetail: NextPage = ({ id }) => {
                     </>
                 )}
             </Disclosure>
-            <div>
-                <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8">
+            <Form form={form} onSubmitForm={onSubmitForm}>
+                <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8 mb-24">
                     <div className="block">
                         <Image
                             src={data[0]?.productStore.product?.imageUrl || Cursed}
@@ -72,41 +92,74 @@ const ProductDetail: NextPage = ({ id }) => {
                         <h1 className="text-2xl font-semibold">{product?.name}</h1>
                         <p className="italic">{product?.description}</p>
                     </div>
-                    {
-                        data?.map((group) => (
-                            <div key={group.id}>
-                                <ProductDetailAction
-                                    amount={group.amount || 1}
-                                    displayType={group.displayType}
-                                    multipleUnits={group.multipleUnits}
-                                    optionGroup={group.optionGroup}
-                                />
-                            </div>
-                        ))
-                    }
+                    <div className="my-4">
+                        {
+                            data?.map((group) => (
+                                <div key={group.id} className="my-2">
+                                    <Disclosure>
+                                        {({ open }) => (
+                                            <>
+                                                <Disclosure.Button className="flex w-full justify-between items-center rounded-lg bg-purple-100 px-4 py-2 text-left text-base font-medium text-purple-900 hover:bg-purple-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75">
+                                                    <span>{group.optionGroup.name}</span>
+                                                    <span className="italic text-sm">{handleDescriptionText(group.displayType, group.amount)}</span>
+                                                </Disclosure.Button>
+                                                <Disclosure.Panel className="px-4 pt-4 pb-2 text-sm text-gray-500">
+                                                    <ProductDetailAction
+                                                        form={form}
+                                                        name={`optionGroups.${group.id}`}
+                                                        amount={group.amount || 1}
+                                                        displayType={group.displayType}
+                                                        multipleUnits={group.multipleUnits}
+                                                        optionGroup={group.optionGroup}
+                                                    />
+                                                </Disclosure.Panel>
+                                            </>
+                                        )}
+                                    </Disclosure>
+                                </div>
+                            ))
+                        }
+                    </div>
+
+                    <div>
+                        <label htmlFor="about" className="block text-lg font-medium text-gray-700">
+                            Comentarios
+                        </label>
+                        <div className="mt-1">
+                            <textarea
+                                {...form.register('additionalInfo')}
+                                rows={4}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                placeholder="Deja cualquier aclaración"
+                            />
+                        </div>
+                    </div>
+
                 </div>
                 <footer className="fixed bottom-0 bg-slate-600 w-full">
-                    <div className="flex justify-between p-4">
+                    <div className="flex justify-between p-2 items-center">
                         <div className="basis-full">
-                            <div className="w-full">xx
-                                <div className="flex justify-around">
-                                    <p>-</p>
-                                    <p>1</p>
-                                    <p>+</p>
+                            <div className="w-full p-1">
+                                <div className="flex justify-around items-center">
+                                    <Button>-</Button>
+                                    <div className="border-2 p-1 border-white">
+                                        1
+                                    </div>
+                                    <Button>+</Button>
                                 </div>
                             </div>
                         </div>
                         <div className="basis-full">
-                            <button className="w-full">
+                            <Button className="w-full" type='submit'>
                                 <div className="flex justify-around ">
                                     <p>Agregar</p>
                                     <p>$2500</p>
                                 </div>
-                            </button>
+                            </Button>
                         </div>
                     </div>
                 </footer>
-            </div>
+            </Form>
         </>
     )
 }

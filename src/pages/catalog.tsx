@@ -319,14 +319,29 @@ const Catalog: NextPageWithLayout = () => {
         productUpdate.mutate({ productId, enabled });
     }
 
-    function toggleProductDrawer(product?: Product) {
+    async function toggleProductDrawer(product?: Product) {
         if (isProductDrawerOpen) {
             productForm.resetField('name')
             productForm.resetField('description')
             productForm.resetField('price')
+            productForm.resetField('optionGroups')
             setSelectedProduct({ isEdit: false, product: undefined })
         }
         if (product) {
+            const { data } = await productQuery.refetch()
+            console.log('data', data);
+            const foundProduct = data?.find((p) => p.id == product.id);
+            if (foundProduct?.productStore?.productStoreToOptionGroups) {
+                for (const productStoreToOptionGroups of foundProduct?.productStore?.productStoreToOptionGroups) {
+                    productForm.setValue(`optionGroups.${productStoreToOptionGroups.optionGroupId}.displayTypeId`, productStoreToOptionGroups.displayTypeId);
+                    productForm.setValue(`optionGroups.${productStoreToOptionGroups.optionGroupId}.maxAmount`, productStoreToOptionGroups.amount || 0);
+                    productForm.setValue(`optionGroups.${productStoreToOptionGroups.optionGroupId}.multipleUnits`, productStoreToOptionGroups.multipleUnits);
+                    productForm.setValue(`optionGroups.${productStoreToOptionGroups.optionGroupId}.enabled`, productStoreToOptionGroups.enabled);
+                    for (const option of productStoreToOptionGroups.productOptions) {
+                        productForm.setValue(`optionGroups.${productStoreToOptionGroups.optionGroupId}.options.${option.optionId}`, option.enabled)
+                    }
+                }
+            }
             setSelectedProduct({ isEdit: true, product });
             const { name, description, price } = product;
             productForm.setValue('name', name)
@@ -392,6 +407,7 @@ const Catalog: NextPageWithLayout = () => {
     }
 
     const onSubmitProductForm: SubmitHandler<ProductFormInput> = async (input) => {
+        console.log('input', input);
         const { name, description, price, optionGroups, imageUrl } = input
         if (selectedCategory) {
             productMutation.mutate({ name, description, price, imageUrl, index: productQuery.data?.length || 1, categoryId: selectedCategory.id }, {
