@@ -10,7 +10,7 @@ import Button from "../../../components/Button";
 import { DisplayType } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import Form from "../../../components/Form";
-const ProductDetail: NextPage = ({ id }) => {
+const ProductDetail: NextPage<Record<string, string>> = ({ id }) => {
     const router = useRouter()
     const { data } = trpc.useQuery(["storeRouter.getProductDetails", { id }]);
     const form = useForm();
@@ -57,11 +57,6 @@ const ProductDetail: NextPage = ({ id }) => {
                                         <span className={'text-white'}>
                                             WAPI
                                         </span>
-                                    </div>
-                                    <div className="hidden sm:ml-6 sm:block">
-                                        <div className="flex space-x-4">
-                                            Aca van las categorias
-                                        </div>
                                     </div>
                                 </div>
                                 <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">

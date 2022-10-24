@@ -47,32 +47,32 @@ export const productStoreToOptionGroupRouter = createProtectedRouter()
       })
     },
   })
-  // .mutation("update", {
-  //   input: z.object({
-  //     name: z.string().nullish(),
-  //     enabled: z.boolean().nullish(),
-  //     productStoreToOptionGroupId: z.string(),
-  //   }),
-  //   async resolve({ ctx, input }) {
-  //     const { name, enabled, productStoreToOptionGroupId } = input;
-  //     if (typeof name === 'string') {
-  //       return await ctx.prisma.productStoreToOptionGroup.update({
-  //         where: { id: productStoreToOptionGroupId },
-  //         data: {
-  //           name,
-  //         },
-  //       })
-  //     } else if (typeof enabled === 'boolean') {
-  //       return await ctx.prisma.productStoreToOptionGroup.update({
-  //         where: { id: productStoreToOptionGroupId },
-  //         data: {
-  //           enabled,
-  //         },
-  //       })
-  //     }
-
-  //   },
-  // })
+  .mutation("update", {
+    input: z.object({
+      enabled: z.boolean(),
+      amount: z.number().nullish(),
+      multipleUnits: z.boolean().nullish(),
+      optionGroupId: z.string(),
+      productStoreId: z.string(),
+    }),
+    async resolve({ ctx, input }) {
+      const { amount, multipleUnits, enabled, optionGroupId, productStoreId } = input;
+      return await ctx.prisma.productStoreToOptionGroup.updateMany({ // TODO [] This is actually wrong, i should've declared as unique in [productStoreId, optionGroupId]
+        where: {
+          productStoreId,
+          optionGroupId,
+        },
+        data: {
+          enabled,
+          amount,
+          multipleUnits: multipleUnits || false,
+        },
+        select: {
+          id: true,
+        }
+      })
+    },
+  })
   // .mutation("delete", {
   //   input: z.object({
   //     categoryId: z.string(),

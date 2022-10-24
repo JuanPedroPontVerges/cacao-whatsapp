@@ -56,19 +56,26 @@ export const productRouter = createProtectedRouter()
       description: z.string().nullish(),
       price: z.number().nullish(),
       enabled: z.boolean().nullish(),
-      productId: z.string(),
+      imageUrl: z.string().nullish(),
+      productId: z.string().nullish(),
     }),
     async resolve({ ctx, input }) {
-      const { name, productId, enabled, description, price } = input;
+      const { name, productId, enabled, description, price, imageUrl } = input;
       if (typeof name === 'string') {
-        return await ctx.prisma.product.update({
-          where: { id: productId },
-          data: {
-            name,
-            description,
-            price
-          },
-        })
+        if (input && input.productId != null) {
+          return await ctx.prisma.product.update({
+            where: { id: productId },
+            data: {
+              imageUrl,
+              name,
+              description,
+              price,
+            },
+            select: {
+              productStore: true,
+            }
+          })
+        }
       } else if (typeof enabled === 'boolean') {
         return await ctx.prisma.product.update({
           where: { id: productId },

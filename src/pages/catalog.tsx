@@ -100,10 +100,6 @@ const Catalog: NextPageWithLayout = () => {
             optionGroupQuery.refetch();
         }
     });
-    /* Indexes */
-    const optionUpdateIndexes = trpc.useMutation(["optionRouter.indexes"]);
-    const productUpdateIndexes = trpc.useMutation(["productRouter.indexes"]);
-
     const optionUpdate = trpc.useMutation(["optionRouter.update"], {
         onSuccess: () => {
             optionQuery.refetch();
@@ -115,6 +111,16 @@ const Catalog: NextPageWithLayout = () => {
             optionQuery.refetch();
         }
     });
+    const productStoreToOptionGroupUpdate = trpc.useMutation(["productStoreToOptionGroup.update"], {
+        onSuccess: () => {
+            // optionQuery.refetch();
+        }
+    });
+    /* Indexes */
+    const optionUpdateIndexes = trpc.useMutation(["optionRouter.indexes"]);
+    const productUpdateIndexes = trpc.useMutation(["productRouter.indexes"]);
+
+
     /* Deletes */
     const categoryDelete = trpc.useMutation(["categoryRouter.delete"], {
         onSuccess: () => {
@@ -407,19 +413,19 @@ const Catalog: NextPageWithLayout = () => {
     }
 
     const onSubmitProductForm: SubmitHandler<ProductFormInput> = async (input) => {
-        console.log('input', input);
         const { name, description, price, optionGroups, imageUrl } = input
         if (selectedCategory) {
-            productMutation.mutate({ name, description, price, imageUrl, index: productQuery.data?.length || 1, categoryId: selectedCategory.id }, {
-                onSuccess: async ({ productStore }) => {
-                    if (productStore) {
+            if (selectedProduct) {
+                productUpdate.mutate({ productId: selectedProduct.product?.id, name, description, price, imageUrl }, {
+                    onSuccess: async (data: { productStore: { id: string } }) => {
+                        const productStoreId = data.productStore.id;
                         for (const optionGroupId in optionGroups) {
                             if (optionGroupId) {
                                 const productStoreToOptionGroup = optionGroups[optionGroupId]
                                 if (productStoreToOptionGroup) {
-                                    const { id: productStoreToOptionGroupId } = await productStoreToOptionGroupMutation.mutateAsync({
+                                    const { id: productStoreToOptionGroupId } = await productStoreToOptionGroupUpdate.mutateAsync({
                                         optionGroupId,
-                                        productStoreId: productStore.id,
+                                        productStoreId,
                                         displayTypeId: productStoreToOptionGroup?.displayTypeId,
                                         amount: productStoreToOptionGroup.maxAmount,
                                         enabled: productStoreToOptionGroup.enabled,
@@ -438,8 +444,39 @@ const Catalog: NextPageWithLayout = () => {
                             }
                         }
                     }
-                }
-            })
+                })
+            } else {
+                productMutation.mutate({ name, description, price, imageUrl, index: productQuery.data?.length || 1, categoryId: selectedCategory.id }, {
+                    onSuccess: async ({ productStore }) => {
+                        if (productStore) {
+                            for (const optionGroupId in optionGroups) {
+                                if (optionGroupId) {
+                                    const productStoreToOptionGroup = optionGroups[optionGroupId]
+                                    if (productStoreToOptionGroup) {
+                                        const { id: productStoreToOptionGroupId } = await productStoreToOptionGroupMutation.mutateAsync({
+                                            optionGroupId,
+                                            productStoreId: productStore.id,
+                                            displayTypeId: productStoreToOptionGroup?.displayTypeId,
+                                            amount: productStoreToOptionGroup.maxAmount,
+                                            enabled: productStoreToOptionGroup.enabled,
+                                            multipleUnits: productStoreToOptionGroup.multipleUnits,
+                                        })
+                                        if (productStoreToOptionGroup.options) {
+                                            for (const optionId in productStoreToOptionGroup.options) {
+                                                const enabled = productStoreToOptionGroup.options[optionId]
+                                                if (typeof enabled === 'boolean') {
+                                                    await productOptionMutation.mutateAsync({ productStoreToOptionGroupId, optionId, enabled })
+                                                }
+
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                })
+            }
         }
     }
 

@@ -55,7 +55,12 @@ const ProductDetailAction: React.FC<ProductDetailActionProps> = ({ displayType, 
                                     <div className="basis-3/4 flex gap-x-4 items-center">
                                         <input
                                             value={option.id}
-                                            {...form.register(`${name}.option`)}
+                                            {...form.register(`${name}.option`, {
+                                                required: {
+                                                    value: true,
+                                                    message: 'Porfavor seleccione una opción'
+                                                }
+                                            })}
                                             type="radio"
                                             className="h-6 w-6 border-gray-300 text-indigo-600 focus:ring-indigo-500"
                                         />
