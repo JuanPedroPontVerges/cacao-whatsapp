@@ -54,10 +54,12 @@ export const productStoreToOptionGroupRouter = createProtectedRouter()
       multipleUnits: z.boolean().nullish(),
       optionGroupId: z.string(),
       productStoreId: z.string(),
+      displayTypeId: z.string(),
     }),
     async resolve({ ctx, input }) {
-      const { amount, multipleUnits, enabled, optionGroupId, productStoreId } = input;
-      return await ctx.prisma.productStoreToOptionGroup.updateMany({ // TODO [] This is actually wrong, i should've declared as unique in [productStoreId, optionGroupId]
+      console.log('llego hasta acá');
+      const { amount, multipleUnits, enabled, optionGroupId, displayTypeId, productStoreId } = input;
+      await ctx.prisma.productStoreToOptionGroup.updateMany({ // TODO [] This is actually wrong, i should've declared as unique in [productStoreId, optionGroupId]
         where: {
           productStoreId,
           optionGroupId,
@@ -66,9 +68,16 @@ export const productStoreToOptionGroupRouter = createProtectedRouter()
           enabled,
           amount,
           multipleUnits: multipleUnits || false,
+          displayTypeId
+        },
+      })
+      return await ctx.prisma.productStoreToOptionGroup.findFirst({
+        where: {
+          productStoreId,
+          optionGroupId,
         },
         select: {
-          id: true,
+          id: true, 
         }
       })
     },

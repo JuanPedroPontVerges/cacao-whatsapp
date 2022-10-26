@@ -25,38 +25,54 @@ export const productOptionRouter = createProtectedRouter()
           productStoreToOptionGroup: {
             connect: {
               id: productStoreToOptionGroupId
-            }
+            },
           },
         },
       })
     },
   })
-  // .mutation("update", {
-  //   input: z.object({
-  //     name: z.string().nullish(),
-  //     enabled: z.boolean().nullish(),
-  //     productOptionId: z.string(),
-  //   }),
-  //   async resolve({ ctx, input }) {
-  //     const { name, enabled, productOptionId } = input;
-  //     if (typeof name === 'string') {
-  //       return await ctx.prisma.productOption.update({
-  //         where: { id: productOptionId },
-  //         data: {
-  //           name,
-  //         },
-  //       })
-  //     } else if (typeof enabled === 'boolean') {
-  //       return await ctx.prisma.productOption.update({
-  //         where: { id: productOptionId },
-  //         data: {
-  //           enabled,
-  //         },
-  //       })
-  //     }
-
-  //   },
-  // })
+  .mutation("update", {
+    input: z.object({
+      optionId: z.string(),
+      productStoreToOptionGroupId: z.string(),
+      enabled: z.boolean(),
+    }),
+    async resolve({ ctx, input }) {
+      const { productStoreToOptionGroupId, enabled, optionId } = input;
+      const productOption = await ctx.prisma.productOption.findFirst({
+        where: {
+          productStoreToOptionGroupId,
+          optionId,
+        },
+      })
+      if (productOption) {
+        await ctx.prisma.productOption.update({
+          where: {
+            id: productOption.id
+          },
+          data: {
+            enabled
+          }
+        })
+      } else {
+        await ctx.prisma.productOption.create({
+          data: {
+            enabled,
+            option: {
+              connect: {
+                id: optionId
+              }
+            },
+            productStoreToOptionGroup: {
+              connect: {
+                id: productStoreToOptionGroupId
+              },
+            },
+          },
+        })
+      }
+    },
+  })
   // .mutation("delete", {
   //   input: z.object({
   //     categoryId: z.string(),

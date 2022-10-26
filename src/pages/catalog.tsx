@@ -111,7 +111,12 @@ const Catalog: NextPageWithLayout = () => {
             optionQuery.refetch();
         }
     });
-    const productStoreToOptionGroupUpdate = trpc.useMutation(["productStoreToOptionGroup.update"], {
+    const productStoreToOptionGroupUpdate = trpc.useMutation(["productStoreToOptionGroupRouter.update"], {
+        onSuccess: () => {
+            // optionQuery.refetch();
+        }
+    });
+    const productOptionUpdate = trpc.useMutation(["productOptionRouter.update"], {
         onSuccess: () => {
             // optionQuery.refetch();
         }
@@ -335,7 +340,6 @@ const Catalog: NextPageWithLayout = () => {
         }
         if (product) {
             const { data } = await productQuery.refetch()
-            console.log('data', data);
             const foundProduct = data?.find((p) => p.id == product.id);
             if (foundProduct?.productStore?.productStoreToOptionGroups) {
                 for (const productStoreToOptionGroups of foundProduct?.productStore?.productStoreToOptionGroups) {
@@ -415,15 +419,15 @@ const Catalog: NextPageWithLayout = () => {
     const onSubmitProductForm: SubmitHandler<ProductFormInput> = async (input) => {
         const { name, description, price, optionGroups, imageUrl } = input
         if (selectedCategory) {
-            if (selectedProduct) {
-                productUpdate.mutate({ productId: selectedProduct.product?.id, name, description, price, imageUrl }, {
+            if (selectedProduct.product) {
+                productUpdate.mutate({ productId: selectedProduct.product.id, name, description, price, imageUrl }, {
                     onSuccess: async (data: { productStore: { id: string } }) => {
                         const productStoreId = data.productStore.id;
                         for (const optionGroupId in optionGroups) {
                             if (optionGroupId) {
                                 const productStoreToOptionGroup = optionGroups[optionGroupId]
                                 if (productStoreToOptionGroup) {
-                                    const { id: productStoreToOptionGroupId } = await productStoreToOptionGroupUpdate.mutateAsync({
+                                    const response = await productStoreToOptionGroupUpdate.mutateAsync({
                                         optionGroupId,
                                         productStoreId,
                                         displayTypeId: productStoreToOptionGroup?.displayTypeId,
@@ -434,8 +438,8 @@ const Catalog: NextPageWithLayout = () => {
                                     if (productStoreToOptionGroup.options) {
                                         for (const optionId in productStoreToOptionGroup.options) {
                                             const enabled = productStoreToOptionGroup.options[optionId]
-                                            if (typeof enabled === 'boolean') {
-                                                await productOptionMutation.mutateAsync({ productStoreToOptionGroupId, optionId, enabled })
+                                            if (typeof enabled === 'boolean' && response?.id) {
+                                                await productOptionUpdate.mutateAsync({ productStoreToOptionGroupId: response?.id, optionId, enabled })
                                             }
 
                                         }

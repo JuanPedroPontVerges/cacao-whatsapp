@@ -14,6 +14,27 @@ const ProductDetail: NextPage<Record<string, string>> = ({ id }) => {
     const router = useRouter()
     const { data } = trpc.useQuery(["storeRouter.getProductDetails", { id }]);
     const form = useForm();
+    const optionGroups = form.watch('optionGroups');
+    console.log('optionGroups', optionGroups);
+    const limitedOptionGroups = data?.map((optionGroup: any) => {
+        return optionGroup.displayType.name.includes('Cantidad Fija') ? optionGroup.id : null
+    }).filter((notNull) => notNull != null)
+    for (const optionGroup in optionGroups) {
+        if (limitedOptionGroups?.includes(optionGroup)) {
+            console.log('optionGroup', optionGroup);
+            console.log('data', data);
+            const maxAmount = data?.find((data: any) => (data.id == optionGroup))?.amount || 0
+            let counter = 0;
+            Object.entries(optionGroups[optionGroup].option).map((value) => {
+                const amount = value[1].amount;
+                counter += amount;
+            })
+            console.log('maxAmount', maxAmount);
+            console.log('counter', counter);
+            if (counter > maxAmount) alert('Basta flaco')
+            else console.log('no impota, segui')
+        }
+    }
     if (!data) return (<>No data</>)
     const product = data[0]?.productStore.product
     const handleDescriptionText = (displayType: DisplayType, amount: number | null): string => {
