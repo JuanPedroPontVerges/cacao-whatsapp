@@ -136,6 +136,7 @@ model ProductStore {
     updatedAt                  DateTime?                   @updatedAt
     product                    Product                     @relation(fields: [productId], references: [id], onDelete: Cascade)
     productStoreToOptionGroups ProductStoreToOptionGroup[]
+    productStoreCarts          ProductStoreCart[]
 }
 
 model ProductStoreToOptionGroup {
@@ -197,4 +198,21 @@ model Option {
     updatedAt      DateTime?       @updatedAt
     optionGroup    OptionGroup     @relation(fields: [optionGroupId], references: [id], onDelete: Cascade)
     productOptions ProductOption[]
+}
+
+model ProductStoreCart {
+    id             String       @id @default(cuid())
+    productStoreId String
+    cartId         String?
+    additionalInfo String?
+    amount         Int
+    finalPrice     Int
+    productStore   ProductStore @relation(fields: [productStoreId], references: [id], onDelete: Cascade)
+    cart           Cart?        @relation(fields: [cartId], references: [id], onDelete: Cascade)
+}
+
+model Cart {
+    id                String             @id @default(cuid())
+    finalPrice        Int
+    productStoreCarts ProductStoreCart[]
 }

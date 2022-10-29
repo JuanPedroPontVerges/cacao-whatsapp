@@ -57,29 +57,58 @@ export const productStoreToOptionGroupRouter = createProtectedRouter()
       displayTypeId: z.string(),
     }),
     async resolve({ ctx, input }) {
-      console.log('llego hasta acá');
       const { amount, multipleUnits, enabled, optionGroupId, displayTypeId, productStoreId } = input;
-      await ctx.prisma.productStoreToOptionGroup.updateMany({ // TODO [] This is actually wrong, i should've declared as unique in [productStoreId, optionGroupId]
-        where: {
-          productStoreId,
-          optionGroupId,
-        },
-        data: {
-          enabled,
-          amount,
-          multipleUnits: multipleUnits || false,
-          displayTypeId
-        },
-      })
-      return await ctx.prisma.productStoreToOptionGroup.findFirst({
+      const productStoreToOptionGroup = await ctx.prisma.productStoreToOptionGroup.findFirst({
         where: {
           productStoreId,
           optionGroupId,
         },
         select: {
-          id: true, 
+          id: true,
         }
       })
+      if (productStoreToOptionGroup) {
+        await ctx.prisma.productStoreToOptionGroup.updateMany({ // TODO [] This is actually wrong, i should've declared as unique in [productStoreId, optionGroupId]
+          where: {
+            productStoreId,
+            optionGroupId,
+          },
+          data: {
+            enabled,
+            amount,
+            multipleUnits: multipleUnits || false,
+            displayTypeId
+          },
+        })
+        return { id: productStoreToOptionGroup?.id };
+      } else {
+        return await ctx.prisma.productStoreToOptionGroup.create({
+          data: {
+            productStore: {
+              connect: {
+                id: productStoreId
+              }
+            },
+            displayType: {
+              connect: {
+                id: displayTypeId
+              }
+            },
+            optionGroup: {
+              connect: {
+                id: optionGroupId
+              }
+            },
+            enabled,
+            amount,
+            multipleUnits: multipleUnits || false,
+          },
+          select: {
+            id: true,
+          }
+        })
+      }
+
     },
   })
   // .mutation("delete", {

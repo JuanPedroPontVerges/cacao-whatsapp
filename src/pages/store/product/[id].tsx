@@ -10,32 +10,24 @@ import Button from "../../../components/Button";
 import { DisplayType } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import Form from "../../../components/Form";
+import { useEffect, useState } from "react";
 const ProductDetail: NextPage<Record<string, string>> = ({ id }) => {
     const router = useRouter()
     const { data } = trpc.useQuery(["storeRouter.getProductDetails", { id }]);
-    const form = useForm();
-    const optionGroups = form.watch('optionGroups');
-    console.log('optionGroups', optionGroups);
-    const limitedOptionGroups = data?.map((optionGroup: any) => {
-        return optionGroup.displayType.name.includes('Cantidad Fija') ? optionGroup.id : null
-    }).filter((notNull) => notNull != null)
-    for (const optionGroup in optionGroups) {
-        if (limitedOptionGroups?.includes(optionGroup)) {
-            console.log('optionGroup', optionGroup);
-            console.log('data', data);
-            const maxAmount = data?.find((data: any) => (data.id == optionGroup))?.amount || 0
-            let counter = 0;
-            Object.entries(optionGroups[optionGroup].option).map((value) => {
-                const amount = value[1].amount;
-                counter += amount;
-            })
-            console.log('maxAmount', maxAmount);
-            console.log('counter', counter);
-            if (counter > maxAmount) alert('Basta flaco')
-            else console.log('no impota, segui')
+    const form = useForm<any>({
+        defaultValues: {
+            amount: 1,
         }
-    }
+    });
+    const [productPrice, setProductPrice] = useState<number | null | undefined>(data?.[0]?.productStore.product.price);
+    useEffect(() => {
+        if (!productPrice) {
+            setProductPrice(data?.[0]?.productStore.product.price)
+            form.setValue('finalPrice', data?.[0]?.productStore.product.price);
+        }
+    }, [data])
     if (!data) return (<>No data</>)
+    const initialPrice = data?.[0]?.productStore.product.price;
     const product = data[0]?.productStore.product
     const handleDescriptionText = (displayType: DisplayType, amount: number | null): string => {
         if (displayType && amount) {
@@ -49,6 +41,38 @@ const ProductDetail: NextPage<Record<string, string>> = ({ id }) => {
         }
         return 'Seleccioná las opciones que quieras';
     };
+
+    const handleSetPrice = (price: number) => {
+        const amount = form.getValues('amount');
+        if (productPrice) {
+            setProductPrice(() => {
+                const total = productPrice + price;
+                form.setValue('finalPrice', total * amount);
+                return total;
+            });
+        }
+    }
+
+    const handleOnClickSubstract = () => {
+        const amount = form.getValues('amount')
+        if (amount <= 1) {
+            return;
+        } else if (productPrice) {
+            form.setValue('amount', amount - 1)
+            const formFinalPrice = form.getValues('finalPrice');
+            form.setValue('finalPrice', formFinalPrice - productPrice)
+        }
+    }
+
+    const handleOnClickAdd = () => {
+        if (productPrice) {
+            const amount = form.getValues('amount')
+            form.setValue('amount', amount + 1);
+            console.log('productPrice', productPrice);
+            console.log('amount', amount);
+            form.setValue('finalPrice', (amount + 1) * productPrice)
+        }
+    }
 
     const onSubmitForm = (input: any) => {
         console.log('input', input);
@@ -65,28 +89,10 @@ const ProductDetail: NextPage<Record<string, string>> = ({ id }) => {
                                 </div>
                                 <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                                     <div className="flex flex-shrink-0 items-center">
-                                        {/* <img
-                                    className="block h-8 w-auto lg:hidden"
-                                    src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
-                                    alt="Your Company"
-                                />
-                                <img
-                                    className="hidden h-8 w-auto lg:block"
-                                    src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
-                                    alt="Your Company"
-                                /> */}
                                         <span className={'text-white'}>
                                             WAPI
                                         </span>
                                     </div>
-                                </div>
-                                <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                                    <button
-                                        type="button"
-                                        className="rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                                    >
-                                        <ShoppingCartIcon className="h-6 w-6" aria-hidden="true" />
-                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -121,12 +127,14 @@ const ProductDetail: NextPage<Record<string, string>> = ({ id }) => {
                                                 </Disclosure.Button>
                                                 <Disclosure.Panel className="px-4 pt-4 pb-2 text-sm text-gray-500">
                                                     <ProductDetailAction
+                                                        disabled={false}
                                                         form={form}
                                                         name={`optionGroups.${group.id}`}
                                                         amount={group.amount || 1}
                                                         displayType={group.displayType}
                                                         multipleUnits={group.multipleUnits}
-                                                        optionGroup={group.optionGroup}
+                                                        handleSetPrice={handleSetPrice}
+                                                        productOptions={group.productOptions}
                                                     />
                                                 </Disclosure.Panel>
                                             </>
@@ -157,19 +165,25 @@ const ProductDetail: NextPage<Record<string, string>> = ({ id }) => {
                         <div className="basis-full">
                             <div className="w-full p-1">
                                 <div className="flex justify-around items-center">
-                                    <Button>-</Button>
-                                    <div className="border-2 p-1 border-white">
-                                        1
+                                    <Button type='button' onClick={handleOnClickSubstract}>-</Button>
+                                    <div className="border-2 p-1 border-white basis-1/3">
+                                        <input readOnly aria-readonly className="w-full" type="number" {...form.register('amount', { valueAsNumber: true })} />
                                     </div>
-                                    <Button>+</Button>
+                                    <Button type='button' onClick={handleOnClickAdd}>+</Button>
                                 </div>
                             </div>
                         </div>
                         <div className="basis-full">
                             <Button className="w-full" type='submit'>
-                                <div className="flex justify-around ">
+                                <div className="flex justify-around items-center">
                                     <p>Agregar</p>
-                                    <p>$2500</p>
+                                    <input
+                                        readOnly
+                                        aria-readonly
+                                        className="block w-full flex-1 bg-transparent rounded-none border-0 sm:text-sm"
+                                        type="number"
+                                        {...form.register('finalPrice', { valueAsNumber: true })}
+                                    />
                                 </div>
                             </Button>
                         </div>

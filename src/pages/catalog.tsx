@@ -438,8 +438,8 @@ const Catalog: NextPageWithLayout = () => {
                                     if (productStoreToOptionGroup.options) {
                                         for (const optionId in productStoreToOptionGroup.options) {
                                             const enabled = productStoreToOptionGroup.options[optionId]
-                                            if (typeof enabled === 'boolean' && response?.id) {
-                                                await productOptionUpdate.mutateAsync({ productStoreToOptionGroupId: response?.id, optionId, enabled })
+                                            if (typeof enabled === 'boolean' && response) {
+                                                await productOptionUpdate.mutateAsync({ productStoreToOptionGroupId: response.id, optionId, enabled })
                                             }
 
                                         }

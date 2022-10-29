@@ -2,25 +2,29 @@ import { NextPageWithLayout } from "../_app";
 import StoreNav from "../../components/layouts/StoreNav";
 import { trpc } from "../../utils/trpc";
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Disclosure } from '@headlessui/react'
 import { Bars3Icon, ShoppingCartIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import Image from "next/image";
 import Link from "next/link";
 import Cursed from 'public/assets/alien.png'
+import ShoppingCart from "../../components/ShoppingCart";
 
 function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ')
 }
 
 const Store: NextPageWithLayout = ({ id }) => {
-    // const [open, setOpen] = useState(false);
     const { data } = trpc.useQuery(["storeRouter.getCategoriesByMenuId", { id }]);
     const [selectedCategory, setSelectedCategory] = useState(data?.[0]);
+    const [isShoppingCartVisible, setIsShoppingCartVisible] = useState(false);
     if (!data) return (<>Loading...</>)
     const onClickCategory = (categoryId: string) => {
         const category = data?.find((category) => category.id === categoryId);
         setSelectedCategory(category);
+    }
+    const toggleShoppingCart = () => {
+        setIsShoppingCartVisible(!isShoppingCartVisible)
     }
     return (
         <div className="bg-white">
@@ -42,16 +46,6 @@ const Store: NextPageWithLayout = ({ id }) => {
                                 </div>
                                 <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                                     <div className="flex flex-shrink-0 items-center">
-                                        {/* <img
-                                            className="block h-8 w-auto lg:hidden"
-                                            src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
-                                            alt="Your Company"
-                                        />
-                                        <img
-                                            className="hidden h-8 w-auto lg:block"
-                                            src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
-                                            alt="Your Company"
-                                        /> */}
                                         <span className={'text-white'}>
                                             WAPI
                                         </span>
@@ -79,7 +73,7 @@ const Store: NextPageWithLayout = ({ id }) => {
                                         type="button"
                                         className="rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                                     >
-                                        <ShoppingCartIcon className="h-6 w-6" aria-hidden="true" />
+                                        <ShoppingCartIcon className="h-6 w-6" aria-hidden="true" onClick={toggleShoppingCart} />
                                     </button>
                                 </div>
                             </div>
@@ -117,7 +111,7 @@ const Store: NextPageWithLayout = ({ id }) => {
                         selectedCategory?.products.map((product) => {
                             return (
                                 <Link key={product.id} href={`product/${product.id}`}>
-                                    <div className="group">
+                                    <div className="group cursor-pointer">
                                         <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-200 xl:aspect-w-7 xl:aspect-h-8">
                                             <Image
                                                 layout={'fill'}
@@ -135,6 +129,7 @@ const Store: NextPageWithLayout = ({ id }) => {
                     }
                 </div>
             </div>
+            <ShoppingCart toggleShoppingCart={toggleShoppingCart} visible={isShoppingCartVisible} />
         </div>
     )
 }

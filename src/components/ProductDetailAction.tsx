@@ -2,122 +2,82 @@ import { DisplayType, Option } from "@prisma/client"
 import { UseFormReturn } from "react-hook-form";
 
 type OptionGroupAction = {
-    options: Option[];
-    id: string;
-    name: string;
+    option: Option;
 }
 
 export type ProductDetailActionProps = {
     displayType: DisplayType;
-    optionGroup: OptionGroupAction;
+    productOptions: OptionGroupAction[];
     amount: number;
     name: string;
+    disabled: boolean;
     multipleUnits?: boolean;
     form: UseFormReturn;
+    handleSetPrice: (price: number) => void;
 }
-
-const ProductDetailAction: React.FC<ProductDetailActionProps> = ({ displayType, multipleUnits, optionGroup, amount, name, form }) => {
-    const conditionallyRenderInput = (displayType: DisplayType, amount: number, multipleUnits?: boolean) => {
-        if (displayType.name.includes('Fija')) {
-            if (amount > 1 && multipleUnits) {
-                return 'checkbox and multiple units!'
-            } else if (amount > 1 && !multipleUnits) {
-                return 'checkbox!'
-            } else if (displayType.name.includes('Fija') && amount == 1) {
-                return 'radio!'
+/*
+    TODO
+    [] - See how i can prevent user selecting multiple units in options that doesnt have multipleUnits configs. 
+*/
+const ProductDetailAction: React.FC<ProductDetailActionProps> = ({ displayType, multipleUnits, productOptions, amount, name, form, disabled, handleSetPrice }) => {
+    const handleInputNumber = (add: boolean, inputAmountName: string, price: number | null) => {
+        const isLimitedOptionGroup = displayType.name.includes('Cantidad Fija');
+        if (isLimitedOptionGroup) {
+            let counter = 0;
+            const optionGroupWatcher = form.watch(`${name}`)
+            for (const option in optionGroupWatcher.option) {
+                counter += optionGroupWatcher.option[option].amount;
             }
-        } else {
-            if (!multipleUnits) {
-                return 'checkbox!'
-            } else {
-                return 'checkbox and multiple units!'
+            if (counter + 1 > amount && add === true) {
+                alert('Llegaste al limite')
+                return;
             }
         }
-    }
-
-    const handleInputNumber = (add: boolean, name: string) => {
-        const prevValue = Number(form.getValues(name)) || 0;
+        const prevValue = Number(form.getValues(inputAmountName)) || 0;
+        if (price && add === true) {
+            handleSetPrice(Number(price));
+        } else if (price && add === false && prevValue != 0) {
+            handleSetPrice(-Math.abs(price))
+        }
         if (add === true) {
-            form.setValue(name, prevValue + 1)
+            form.setValue(inputAmountName, prevValue + 1)
         } else if (prevValue > 0) {
-            form.setValue(name, prevValue - 1)
+            form.setValue(inputAmountName, prevValue - 1)
         }
     }
 
     return (
         <>
             {
-                optionGroup.options.map((option, index) => {
+                productOptions.map(({ option }, index) => {
                     return (
                         <div key={index}>
-                            {conditionallyRenderInput(displayType, amount, multipleUnits) === 'radio!' ? (
-                                <div className="flex justify-between items-center my-2">
-                                    <div className="basis-3/4 flex gap-x-4 items-center">
-                                        <input
-                                            value={option.id}
-                                            {...form.register(`${name}.option`, {
-                                                required: {
-                                                    value: true,
-                                                    message: 'Porfavor seleccione una opción'
-                                                }
-                                            })}
-                                            type="radio"
-                                            className="h-6 w-6 border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                        />
-                                        <div className="flex flex-col">
-                                            <label className="block text-lg font-medium text-gray-700">
-                                                {option.name}
-                                            </label>
-                                            <span>{option.description}</span>
-                                        </div>
+                            <div className="flex justify-between items-center my-2">
+                                <div className="flex items-center basis-3/4 gap-x-4">
+                                    <div className="flex flex-col">
+                                        <label className="block text-lg font-medium text-gray-700">
+                                            {option.name}
+                                        </label>
+                                        <span>{option.description}</span>
                                     </div>
+                                </div>
+                                <div className="flex items-center gap-x-2">
+                                    <button className="text-2xl p-1" onClick={() => handleInputNumber(false, `${name}.option.${option.id}.amount`, option.price)}>-</button>
+                                    <input
+                                        defaultValue={0}
+                                        type="number"
+                                        readOnly
+                                        className="text-center w-10 h-6"
+                                        {...form.register(`${name}.option.${option.id}.amount`, {
+                                            valueAsNumber: true,
+                                            min: 0,
+                                            max: option.maxAmount || undefined,
+                                        })}
+                                    />
+                                    <button className="text-2xl p-1 disabled:text-red-300" disabled={disabled} onClick={() => handleInputNumber(true, `${name}.option.${option.id}.amount`, option.price)}>+</button>
                                     {option.price ? (<div>${option.price}</div>) : null}
                                 </div>
-                            ) : conditionallyRenderInput(displayType, amount, multipleUnits) === 'checkbox!' ? (
-                                <div className="flex justify-between items-center my-2">
-                                    <div className="flex items-center basis-3/4 gap-x-4">
-                                        <input
-                                            {...form.register(`${name}.option.${option.id}`)}
-                                            type="checkbox"
-                                            className="h-6 w-6 border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                        />
-                                        <div className="flex flex-col">
-                                            <label className="block text-lg font-medium text-gray-700">
-                                                {option.name}
-                                            </label>
-                                            <span>{option.description}</span>
-                                        </div>
-                                    </div>
-                                    {option.price ? (<div>${option.price}</div>) : null}
-                                </div>
-                            ) : conditionallyRenderInput(displayType, amount, multipleUnits) === 'checkbox and multiple units!' ? (
-                                <div className="flex justify-between items-center my-2">
-                                    <div className="flex items-center basis-3/4 gap-x-4">
-                                        <div className="flex flex-col">
-                                            <label className="block text-lg font-medium text-gray-700">
-                                                {option.name}
-                                            </label>
-                                            <span>{option.description}</span>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-x-2">
-                                        <button className="text-2xl p-1" onClick={() => handleInputNumber(false, `${name}.option.${option.id}.amount`)}>-</button>
-                                        <input
-                                            defaultValue={0}
-                                            type="number"
-                                            readOnly
-                                            className="text-center w-10 h-6"
-                                            {...form.register(`${name}.option.${option.id}.amount`, {
-                                                valueAsNumber: true,
-                                                min: 0,
-                                                max: option.maxAmount || undefined,
-                                            })}
-                                        />
-                                        <button className="text-2xl p-1" onClick={() => handleInputNumber(true, `${name}.option.${option.id}.amount`)}>+</button>
-                                        {option.price ? (<div>${option.price}</div>) : null}
-                                    </div>
-                                </div>
-                            ) : 'Ni idea wachin'}
+                            </div>
                         </div>
                     )
                 })

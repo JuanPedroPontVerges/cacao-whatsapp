@@ -48,21 +48,22 @@ export const storeRouter = createRouter()
         const productStoreQuery = await ctx.prisma.product.findFirst({
           where: {
             enabled: true,
-            productStore: {
-              productId: input.id,
-            }
           },
           select: {
             productStore: true,
           }
         });
-        console.log('productStoreQuery', productStoreQuery);
         const details = await ctx.prisma.productStoreToOptionGroup.findMany({
-          where: {  
+          where: {
             productStoreId: productStoreQuery?.productStore?.id,
             enabled: true,
             optionGroup: {
               enabled: true,
+              options: {
+                some: {
+                  enabled: true
+                }
+              }
             },
             productOptions: {
               some: {
@@ -71,6 +72,15 @@ export const storeRouter = createRouter()
             }
           },
           include: {
+            optionGroup: true,
+            productOptions: {
+              where: {
+                enabled: true,
+              },
+              include: {
+                option: true,
+              }
+            },
             productStore: {
               select: {
                 product: {
@@ -78,17 +88,20 @@ export const storeRouter = createRouter()
                     name: true,
                     description: true,
                     imageUrl: true,
+                    price: true,
                   }
                 },
               }
             },
-            optionGroup: {
-              select: {
-                id: true,
-                name: true,
-                options: true
-              }
-            },
+            // optionGroup: {
+            //   include: {
+            //     options: {
+            //       where: {
+            //         enabled: true
+            //       }
+            //     }
+            //   }
+            // },
             displayType: true,
           }
         })
