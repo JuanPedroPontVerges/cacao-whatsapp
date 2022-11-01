@@ -5,6 +5,7 @@ import { Fragment } from "react";
 import Cursed from 'public/assets/alien.png'
 import { useLocalSession } from "../helpers/session.hooks";
 import { trpc } from "../utils/trpc";
+import Link from "next/link";
 
 const ShoppingCart: React.FC<{ visible: boolean, toggleShoppingCart: () => void }> = ({ visible, toggleShoppingCart }) => {
     const [session] = useLocalSession();
@@ -65,59 +66,71 @@ const ShoppingCart: React.FC<{ visible: boolean, toggleShoppingCart: () => void 
                                             <div className="mt-8">
                                                 <div className="flow-root">
                                                     <ul role="list" className="-my-6 divide-y divide-gray-200">
-                                                        {cartQuery.data?.productStoreCarts.map((productStoreCart) => (
-                                                            <li key={productStoreCart.id} className="flex py-6">
-                                                                <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
-                                                                    <Image
-                                                                        src={productStoreCart.productStore.product.imageUrl || Cursed}
-                                                                        alt={'Nombre de producto'}
-                                                                        className="h-full w-full object-cover object-center"
-                                                                    />
-                                                                </div>
-
-                                                                <div className="ml-4 flex flex-1 flex-col">
-                                                                    <div>
-                                                                        <div className="flex justify-between text-base font-medium text-gray-900">
-                                                                            <h3>
-                                                                                {productStoreCart.productStore.product.name}
-                                                                            </h3>
-                                                                            <p className="ml-4">{productStoreCart.finalPrice}</p>
+                                                        {cartQuery.data?.productStoreCarts.length || 0 > 0 ? (
+                                                            cartQuery.data?.productStoreCarts.map((productStoreCart) => (
+                                                                <Link href={`/store/product/${productStoreCart.productStore.product.id}?productStoreCartId=${productStoreCart.id}`} key={productStoreCart.id}>
+                                                                    <li className="flex py-6">
+                                                                        <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
+                                                                            <Image
+                                                                                src={productStoreCart.productStore.product.imageUrl || Cursed}
+                                                                                alt={'Nombre de producto'}
+                                                                                className="h-full w-full object-cover object-center"
+                                                                            />
                                                                         </div>
-                                                                    </div>
-                                                                    <div className="flex flex-1 items-end justify-between text-sm">
-                                                                        <p className="text-gray-500">Qty {productStoreCart.amount}</p>
 
-                                                                        <div className="flex">
-                                                                            <button
-                                                                                type="button"
-                                                                                className="font-medium text-indigo-600 hover:text-indigo-500"
-                                                                                onClick={() => (onClickDelete(productStoreCart.id))}
-                                                                            >
-                                                                                Remove
-                                                                            </button>
+                                                                        <div className="ml-4 flex flex-1 flex-col">
+                                                                            <div>
+                                                                                <div className="flex justify-between text-base font-medium text-gray-900">
+                                                                                    <h3>
+                                                                                        {productStoreCart.productStore.product.name}
+                                                                                    </h3>
+                                                                                    <p className="ml-4">{productStoreCart.finalPrice}</p>
+                                                                                </div>
+                                                                            </div>
+                                                                            <div className="flex flex-1 items-end justify-between text-sm">
+                                                                                <p className="text-gray-500">Qty {productStoreCart.amount}</p>
+
+                                                                                <div className="flex">
+                                                                                    <button
+                                                                                        type="button"
+                                                                                        className="font-medium text-indigo-600 hover:text-indigo-500"
+                                                                                        onClick={() => (onClickDelete(productStoreCart.id))}
+                                                                                    >
+                                                                                        Remove
+                                                                                    </button>
+                                                                                </div>
+                                                                            </div>
                                                                         </div>
-                                                                    </div>
-                                                                </div>
-                                                            </li>
-                                                        ))}
+                                                                    </li>
+                                                                </Link>
+                                                            ))
+                                                        ) : (
+                                                            <p>No has agregado ningún item</p>
+                                                        )}
+
                                                     </ul>
                                                 </div>
                                             </div>
                                         </div>
 
                                         <div className="border-t border-gray-200 py-6 px-4 sm:px-6">
-                                            <div className="flex justify-between text-base font-medium text-gray-900">
-                                                <p>Subtotal</p>
-                                                <p>${finalPrice}</p>
-                                            </div>
-                                            <div className="mt-6">
-                                                <a
-                                                    href="#"
-                                                    className="flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700"
-                                                >
-                                                    Checkout
-                                                </a>
-                                            </div>
+
+                                            {cartQuery.data?.productStoreCarts.length || 0 > 0 ? (
+                                                <>
+                                                    <div className="flex justify-between text-base font-medium text-gray-900">
+                                                        <p>Subtotal</p>
+                                                        <p>${finalPrice}</p>
+                                                    </div>
+                                                    <div className="mt-6">
+                                                        <a
+                                                            href="#"
+                                                            className="flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700"
+                                                        >
+                                                            Checkout
+                                                        </a>
+                                                    </div>
+                                                </>
+                                            ) : null}
                                             <div className="mt-6 flex justify-center text-center text-sm text-gray-500">
                                                 <p>
                                                     or{' '}
@@ -126,7 +139,7 @@ const ShoppingCart: React.FC<{ visible: boolean, toggleShoppingCart: () => void 
                                                         className="font-medium text-indigo-600 hover:text-indigo-500"
                                                         onClick={() => toggleShoppingCart()}
                                                     >
-                                                        Continue Shopping
+                                                        Seguir comprando
                                                         <span aria-hidden="true"> &rarr;</span>
                                                     </button>
                                                 </p>

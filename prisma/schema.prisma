@@ -215,12 +215,12 @@ model ProductStoreCart {
 }
 
 model ProductStoreCartToOption {
-    id                 String           @id @default(cuid())
     productStoreCartId String
     optionId           String
     amount             Int
     option             Option           @relation(fields: [optionId], references: [id], onDelete: Cascade)
     productStoreCart   ProductStoreCart @relation(fields: [productStoreCartId], references: [id], onDelete: Cascade)
+    @@id([productStoreCartId, optionId])
 }
 
 model Cart {

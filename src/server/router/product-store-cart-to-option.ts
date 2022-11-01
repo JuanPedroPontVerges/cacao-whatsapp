@@ -11,8 +11,14 @@ export const productStoreCartToOptionRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       const { amount, productStoreCartId, optionId } = input;
-      return await ctx.prisma.productStoreCartToOption.create({
-        data: {
+      return await ctx.prisma.productStoreCartToOption.upsert({
+        where: {
+          productStoreCartId_optionId: {
+            productStoreCartId,
+            optionId
+          }
+        },
+        create: {
           amount,
           productStoreCart: {
             connect: {
@@ -25,8 +31,18 @@ export const productStoreCartToOptionRouter = createRouter()
             }
           }
         },
-        select: {
-          id: true,
+        update: {
+          amount,
+          productStoreCart: {
+            connect: {
+              id: productStoreCartId,
+            },
+          },
+          option: {
+            connect: {
+              id: optionId,
+            }
+          }
         }
       });
     }

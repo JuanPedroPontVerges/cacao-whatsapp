@@ -24,13 +24,16 @@ export type ProductStoreCartFormInput = {
         }>
     }>
 }
-const ProductDetail: NextPageWithLayout = ({ id }) => {
+const ProductDetail: NextPageWithLayout = ({ query }) => {
     const router = useRouter()
     const cartMutation = trpc.useMutation(['cartRouter.create']);
     const [{ cartId }, setSession] = useLocalSession();
+    const productStoreCartQuery = trpc.useQuery(['productStoreCartRouter.findById', { id: query.productStoreCartId }])
     const productStoreCartMutation = trpc.useMutation(['productStoreCartRouter.create']);
+    const productStoreCartUpdate = trpc.useMutation(['productStoreCartRouter.update']);
     const productStoreCartToOptionMutation = trpc.useMutation(['productStoreCartToOptionRouter.create']);
-    const { data } = trpc.useQuery(["storeRouter.getProductDetails", { id }]);
+    const [isLoaded, setIsLoaded] = useState(false);
+    const { data } = trpc.useQuery(["storeRouter.getProductDetailsByProductId", { id: query.id }]);
     const form = useForm<ProductStoreCartFormInput>({
         defaultValues: {
             amount: 1,
@@ -47,7 +50,29 @@ const ProductDetail: NextPageWithLayout = ({ id }) => {
             }
         }
     }, [data])
+
+    useEffect(() => {
+        if (productStoreCartQuery.data) {
+            if (!isLoaded) {
+                const { additionalInfo, amount, finalPrice, productStoreCartToOptions } = productStoreCartQuery.data
+                form.setValue('additionalInfo', additionalInfo as string)
+                form.setValue('amount', amount)
+                form.setValue('finalPrice', finalPrice)
+                const formFields = form.getValues();
+                for (const productStoreToOptionGroupId in formFields.productStoreToOptionGroups) {
+                    for (const optionId in formFields.productStoreToOptionGroups[productStoreToOptionGroupId]?.option) {
+                        const optionInQuery = productStoreCartToOptions.find((option) => option.optionId === optionId);
+                        if (optionInQuery) {
+                            form.setValue(`productStoreToOptionGroups.${productStoreToOptionGroupId}.option.${optionId}`, { amount: optionInQuery.amount });
+                        }
+                    }
+                }
+            }
+            setIsLoaded(true)
+        }
+    }, [productStoreCartQuery])
     if (!data) return (<>No data</>)
+
     const product = data[0]?.productStore.product
     const handleDescriptionText = (displayType: DisplayType, amount: number | null): string => {
         if (displayType && amount) {
@@ -93,16 +118,30 @@ const ProductDetail: NextPageWithLayout = ({ id }) => {
     }
 
     const onSubmitForm: SubmitHandler<ProductStoreCartFormInput> = async (input) => {
-        console.log('input', input);
+        const { additionalInfo, amount, finalPrice, productStoreToOptionGroups } = input;
+        if (query.productStoreCartId) {
+            await productStoreCartUpdate.mutateAsync({ id: query.productStoreCartId, additionalInfo, amount, finalPrice })
+            for (const productStoreToOptionGroupId in productStoreToOptionGroups) {
+                const options = productStoreToOptionGroups[productStoreToOptionGroupId]?.option
+                if (options && query.productStoreCartId) {
+                    for (const optionId in options) {
+                        const amount = options[optionId]?.amount || 0;
+                        await productStoreCartToOptionMutation.mutateAsync({ amount, optionId, productStoreCartId: query.productStoreCartId })
+                    }
+                }
+            }
+            await productStoreCartQuery.refetch()
+            router.back()
+            return;
+        }
         if (data[0]?.productStoreId) {
-            const { additionalInfo, amount, finalPrice, productStoreToOptionGroups } = input;
             if (cartId) {
                 const { id: productStoreCartId } = await productStoreCartMutation.mutateAsync({ cartId, productStoreId: data[0]?.productStoreId, additionalInfo, amount, finalPrice });
                 for (const productStoreToOptionGroupId in productStoreToOptionGroups) {
                     const options = productStoreToOptionGroups[productStoreToOptionGroupId]?.option
                     if (options && productStoreCartId) {
                         for (const optionId in options) {
-                            const amount = options[optionId]?.amount;
+                            const amount = options[optionId]?.amount || 0;
                             await productStoreCartToOptionMutation.mutateAsync({ amount, optionId, productStoreCartId })
                         }
                     }
@@ -115,7 +154,7 @@ const ProductDetail: NextPageWithLayout = ({ id }) => {
                     const options = productStoreToOptionGroups[productStoreToOptionGroupId]?.option
                     if (options && productStoreCartId) {
                         for (const optionId in options) {
-                            const amount = options[optionId]?.amount;
+                            const amount = options[optionId]?.amount || 0;
                             if (amount > 0) {
                                 await productStoreCartToOptionMutation.mutateAsync({ amount, optionId, productStoreCartId })
                             }
@@ -123,6 +162,7 @@ const ProductDetail: NextPageWithLayout = ({ id }) => {
                     }
                 }
             }
+            router.back()
         }
     }
     return (
@@ -166,7 +206,7 @@ const ProductDetail: NextPageWithLayout = ({ id }) => {
                         {
                             data?.map((productStoreToOptionGroup) => (
                                 <div key={productStoreToOptionGroup.id} className="my-2">
-                                    <Disclosure>
+                                    <Disclosure as="div" defaultOpen={query.productStoreCartId ? true : false}>
                                         {({ open }) => (
                                             <>
                                                 <Disclosure.Button className="flex w-full justify-between items-center rounded-lg bg-purple-100 px-4 py-2 text-left text-base font-medium text-purple-900 hover:bg-purple-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75">
@@ -254,7 +294,7 @@ ProductDetail.getLayout = function getLayout(page) {
 
 export const getServerSideProps: GetServerSideProps = async (ctx: GetServerSidePropsContext) => {
     return {
-        props: ctx.params || {}
+        props: { query: ctx.query } || {}
     }
 }
 

@@ -20,6 +20,7 @@ const Store: NextPageWithLayout = ({ id }) => {
     const [selectedCategory, setSelectedCategory] = useState(data?.[0]);
     const [isShoppingCartVisible, setIsShoppingCartVisible] = useState(false);
     const [session] = useLocalSession();
+    const cartQuery = trpc.useQuery(["cartRouter.findProductStoreCartQuantity", { cartId: session.cartId }])
     useEffect(() => {
         console.log('session', session);
     }, [session])
@@ -78,6 +79,13 @@ const Store: NextPageWithLayout = ({ id }) => {
                                         type="button"
                                         className="rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                                     >
+                                        {cartQuery.data?.length || 0 > 0 ? (
+                                            <span className="inline-flex items-center justify-center px-2 py-1 mr-2 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">
+                                                {cartQuery.data?.length}
+                                            </span>
+                                        ) : (
+                                            null
+                                        )}
                                         <ShoppingCartIcon className="h-6 w-6" aria-hidden="true" onClick={toggleShoppingCart} />
                                     </button>
                                 </div>

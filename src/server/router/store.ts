@@ -44,21 +44,26 @@ export const storeRouter = createRouter()
       }
     },
   })
-  .query("getProductDetails", {
+  .query("getProductDetailsByProductId", {
     input: z.object({ id: z.string().nullish() }).nullish(),
     async resolve({ ctx, input }) {
       if (input && input.id != null) {
-        const productStoreQuery = await ctx.prisma.product.findFirst({
+        const productQuery = await ctx.prisma.product.findFirst({
           where: {
+            id: input.id,
             enabled: true,
           },
           select: {
             productStore: true,
+            name: true,
+            description: true,
+            imageUrl: true,
+            price: true,
           }
         });
         return await ctx.prisma.productStoreToOptionGroup.findMany({
           where: {
-            productStoreId: productStoreQuery?.productStore?.id,
+            productStoreId: productQuery?.productStore?.id,
             enabled: true,
             optionGroup: {
               enabled: true,

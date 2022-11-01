@@ -57,8 +57,10 @@ export const cartRouter = createRouter()
                 },
                 productStore: {
                   select: {
+                    id: true,
                     product: {
                       select: {
+                        id: true,
                         imageUrl: true,
                         price: true,
                         name: true,
@@ -68,6 +70,24 @@ export const cartRouter = createRouter()
                 }
               }
             }
+          }
+        })
+      }
+    }
+  })
+  .query("findProductStoreCartQuantity", {
+    input: z.object({
+      cartId: z.string().nullish(),
+    }),
+    async resolve({ ctx, input }) {
+      const { cartId } = input;
+      if (cartId && cartId != null) {
+        return await ctx.prisma.productStoreCart.findMany({
+          where: {
+            cartId,
+          },
+          select: {
+            _count: true
           }
         })
       }

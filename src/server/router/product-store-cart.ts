@@ -35,6 +35,57 @@ export const productStoreCartRouter = createRouter()
       });
     }
   })
+  .mutation("update", {
+    input: z.object({
+      id: z.string(),
+      amount: z.number(),
+      finalPrice: z.number(),
+      additionalInfo: z.string().nullish(),
+    }),
+    async resolve({ ctx, input }) {
+      const { amount, finalPrice, additionalInfo, id} = input;
+      return await ctx.prisma.productStoreCart.update({
+        where: {
+          id,
+        },
+        data: {
+          amount,
+          finalPrice,
+          additionalInfo,
+        },
+        select: {
+          id: true,
+        }
+      });
+    }
+  })
+  .query("findById", {
+    input: z.object({ id: z.string().nullish() }).nullish(),
+    async resolve({ ctx, input }) {
+      if (input && input.id != null) {
+        return await ctx.prisma.productStoreCart.findFirst({
+          where: {
+            id: input.id
+          },
+          include: {
+            productStoreCartToOptions: {
+              include: {
+                option: {
+                  include: {
+                    optionGroup: {
+                      include: {
+                        productStoreToOptionGroups: true,
+                      }
+                    }
+                  }
+                }
+              }
+            },
+          }
+        });
+      }
+    },
+  })
   .query("getCategoriesByMenuId", {
     input: z.object({ id: z.string().nullish() }).nullish(),
     async resolve({ ctx, input }) {
