@@ -1,5 +1,6 @@
 import { DisplayType, Option } from "@prisma/client"
 import { UseFormReturn } from "react-hook-form";
+import { ProductStoreCartFormInput } from "../pages/store/product/[id]";
 
 type OptionGroupAction = {
     option: Option;
@@ -12,7 +13,7 @@ export type ProductDetailActionProps = {
     name: string;
     disabled: boolean;
     multipleUnits?: boolean;
-    form: UseFormReturn;
+    form: UseFormReturn<ProductStoreCartFormInput>;
     handleSetPrice: (price: number) => void;
 }
 /*
@@ -26,7 +27,7 @@ const ProductDetailAction: React.FC<ProductDetailActionProps> = ({ displayType, 
             let counter = 0;
             const optionGroupWatcher = form.watch(`${name}`)
             for (const option in optionGroupWatcher.option) {
-                counter += optionGroupWatcher.option[option].amount;
+                counter += optionGroupWatcher.option?.[option]?.amount;
             }
             if (counter + 1 > amount && add === true) {
                 alert('Llegaste al limite')
@@ -62,7 +63,7 @@ const ProductDetailAction: React.FC<ProductDetailActionProps> = ({ displayType, 
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-x-2">
-                                    <button className="text-2xl p-1" onClick={() => handleInputNumber(false, `${name}.option.${option.id}.amount`, option.price)}>-</button>
+                                    <button type={'button'} className="text-2xl p-1" onClick={() => handleInputNumber(false, `${name}.option.${option.id}.amount`, option.price)}>-</button>
                                     <input
                                         defaultValue={0}
                                         type="number"
@@ -74,7 +75,7 @@ const ProductDetailAction: React.FC<ProductDetailActionProps> = ({ displayType, 
                                             max: option.maxAmount || undefined,
                                         })}
                                     />
-                                    <button className="text-2xl p-1 disabled:text-red-300" disabled={disabled} onClick={() => handleInputNumber(true, `${name}.option.${option.id}.amount`, option.price)}>+</button>
+                                    <button type={'button'} className="text-2xl p-1 disabled:text-red-300" disabled={disabled} onClick={() => handleInputNumber(true, `${name}.option.${option.id}.amount`, option.price)}>+</button>
                                     {option.price ? (<div>${option.price}</div>) : null}
                                 </div>
                             </div>

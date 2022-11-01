@@ -10,4 +10,12 @@ const Index: NextPageWithLayout = (props) => {
     )
 }
 
+Index.getLayout = function getLayout(page) {
+    return (
+        <StoreNav>
+            {page}
+        </StoreNav>
+    )
+}
+
 export default Index;

@@ -2,40 +2,46 @@ import { z } from "zod";
 import { createRouter } from "./context";
 
 // Example router with queries that can only be hit if the user requesting is signed in
-export const storeRouter = createRouter()
-  .query("getVenueByUser", {
-    input: z.object({ id: z.string().nullish() }).nullish(),
+export const productStoreCartRouter = createRouter()
+  .mutation("create", {
+    input: z.object({
+      amount: z.number(),
+      finalPrice: z.number(),
+      productStoreId: z.string(),
+      cartId: z.string(),
+      additionalInfo: z.string().nullish(),
+    }),
     async resolve({ ctx, input }) {
-      if (input && input.id != null) {
-        return await ctx.prisma.user.findFirst({
-          where: {
-            id: input.id
+      const { amount, finalPrice, additionalInfo, productStoreId, cartId } = input;
+      return await ctx.prisma.productStoreCart.create({
+        data: {
+          amount,
+          finalPrice,
+          additionalInfo,
+          productStore: {
+            connect: {
+              id: productStoreId,
+            }
           },
-          select: {
-            venueId: true,
-            venue: {
-              select: {
-                menus: true
-              }
+          cart: {
+            connect: {
+              id: cartId,
             }
           }
-        });
-      }
-    },
+        },
+        select: {
+          id: true,
+        }
+      });
+    }
   })
   .query("getCategoriesByMenuId", {
     input: z.object({ id: z.string().nullish() }).nullish(),
     async resolve({ ctx, input }) {
-      console.log('input', input);
       if (input && input.id != null) {
         return await ctx.prisma.category.findMany({
           where: {
-            menuId: input.id,
-            AND: {
-              products: {
-                some: {}
-              }
-            }
+            menuId: input.id
           },
           include: {
             products: true,

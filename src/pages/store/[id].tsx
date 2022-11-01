@@ -9,6 +9,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Cursed from 'public/assets/alien.png'
 import ShoppingCart from "../../components/ShoppingCart";
+import { useLocalSession } from "../../helpers/session.hooks";
 
 function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ')
@@ -18,6 +19,10 @@ const Store: NextPageWithLayout = ({ id }) => {
     const { data } = trpc.useQuery(["storeRouter.getCategoriesByMenuId", { id }]);
     const [selectedCategory, setSelectedCategory] = useState(data?.[0]);
     const [isShoppingCartVisible, setIsShoppingCartVisible] = useState(false);
+    const [session] = useLocalSession();
+    useEffect(() => {
+        console.log('session', session);
+    }, [session])
     if (!data) return (<>Loading...</>)
     const onClickCategory = (categoryId: string) => {
         const category = data?.find((category) => category.id === categoryId);

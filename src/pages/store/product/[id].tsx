@@ -1,5 +1,5 @@
 import { Disclosure } from "@headlessui/react";
-import { ShoppingCartIcon, ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
+import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
 import { NextPage, GetServerSideProps, GetServerSidePropsContext } from "next";
 import Image from "next/image";
 import { useRouter } from "next/router";
@@ -8,26 +8,46 @@ import Cursed from 'public/assets/alien.png'
 import ProductDetailAction from "../../../components/ProductDetailAction";
 import Button from "../../../components/Button";
 import { DisplayType } from "@prisma/client";
-import { useForm } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import Form from "../../../components/Form";
 import { useEffect, useState } from "react";
-const ProductDetail: NextPage<Record<string, string>> = ({ id }) => {
+import { NextPageWithLayout } from "../../_app";
+import StoreNav from "../../../components/layouts/StoreNav";
+import { useLocalSession } from "../../../helpers/session.hooks";
+export type ProductStoreCartFormInput = {
+    additionalInfo?: string,
+    amount: number,
+    finalPrice: number;
+    productStoreToOptionGroups: Record<string, {
+        option: Record<string, {
+            amount: number
+        }>
+    }>
+}
+const ProductDetail: NextPageWithLayout = ({ id }) => {
     const router = useRouter()
+    const cartMutation = trpc.useMutation(['cartRouter.create']);
+    const [{ cartId }, setSession] = useLocalSession();
+    const productStoreCartMutation = trpc.useMutation(['productStoreCartRouter.create']);
+    const productStoreCartToOptionMutation = trpc.useMutation(['productStoreCartToOptionRouter.create']);
     const { data } = trpc.useQuery(["storeRouter.getProductDetails", { id }]);
-    const form = useForm<any>({
+    const form = useForm<ProductStoreCartFormInput>({
         defaultValues: {
             amount: 1,
         }
     });
     const [productPrice, setProductPrice] = useState<number | null | undefined>(data?.[0]?.productStore.product.price);
     useEffect(() => {
-        if (!productPrice) {
-            setProductPrice(data?.[0]?.productStore.product.price)
-            form.setValue('finalPrice', data?.[0]?.productStore.product.price);
+        if (!productPrice && data) {
+            if (data[0]) {
+                if (data[0].productStore.product.price) {
+                    setProductPrice(data?.[0]?.productStore.product.price)
+                    form.setValue('finalPrice', data?.[0]?.productStore.product.price);
+                }
+            }
         }
     }, [data])
     if (!data) return (<>No data</>)
-    const initialPrice = data?.[0]?.productStore.product.price;
     const product = data[0]?.productStore.product
     const handleDescriptionText = (displayType: DisplayType, amount: number | null): string => {
         if (displayType && amount) {
@@ -68,14 +88,42 @@ const ProductDetail: NextPage<Record<string, string>> = ({ id }) => {
         if (productPrice) {
             const amount = form.getValues('amount')
             form.setValue('amount', amount + 1);
-            console.log('productPrice', productPrice);
-            console.log('amount', amount);
             form.setValue('finalPrice', (amount + 1) * productPrice)
         }
     }
 
-    const onSubmitForm = (input: any) => {
+    const onSubmitForm: SubmitHandler<ProductStoreCartFormInput> = async (input) => {
         console.log('input', input);
+        if (data[0]?.productStoreId) {
+            const { additionalInfo, amount, finalPrice, productStoreToOptionGroups } = input;
+            if (cartId) {
+                const { id: productStoreCartId } = await productStoreCartMutation.mutateAsync({ cartId, productStoreId: data[0]?.productStoreId, additionalInfo, amount, finalPrice });
+                for (const productStoreToOptionGroupId in productStoreToOptionGroups) {
+                    const options = productStoreToOptionGroups[productStoreToOptionGroupId]?.option
+                    if (options && productStoreCartId) {
+                        for (const optionId in options) {
+                            const amount = options[optionId]?.amount;
+                            await productStoreCartToOptionMutation.mutateAsync({ amount, optionId, productStoreCartId })
+                        }
+                    }
+                }
+            } else {
+                const { id: cartId } = await cartMutation.mutateAsync({ finalPrice });
+                setSession({ cartId });
+                const { id: productStoreCartId } = await productStoreCartMutation.mutateAsync({ cartId, productStoreId: data[0]?.productStoreId, additionalInfo, amount, finalPrice });
+                for (const productStoreToOptionGroupId in productStoreToOptionGroups) {
+                    const options = productStoreToOptionGroups[productStoreToOptionGroupId]?.option
+                    if (options && productStoreCartId) {
+                        for (const optionId in options) {
+                            const amount = options[optionId]?.amount;
+                            if (amount > 0) {
+                                await productStoreCartToOptionMutation.mutateAsync({ amount, optionId, productStoreCartId })
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
     return (
         <>
@@ -116,25 +164,25 @@ const ProductDetail: NextPage<Record<string, string>> = ({ id }) => {
                     </div>
                     <div className="my-4">
                         {
-                            data?.map((group) => (
-                                <div key={group.id} className="my-2">
+                            data?.map((productStoreToOptionGroup) => (
+                                <div key={productStoreToOptionGroup.id} className="my-2">
                                     <Disclosure>
                                         {({ open }) => (
                                             <>
                                                 <Disclosure.Button className="flex w-full justify-between items-center rounded-lg bg-purple-100 px-4 py-2 text-left text-base font-medium text-purple-900 hover:bg-purple-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75">
-                                                    <span>{group.optionGroup.name}</span>
-                                                    <span className="italic text-sm">{handleDescriptionText(group.displayType, group.amount)}</span>
+                                                    <span>{productStoreToOptionGroup.optionGroup.name}</span>
+                                                    <span className="italic text-sm">{handleDescriptionText(productStoreToOptionGroup.displayType, productStoreToOptionGroup.amount)}</span>
                                                 </Disclosure.Button>
                                                 <Disclosure.Panel className="px-4 pt-4 pb-2 text-sm text-gray-500">
                                                     <ProductDetailAction
                                                         disabled={false}
                                                         form={form}
-                                                        name={`optionGroups.${group.id}`}
-                                                        amount={group.amount || 1}
-                                                        displayType={group.displayType}
-                                                        multipleUnits={group.multipleUnits}
+                                                        name={`productStoreToOptionGroups.${productStoreToOptionGroup.id}`}
+                                                        amount={productStoreToOptionGroup.amount || 1}
+                                                        displayType={productStoreToOptionGroup.displayType}
+                                                        multipleUnits={productStoreToOptionGroup.multipleUnits}
                                                         handleSetPrice={handleSetPrice}
-                                                        productOptions={group.productOptions}
+                                                        productOptions={productStoreToOptionGroup.productOptions}
                                                     />
                                                 </Disclosure.Panel>
                                             </>
@@ -193,6 +241,15 @@ const ProductDetail: NextPage<Record<string, string>> = ({ id }) => {
         </>
     )
 }
+
+ProductDetail.getLayout = function getLayout(page) {
+    return (
+        <StoreNav>
+            {page}
+        </StoreNav>
+    )
+}
+
 
 
 export const getServerSideProps: GetServerSideProps = async (ctx: GetServerSidePropsContext) => {

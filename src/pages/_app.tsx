@@ -28,22 +28,6 @@ const MyApp: AppType<{ session: Session | null }> = ({
       {getLayout(<Component {...pageProps} />) as ReactElement<any, any> | null}
     </SessionProvider>)
 }
-// const MyApp: AppType<{ session: Session | null }> = ({
-//   Component,
-//   pageProps: { session, ...pageProps },
-// }) => {
-//   return (
-//     <SessionProvider session={session}>
-//       <Dashboard>
-//         <DndProvider backend={HTML5Backend}>
-//           <Component {...pageProps} />
-//         </DndProvider>
-//       </Dashboard>
-//     </SessionProvider>
-//   );
-// };
-
-
 
 const getBaseUrl = () => {
   if (typeof window !== "undefined") return ""; // browser should use relative url

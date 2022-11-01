@@ -12,6 +12,9 @@ import { productRouter } from "./product";
 import { productStoreToOptionGroupRouter } from "./product-store-to-option-group";
 import { productOptionRouter } from "./product-option";
 import { storeRouter } from "./store";
+import { productStoreCartRouter } from "./product-store-cart";
+import { productStoreCartToOptionRouter } from "./product-store-cart-to-option";
+import { cartRouter } from "./cart";
 
 export const appRouter = createRouter()
   .transformer(superjson)
@@ -25,7 +28,11 @@ export const appRouter = createRouter()
   .merge("productRouter.", productRouter)
   .merge("productStoreToOptionGroupRouter.", productStoreToOptionGroupRouter)
   .merge("productOptionRouter.", productOptionRouter)
-  .merge("storeRouter.", storeRouter);
+  .merge("storeRouter.", storeRouter)
+  .merge("productStoreCartRouter.", productStoreCartRouter)
+  .merge("productStoreCartToOptionRouter.", productStoreCartToOptionRouter)
+  .merge("cartRouter.", cartRouter);
+
   
 
 

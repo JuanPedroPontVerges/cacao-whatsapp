@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { trpc } from '../../utils/trpc';
+import React from 'react';
+import SessionProvider from '../../context/session-provider.component';
 
 type StoreNavProps = {
     children: React.ReactNode;
@@ -8,7 +8,9 @@ type StoreNavProps = {
 const StoreNav: React.FC<StoreNavProps> = ({ children }) => {
     return (
         <>
-            {children}
+            <SessionProvider>
+                {children}
+            </SessionProvider>
         </>
     )
 }
