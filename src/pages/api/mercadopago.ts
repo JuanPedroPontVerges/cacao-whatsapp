@@ -17,16 +17,16 @@ export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse
 ) {
-    const { items } = req.body;
-    console.log('items', items);
+    console.log({ req, res });
+    // const { items } = req.body;
     const url = `https://api.mercadopago.com/checkout/preferences`;
     const data = {
         additional_info: 'Compra de proudcot de WAPI!!',
-        notification_url: 'localhost:3000',
+        notification_url: 'https://4a87-186-136-6-251.ngrok.io/mercadopago',
         items: [
             {
-                title: "Mensaje extra",
-                description: "Mensaje extra para el envio de campañas",
+                title: "Compra de proudcot de WAPI!!",
+                description: "Compra de proudcot de WAPI!!",
                 picture_url: "https://www.cacao.to/logo-og.png",
                 category_id: "virtual_goods",
                 quantity: 1,
@@ -40,7 +40,8 @@ export default async function handler(
         },
         external_reference: 123,
         back_urls: {
-            success: `${process.env.APP_BASE_URL}/confirm-payment`,
+            success: `https://4a87-186-136-6-251.ngrok.io/mercadopago`,
+            failure: 'https://4a87-186-136-6-251.ngrok.io/mercadopago',
         },
     }
     try {
