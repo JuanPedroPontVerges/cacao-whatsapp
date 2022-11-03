@@ -10,7 +10,7 @@ import type { AppRouter } from "../server/router";
 import "../styles/globals.css";
 import { SessionProvider } from "next-auth/react";
 
-// redeployngs
+// redeployngss
 
 // eslint-disable-next-line @typescript-eslint/ban-types
 export type NextPageWithLayout = NextPage<{ id?: string, query?: any }> & {
