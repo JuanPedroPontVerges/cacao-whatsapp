@@ -25,25 +25,25 @@ const ProductDetailAction: React.FC<ProductDetailActionProps> = ({ displayType, 
         const isLimitedOptionGroup = displayType.name.includes('Cantidad Fija');
         if (isLimitedOptionGroup) {
             let counter = 0;
-            const optionGroupWatcher = form.watch(`${name}`)
-            for (const option in optionGroupWatcher.option) {
-                counter += optionGroupWatcher.option?.[option]?.amount;
+            const optionGroupWatcher = form.watch(`${name as `productStoreToOptionGroups.${string}`}`)
+            for (const option in optionGroupWatcher?.['option'] as Record<string, any>) {
+                counter += optionGroupWatcher?.option?.[option]?.amount || 0;
             }
             if (counter + 1 > amount && add === true) {
                 alert('Llegaste al limite')
                 return;
             }
         }
-        const prevValue = Number(form.getValues(inputAmountName)) || 0;
+        const prevValue = Number(form.getValues(inputAmountName as 'amount')) || 0;
         if (price && add === true) {
             handleSetPrice(Number(price));
         } else if (price && add === false && prevValue != 0) {
             handleSetPrice(-Math.abs(price))
         }
         if (add === true) {
-            form.setValue(inputAmountName, prevValue + 1)
+            form.setValue(inputAmountName as 'amount', prevValue + 1)
         } else if (prevValue > 0) {
-            form.setValue(inputAmountName, prevValue - 1)
+            form.setValue(inputAmountName as 'amount', prevValue - 1)
         }
     }
 
@@ -69,7 +69,7 @@ const ProductDetailAction: React.FC<ProductDetailActionProps> = ({ displayType, 
                                         type="number"
                                         readOnly
                                         className="text-center w-10 h-6"
-                                        {...form.register(`${name}.option.${option.id}.amount`, {
+                                        {...form.register(`${name}.option.${option.id}.amount` as `productStoreToOptionGroups.${string}`, {
                                             valueAsNumber: true,
                                             min: 0,
                                             max: option.maxAmount || undefined,
