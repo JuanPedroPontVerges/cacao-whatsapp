@@ -10,7 +10,7 @@ interface ListProps {
 
 
 const List: React.FC<ListProps> = ({ name, options, form }) => {
-    const [selectedId, setSelectedId] = useState(options[0].id)
+    const [selectedId, setSelectedId] = useState(options?.[0]?.id)
     const selected = options?.find(({ id }) => id == selectedId)
 
     useEffect(() => {
