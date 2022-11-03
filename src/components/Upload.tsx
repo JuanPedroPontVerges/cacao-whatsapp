@@ -11,7 +11,6 @@ const Upload: React.FC<UploadProps> = ({ label, form }) => {
     const [imageUrl, setImageUrl] = useState<string>();
     const uploadPhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
-            // const file = e.target.files?.[0]! EJEMPLO DE COMO HACER NULLABLE POSICIÓN EN ARRAY
             if (e.target.files[0]) {
                 const file = e.target.files[0]
                 const extention = file.name.split('.').pop();

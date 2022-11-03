@@ -220,6 +220,7 @@ model ProductStoreCartToOption {
     amount             Int
     option             Option           @relation(fields: [optionId], references: [id], onDelete: Cascade)
     productStoreCart   ProductStoreCart @relation(fields: [productStoreCartId], references: [id], onDelete: Cascade)
+
     @@id([productStoreCartId, optionId])
 }
 
@@ -227,15 +228,49 @@ model Cart {
     id                String             @id @default(cuid())
     customerId        String?
     finalPrice        Int
-    customer          Customer?          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+    order             Order?
     productStoreCarts ProductStoreCart[]
 }
 
 model Customer {
-    id          String @id @default(cuid())
+    id          String  @id @default(cuid())
     venueId     String
     fullName    String
     phoneNumber String
-    venue       Venue  @relation(fields: [venueId], references: [id], onDelete: Cascade)
-    carts       Cart[]
+    venue       Venue   @relation(fields: [venueId], references: [id], onDelete: Cascade)
+    orders      Order[]
+}
+
+model Order {
+    id             String      @id @default(cuid())
+    cartId         String      @unique
+    stateId        String
+    typeId         String
+    paymentTypeId  String
+    customerId     String
+    additionalInfo String?
+    total          Int
+    PaymentType    PaymentType @relation(fields: [paymentTypeId], references: [id], onDelete: Cascade)
+    customer       Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+    Cart           Cart        @relation(fields: [cartId], references: [id])
+    State          OrderState  @relation(fields: [stateId], references: [id], onDelete: Cascade)
+    Type           OrderType   @relation(fields: [typeId], references: [id], onDelete: Cascade)
+}
+
+model OrderType {
+    id     String  @id @default(cuid())
+    name   String
+    orders Order[]
+}
+
+model OrderState {
+    id     String  @id @default(cuid())
+    name   String
+    orders Order[]
+}
+
+model PaymentType {
+    id     String  @id @default(cuid())
+    name   String
+    orders Order[]
 }
