@@ -11,7 +11,7 @@ export const serverSchema = z.object({
   WAPI_AWS_PUBLIC_BUCKET_NAME: z.string(),
   WAPI_AWS_REGION: z.string(),
   WAPI_AWS_ACCESS_KEY_ID: z.string(),
-  AWS_SECRET_ACCESS_KEY: z.string(),
+  WAPI_AWS_SECRET_ACCESS_KEY: z.string(),
   MERCADOPAGO_ACCESS_TOKEN: z.string(),
   MERCADOPAGO_PUBLIC_KEY: z.string(),
 });
