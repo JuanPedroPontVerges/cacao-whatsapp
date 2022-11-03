@@ -420,35 +420,32 @@ const Catalog: NextPageWithLayout = () => {
         const { name, description, price, optionGroups, imageUrl } = input
         if (selectedCategory) {
             if (selectedProduct.product) {
-                productUpdate.mutate({ productId: selectedProduct.product.id, name, description, price, imageUrl }, {
-                    onSuccess: async (data: { productStore: { id: string } }) => {
-                        const productStoreId = data.productStore.id;
-                        for (const optionGroupId in optionGroups) {
-                            if (optionGroupId) {
-                                const productStoreToOptionGroup = optionGroups[optionGroupId]
-                                if (productStoreToOptionGroup) {
-                                    const response = await productStoreToOptionGroupUpdate.mutateAsync({
-                                        optionGroupId,
-                                        productStoreId,
-                                        displayTypeId: productStoreToOptionGroup?.displayTypeId,
-                                        amount: productStoreToOptionGroup.maxAmount,
-                                        enabled: productStoreToOptionGroup.enabled,
-                                        multipleUnits: productStoreToOptionGroup.multipleUnits,
-                                    })
-                                    if (productStoreToOptionGroup.options) {
-                                        for (const optionId in productStoreToOptionGroup.options) {
-                                            const enabled = productStoreToOptionGroup.options[optionId]
-                                            if (typeof enabled === 'boolean' && response) {
-                                                await productOptionUpdate.mutateAsync({ productStoreToOptionGroupId: response.id, optionId, enabled })
-                                            }
-
-                                        }
+                const response = await productUpdate.mutateAsync({ productId: selectedProduct.product.id, name, description, price, imageUrl })
+                const productStoreId = response?.productStore?.id;
+                for (const optionGroupId in optionGroups) {
+                    if (optionGroupId) {
+                        const productStoreToOptionGroup = optionGroups[optionGroupId]
+                        if (productStoreToOptionGroup) {
+                            const response = await productStoreToOptionGroupUpdate.mutateAsync({
+                                optionGroupId,
+                                productStoreId: productStoreId as string,
+                                displayTypeId: productStoreToOptionGroup?.displayTypeId,
+                                amount: productStoreToOptionGroup.maxAmount,
+                                enabled: productStoreToOptionGroup.enabled,
+                                multipleUnits: productStoreToOptionGroup.multipleUnits,
+                            })
+                            if (productStoreToOptionGroup.options) {
+                                for (const optionId in productStoreToOptionGroup.options) {
+                                    const enabled = productStoreToOptionGroup.options[optionId]
+                                    if (typeof enabled === 'boolean' && response) {
+                                        await productOptionUpdate.mutateAsync({ productStoreToOptionGroupId: response.id, optionId, enabled })
                                     }
+
                                 }
                             }
                         }
                     }
-                })
+                }
             } else {
                 productMutation.mutate({ name, description, price, imageUrl, index: productQuery.data?.length || 1, categoryId: selectedCategory.id }, {
                     onSuccess: async ({ productStore }) => {

@@ -64,7 +64,7 @@ export const productRouter = createProtectedRouter()
       if (typeof name === 'string') {
         if (input && input.productId != null) {
           return await ctx.prisma.product.update({
-            where: { id: productId },
+            where: { id: productId as string },
             data: {
               imageUrl,
               name,
@@ -78,10 +78,13 @@ export const productRouter = createProtectedRouter()
         }
       } else if (typeof enabled === 'boolean') {
         return await ctx.prisma.product.update({
-          where: { id: productId },
+          where: { id: productId as string },
           data: {
             enabled,
           },
+          select: {
+            productStore: true,
+          }
         })
       }
 
