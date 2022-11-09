@@ -16,6 +16,7 @@ import { productStoreCartRouter } from "./product-store-cart";
 import { productStoreCartToOptionRouter } from "./product-store-cart-to-option";
 import { cartRouter } from "./cart";
 import { paymentTypeRouter } from "./payment-type";
+import { orderRouter } from "./order";
 
 export const appRouter = createRouter()
   .transformer(superjson)
@@ -33,7 +34,8 @@ export const appRouter = createRouter()
   .merge("productStoreCartRouter.", productStoreCartRouter)
   .merge("productStoreCartToOptionRouter.", productStoreCartToOptionRouter)
   .merge("cartRouter.", cartRouter)
-  .merge("paymentTypeRouter.", paymentTypeRouter);
+  .merge("paymentTypeRouter.", paymentTypeRouter)
+  .merge("orderRouter.", orderRouter);
 
   
 

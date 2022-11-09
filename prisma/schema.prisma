@@ -168,7 +168,7 @@ model ProductOption {
 
 model DisplayType {
     id                         String                      @id @default(cuid())
-    name                       String
+    name                       String                      @unique
     productStoreToOptionGroups ProductStoreToOptionGroup[]
 }
 
@@ -235,7 +235,7 @@ model Customer {
     id          String  @id @default(cuid())
     venueId     String
     fullName    String
-    phoneNumber String
+    phoneNumber String  @unique
     venue       Venue   @relation(fields: [venueId], references: [id], onDelete: Cascade)
     orders      Order[]
 }
@@ -258,18 +258,18 @@ model Order {
 
 model OrderType {
     id     String  @id @default(cuid())
-    name   String
+    name   String  @unique
     orders Order[]
 }
 
 model OrderState {
     id     String  @id @default(cuid())
-    name   String?
+    name   String  @unique
     orders Order[]
 }
 
 model PaymentType {
     id     String  @id @default(cuid())
-    name   String
+    name   String  @unique
     orders Order[]
 }

@@ -39,6 +39,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
         { name: 'Inicio', href: '/', current: current == 0 ? true : false },
         { name: 'Catálogo', href: '/catalog', current: current == 1 ? true : false },
         { name: 'Reports', href: '/reports', current: current == 2 ? true : false },
+        { name: 'Ordenes', href: '/orders', current: current == 3 ? true : false },
     ]
     return (
         <DndProvider backend={HTML5Backend}>

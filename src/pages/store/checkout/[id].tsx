@@ -2,21 +2,35 @@ import { Disclosure } from "@headlessui/react"
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline"
 import { GetServerSideProps, GetServerSidePropsContext } from "next"
 import { useRouter } from "next/router"
-import { useForm } from "react-hook-form"
+import { SubmitHandler, useForm } from "react-hook-form"
 import Form from "../../../components/Form"
 import StoreNav from "../../../components/layouts/StoreNav"
 import { trpc } from "../../../utils/trpc"
 import { NextPageWithLayout } from "../../_app"
 
+type CheckoutFormInput = {
+    fullName: string;
+    phoneNumber: string;
+    paymentTypeId: string;
+    additionalInfo: string;
+}
+
 // TODO
 // [] Hacer el on submit del form y crear la orden junto al usario
 
 const Checkout: NextPageWithLayout = ({ query }) => {
-    const router = useRouter()
+    const cartId = query.id as string;
+    const router = useRouter();
     const paymentTypeQuery = trpc.useQuery(["paymentTypeRouter.findAll"])
-    const form = useForm<any>();
-    const onSubmitForm = (input: any) => {
-        console.log('input', input);
+    const orderMutation = trpc.useMutation(["orderRouter.create"])
+    const cartQuery = trpc.useQuery(["cartRouter.findById", { id: cartId }])
+    const form = useForm<CheckoutFormInput>();
+    const paymentTypeIdWatcher = form.watch('paymentTypeId');
+    const mercadoPagoPaymentTypeId = paymentTypeQuery?.data?.find((paymentType) => paymentType.name == 'Mercadopago')?.id
+    const onSubmitForm: SubmitHandler<CheckoutFormInput> = async (input) => {
+        if (!input.paymentTypeId) input.paymentTypeId = paymentTypeQuery.data?.[0]?.id || '123';
+        const result = await orderMutation.mutateAsync({ ...input, cartId })
+        router.push(`/store/checkout/success/${result.id}`)
     };
     return (
         <>
@@ -69,26 +83,12 @@ const Checkout: NextPageWithLayout = ({ query }) => {
                             </div>
                         </div>
                         <div className="mt-4">
-                            <div className="flex items-center gap-x-6">
-                                <label htmlFor="fullName" className="block text-sm font-medium text-gray-700">
-                                    Lo retiro personalmente
-                                </label>
-                                <input
-                                    {...form.register('pick-up')}
-                                    type="radio"
-                                    className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                />
-                            </div>
-                        </div>
-                        <div className="mt-4">
                             <div className="col-span-6 sm:col-span-3">
                                 <label htmlFor="country" className="block text-sm font-medium text-gray-700">
                                     Forma de pago
                                 </label>
                                 <select
-                                    id="country"
-                                    name="country"
-                                    autoComplete="country-name"
+                                    {...form.register('paymentTypeId')}
                                     className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
                                 >
                                     {paymentTypeQuery.data?.map((type) => (
@@ -97,13 +97,33 @@ const Checkout: NextPageWithLayout = ({ query }) => {
                                 </select>
                             </div>
                         </div>
+                        <div className={'mt-4'}>
+                            <label htmlFor="about" className="block text-sm font-medium text-gray-700">
+                                Comentarios adicionales
+                            </label>
+                            <div className="mt-1">
+                                <textarea
+                                    {...form.register('additionalInfo')}
+                                    rows={4}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    placeholder="Deja cualquier aclaración"
+                                />
+                            </div>
+                        </div>
+                        <div>
+                            <p className="italic">Momentaneamente no contamos con delivery</p>
+                        </div>
+                        <div className='mt-2 text-lg'>
+                            Total: ${cartQuery?.data?.finalPrice}
+                        </div>
                         <div className="mt-4 flex justify-center">
                             <button
+                                type={'submit'}
                                 className="flex items-center justify-center rounded-md border 
                                 border-transparent bg-[#128c7e] px-6 py-3 text-base font-medium
                                  text-white shadow-sm"
                             >
-                                Finalizar compra
+                                {paymentTypeIdWatcher === mercadoPagoPaymentTypeId ? 'Pagar con Mercadopago' : 'Finalizar compra'}
                             </button>
                         </div>
                     </Form>
