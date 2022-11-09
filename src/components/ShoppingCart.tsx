@@ -75,6 +75,7 @@ const ShoppingCart: React.FC<{ visible: boolean, toggleShoppingCart: () => void 
                                                                                 src={productStoreCart.productStore.product.imageUrl || Cursed}
                                                                                 alt={'Nombre de producto'}
                                                                                 className="h-full w-full object-cover object-center"
+                                                                                layout='responsive'
                                                                             />
                                                                         </div>
 
