@@ -22,7 +22,7 @@ type OrderDetailProps = {
             }
         }
 
-    }[]
+    }[],
 }
 
 const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCarts, additionalInfo, finalAmount, state, className }) => {

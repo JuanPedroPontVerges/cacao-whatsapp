@@ -35,7 +35,7 @@ const Orders: NextPageWithLayout = () => {
         const parsedState = action === 'confirm' ? 'Confirmado' : action === 'cancel' ? 'Cancelado' : 'no se';
         if (id) {
             await orderStateMutation.mutateAsync({ orderId: id, action: parsedState });
-            orderQuery.refetch()
+            await orderQuery.refetch()
         }
     }
 
@@ -67,7 +67,12 @@ const Orders: NextPageWithLayout = () => {
                 <Modal isOpen={isModalOpen} title='Detalle de orden' onClose={toggleModalVisiblity}>
                     <div className="mx-2 border border-black">
                         <div className="flex">
-                            <OrderDetail finalAmount={selectedOrder?.total} id={selectedOrder?.id} customer={selectedOrder?.customer} additionalInfo={selectedOrder?.additionalInfo} productStoreCarts={selectedOrder?.Cart.productStoreCarts} />
+                            <OrderDetail
+                                id={selectedOrder?.id}
+                                customer={selectedOrder?.customer}
+                                additionalInfo={selectedOrder?.additionalInfo}
+                                finalAmount={selectedOrder?.total}
+                                productStoreCarts={selectedOrder?.Cart.productStoreCarts} />
                         </div>
                     </div>
                 </Modal>

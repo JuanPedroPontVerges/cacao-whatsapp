@@ -14,6 +14,7 @@ export const serverSchema = z.object({
   WAPI_AWS_SECRET_ACCESS_KEY: z.string(),
   MERCADOPAGO_ACCESS_TOKEN: z.string(),
   MERCADOPAGO_PUBLIC_KEY: z.string(),
+  WHATSAPP_TOKEN: z.string(),
 });
 
 /**
