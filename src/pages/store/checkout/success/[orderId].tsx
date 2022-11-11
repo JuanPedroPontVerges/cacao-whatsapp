@@ -5,7 +5,7 @@ import { trpc } from "../../../../utils/trpc";
 import { NextPageWithLayout } from "../../../_app";
 
 const Success: NextPageWithLayout = ({ query }) => {
-    const orderId = query?.id;
+    const orderId = query?.orderId;
     const orderQuery = trpc.useQuery(["orderRouter.findById", { id: orderId }]);
     return (
         <>

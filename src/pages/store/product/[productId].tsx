@@ -33,7 +33,7 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
     const productStoreCartUpdate = trpc.useMutation(['productStoreCartRouter.update']);
     const productStoreCartToOptionMutation = trpc.useMutation(['productStoreCartToOptionRouter.create']);
     const [isLoaded, setIsLoaded] = useState(false);
-    const { data } = trpc.useQuery(["storeRouter.getProductDetailsByProductId", { id: query.id }]);
+    const { data } = trpc.useQuery(["storeRouter.getProductDetailsByProductId", { id: query.productId }]);
     const form = useForm<ProductStoreCartFormInput>({
         defaultValues: {
             amount: 1,
@@ -71,7 +71,7 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
             setIsLoaded(true)
         }
     }, [productStoreCartQuery])
-    if (!data) return (<>No data</>)
+    if (!data) return (<>Loading...</>)
 
     const product = data[0]?.productStore.product
     const handleDescriptionText = (displayType: DisplayType, amount: number | null): string => {
@@ -119,7 +119,7 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
 
     const onSubmitForm: SubmitHandler<ProductStoreCartFormInput> = async (input) => {
         const { additionalInfo, amount, finalPrice, productStoreToOptionGroups } = input;
-        if (query.productStoreCartId) {
+        if (query.productStoreCartId) { /* If is edit */
             await productStoreCartUpdate.mutateAsync({ id: query.productStoreCartId, additionalInfo, amount, finalPrice })
             for (const productStoreToOptionGroupId in productStoreToOptionGroups) {
                 const options = productStoreToOptionGroups[productStoreToOptionGroupId]?.option
@@ -136,6 +136,7 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
         }
         if (data[0]?.productStoreId) {
             if (cartId) {
+                console.log({ finalPrice });
                 const { id: productStoreCartId } = await productStoreCartMutation.mutateAsync({ cartId, productStoreId: data[0]?.productStoreId, additionalInfo, amount, finalPrice });
                 for (const productStoreToOptionGroupId in productStoreToOptionGroups) {
                     const options = productStoreToOptionGroups[productStoreToOptionGroupId]?.option

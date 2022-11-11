@@ -15,11 +15,8 @@ type CheckoutFormInput = {
     additionalInfo: string;
 }
 
-// TODO
-// [] Hacer el on submit del form y crear la orden junto al usario
-
 const Checkout: NextPageWithLayout = ({ query }) => {
-    const cartId = query.id as string;
+    const cartId = query.cartId as string;
     const router = useRouter();
     const paymentTypeQuery = trpc.useQuery(["paymentTypeRouter.findAll"])
     const orderMutation = trpc.useMutation(["orderRouter.create"])
@@ -32,6 +29,7 @@ const Checkout: NextPageWithLayout = ({ query }) => {
         const result = await orderMutation.mutateAsync({ ...input, cartId })
         router.push(`/store/checkout/success/${result.id}`)
     };
+    const finalPrice = cartQuery.data?.productStoreCarts.reduce((acc, value) => (value.finalPrice + acc), 0)
     return (
         <>
             <Disclosure as="nav" className="bg-gray-800">
@@ -72,13 +70,10 @@ const Checkout: NextPageWithLayout = ({ query }) => {
                                 Teléfono
                             </label>
                             <div className="relative mt-1 rounded-md shadow-sm">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2">
-                                    <span className="text-gray-500 sm:text-sm">+549</span>
-                                </div>
                                 <input
                                     {...form.register('phoneNumber')}
                                     type="number"
-                                    className="block w-full rounded-md border-gray-300 pl-12 pr-12 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                    className="block w-full rounded-md border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                                 />
                             </div>
                         </div>
@@ -110,13 +105,13 @@ const Checkout: NextPageWithLayout = ({ query }) => {
                                 />
                             </div>
                         </div>
-                        <div>
+                        {/* <div>
                             <p className="italic">Momentaneamente no contamos con delivery</p>
-                        </div>
+                        </div> */}
                         <div className='mt-2 text-lg'>
-                            Total: ${cartQuery?.data?.finalPrice}
+                            Total: ${finalPrice}
                         </div>
-                        <div className="mt-4 flex justify-center">
+                        <div className="my-4 flex justify-center">
                             <button
                                 type={'submit'}
                                 className="flex items-center justify-center rounded-md border 

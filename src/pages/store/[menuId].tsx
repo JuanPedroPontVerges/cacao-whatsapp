@@ -15,15 +15,17 @@ function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ')
 }
 
-const Store: NextPageWithLayout = ({ id }) => {
-    const { data } = trpc.useQuery(["storeRouter.getCategoriesByMenuId", { id }]);
+const Store: NextPageWithLayout = ({ query }) => {
+    const { data } = trpc.useQuery(["storeRouter.getCategoriesByMenuId", { id: query.menuId }]);
     const [selectedCategory, setSelectedCategory] = useState(data?.[0]);
     const [isShoppingCartVisible, setIsShoppingCartVisible] = useState(false);
-    const [session] = useLocalSession();
+    const [session, setSession] = useLocalSession();
     const cartQuery = trpc.useQuery(["cartRouter.findProductStoreCartQuantity", { cartId: session.cartId }])
     useEffect(() => {
-        console.log('session', session);
-    }, [session])
+        if (query.cartId) {
+            setSession({ cartId: query.cartId })
+        }
+    }, [query])
     if (!data) return (<>Loading...</>)
     const onClickCategory = (categoryId: string) => {
         const category = data?.find((category) => category.id === categoryId);
@@ -157,7 +159,7 @@ Store.getLayout = function getLayout(page) {
 
 export const getServerSideProps: GetServerSideProps = async (ctx: GetServerSidePropsContext) => {
     return {
-        props: ctx.params || {}
+        props: { query: ctx.query } || {}
     }
 }
 

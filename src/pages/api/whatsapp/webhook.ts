@@ -1,21 +1,14 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from "../../../server/db/client";
+import { NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, NOT_SURE_HARDCODED_VENUE_ID } from './constants';
+import { sendCartLink, sendMenu } from './utils';
 
 export default async function handler(
     req: NextApiRequest,
     res: NextApiResponse
 ) {
     if (req.method === 'POST') {
-        // Parse the request body from the POST
         const body = req.body;
-        // console.log(JSON.stringify(body, null, 2));
-        console.log('TESTING', new Date(), body.entry[0].changes[0].value.messages);
-        // const customer = await prisma.customer.findUnique({
-        //     where: {
-        //         phoneNumber: '3516866950',
-        //     }
-        // })
-        // console.log('customer', customer);
         if (req.body.object) {
             if (
                 body.entry &&
@@ -24,30 +17,81 @@ export default async function handler(
                 body.entry[0].changes[0].value.messages &&
                 body.entry[0].changes[0].value.messages[0]
             ) {
-                const phone_number_id =
-                    body.entry[0].changes[0].value.metadata.phone_number_id;
-                const from = body.entry[0].changes[0].value.messages[0].from; // extract the phone number from the webhook payload
-                console.log('from', from);
-                const msg_body = body.entry[0].changes[0].value.messages[0].text.body; // extract the message text from the webhook payload
-                const data = {
-                    messaging_product: "whatsapp",
-                    to: '543516866950',
-                    recipient_type: 'individual',
-                    type: 'text',
-                    text: { body: "Ack: " + msg_body },
-                }
-                const url = `https://graph.facebook.com/v15.0/${phone_number_id}/messages`
-                await fetch(url, {
-                    method: "POST",
-                    body: JSON.stringify(data),
-                    headers: {
-                        "Authorization": `Bearer ${process.env.WHATSAPP_TOKEN}`,
-                        "Content-Type": "application/json"
-                    },
-                });
-            }
-            return res.status(200).end()
+                const message = body.entry[0].changes[0].value.messages[0];
+                const customer = await prisma.customer.findUnique({
+                    where: {
+                        phoneNumber: NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER.toString(),
+                    }
+                })
+                if (message.type === 'interactive') {
+                    const venue = await prisma.venue.findUnique({
+                        where: {
+                            id: NOT_SURE_HARDCODED_VENUE_ID,
+                        },
+                        select: {
+                            id: true,
+                            menus: true,
+                        }
+                    })
+                    if (!venue) return;
+                    console.log('message list_reply', message.interactive.list_reply);
+                    const id = message.interactive.list_reply.id as 'status' | 'order';
+                    if (id === 'status') {
+                        // Verificar estado del pedido
+                    } else if (id === 'order') {
+                        // Not sure if is in mvp's scope
+                        if (!customer) {
+                            await prisma.customer.create({
+                                data: {
+                                    fullName: 'Juan Pedro Pont Vergés',
+                                    phoneNumber: NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER.toString(),
+                                    venue: {
+                                        connect: {
+                                            id: venue.id,
+                                        }
+                                    }
+                                }
+                            })
+                        } else {
+                            const cart = await prisma.cart.findFirst({
+                                where: {
+                                    customerId: customer.id,
+                                    state: 'PENDING'
+                                },
+                            })
+                            if (cart) {
+                                // Has a pending cart
+                                // Send message with cart link
+                                // Find venue menue id
+                                const initPoint = `${process.env.NEXTAUTH_URL}/store/${venue.menus[0]?.id}?cartId=${cart.id}`
+                                await sendCartLink(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, initPoint);
+                            } else {
+                                // Creates a new one
+                                const cart = await prisma.cart.create({
+                                    data: {
+                                        customerId: customer.id,
+                                        finalPrice: 0,
+                                    }
+                                })
+                                const initPoint = `${process.env.NEXTAUTH_URL}/store/${venue.menus[0]?.id}?cartId=${cart.id}`
+                                await sendCartLink(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, initPoint);
 
+                            }
+                        }
+                        /* TODO
+                            [x] - Buscar customer o crear customer
+                            [x] - Crear carrito atada al customer
+                            [x] - Crear link con id del carrito
+                            [] - Mandar mensaje a customer con el link
+                        */
+                    }
+                    //
+                } else if (message.type === 'text') {
+                    await sendMenu(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, customer?.fullName);
+                }
+            }
+            console.log('iegue');
+            return res.status(200).end()
         }
     } else if (req.method === 'GET') {
         const verify_token = 'DAHSKJDHAS3232IUDH12312H3UIADSDHQ12H3_aSDSAD21I23';

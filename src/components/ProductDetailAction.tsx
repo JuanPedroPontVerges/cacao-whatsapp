@@ -1,6 +1,6 @@
 import { DisplayType, Option } from "@prisma/client"
 import { UseFormReturn } from "react-hook-form";
-import { ProductStoreCartFormInput } from "../pages/store/product/[id]";
+import { ProductStoreCartFormInput } from "../pages/store/product/[productId]";
 
 type OptionGroupAction = {
     option: Option;

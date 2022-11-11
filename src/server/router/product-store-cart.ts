@@ -13,7 +13,7 @@ export const productStoreCartRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       const { amount, finalPrice, additionalInfo, productStoreId, cartId } = input;
-      return await ctx.prisma.productStoreCart.create({
+      const productStoreCart = await ctx.prisma.productStoreCart.create({
         data: {
           amount,
           finalPrice,
@@ -26,13 +26,27 @@ export const productStoreCartRouter = createRouter()
           cart: {
             connect: {
               id: cartId,
-            }
+            },
           }
         },
         select: {
           id: true,
         }
       });
+      const cart = await ctx.prisma.cart.findUnique({
+        where: {
+          id: cartId,
+        }
+      })
+      await ctx.prisma.cart.update({
+        where: {
+          id: cartId
+        },
+        data: {
+          finalPrice: cart?.finalPrice || 0 + finalPrice
+        }
+      });
+      return productStoreCart;
     }
   })
   .mutation("update", {
@@ -43,7 +57,10 @@ export const productStoreCartRouter = createRouter()
       additionalInfo: z.string().nullish(),
     }),
     async resolve({ ctx, input }) {
-      const { amount, finalPrice, additionalInfo, id} = input;
+      const { amount, finalPrice, additionalInfo, id } = input;
+      const cart = await ctx.prisma.productStoreCart.findUnique({ where: { id }, select: { finalPrice: true } })
+      console.log('cart', cart);
+      console.log('finalPrice', finalPrice);
       return await ctx.prisma.productStoreCart.update({
         where: {
           id,
@@ -52,6 +69,11 @@ export const productStoreCartRouter = createRouter()
           amount,
           finalPrice,
           additionalInfo,
+          cart: {
+            update: {
+              finalPrice: cart?.finalPrice || 0 + finalPrice,
+            }
+          }
         },
         select: {
           id: true,

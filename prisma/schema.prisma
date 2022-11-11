@@ -227,8 +227,16 @@ model Cart {
     id                String             @id @default(cuid())
     customerId        String?
     finalPrice        Int
+    state             CartState          @default(PENDING)
     order             Order?
+    customer          Customer?          @relation(fields: [customerId], references: [id], onDelete: Cascade)
     productStoreCarts ProductStoreCart[]
+}
+
+enum CartState {
+    PENDING
+    FINISHED
+    CANCELLED
 }
 
 model Customer {
@@ -238,6 +246,7 @@ model Customer {
     phoneNumber String  @unique
     venue       Venue   @relation(fields: [venueId], references: [id], onDelete: Cascade)
     orders      Order[]
+    carts       Cart[]
 }
 
 model Order {

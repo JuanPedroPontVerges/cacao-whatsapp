@@ -13,7 +13,7 @@ import { SessionProvider } from "next-auth/react";
 // redeployngssss
 
 // eslint-disable-next-line @typescript-eslint/ban-types
-export type NextPageWithLayout = NextPage<{ id?: string, query?: any }> & {
+export type NextPageWithLayout = NextPage<Record<string, any>> & {
   getLayout?: (page: ReactElement) => ReactNode;
 };
 type AppPropsWithLayout = AppProps & {
