@@ -1,6 +1,6 @@
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from "../../../server/db/client";
-import { NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, NOT_SURE_HARDCODED_VENUE_ID } from './constants';
+import { NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, NOT_SURE_HARDCODED_VENUE_ID, VERIFY_TOKEN } from './constants';
 import { sendCartLink, sendMenu } from './utils';
 
 export default async function handler(
@@ -61,8 +61,6 @@ export default async function handler(
                             })
                             if (cart) {
                                 // Has a pending cart
-                                // Send message with cart link
-                                // Find venue menue id
                                 const initPoint = `${process.env.NEXTAUTH_URL}/store/${venue.menus[0]?.id}?cartId=${cart.id}`
                                 await sendCartLink(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, initPoint);
                             } else {
@@ -75,17 +73,9 @@ export default async function handler(
                                 })
                                 const initPoint = `${process.env.NEXTAUTH_URL}/store/${venue.menus[0]?.id}?cartId=${cart.id}`
                                 await sendCartLink(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, initPoint);
-
                             }
                         }
-                        /* TODO
-                            [x] - Buscar customer o crear customer
-                            [x] - Crear carrito atada al customer
-                            [x] - Crear link con id del carrito
-                            [] - Mandar mensaje a customer con el link
-                        */
                     }
-                    //
                 } else if (message.type === 'text') {
                     await sendMenu(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, customer?.fullName);
                 }
@@ -94,8 +84,6 @@ export default async function handler(
             return res.status(200).end()
         }
     } else if (req.method === 'GET') {
-        const verify_token = 'DAHSKJDHAS3232IUDH12312H3UIADSDHQ12H3_aSDSAD21I23';
-
         // Parse params from the webhook verification request
         const mode = req.query["hub.mode"];
         const token = req.query["hub.verify_token"] as string;
@@ -104,7 +92,7 @@ export default async function handler(
         // Check if a token and mode were sent
         if (mode && token) {
             // Check the mode and token sent are correct
-            if (mode === "subscribe" && token === verify_token) {
+            if (mode === "subscribe" && token === VERIFY_TOKEN) {
                 // Respond with 200 OK and challenge token from the request
                 console.log("WEBHOOK_VERIFIED");
                 res.status(200).send(challenge);

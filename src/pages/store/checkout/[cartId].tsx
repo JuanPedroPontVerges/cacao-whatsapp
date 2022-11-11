@@ -21,12 +21,14 @@ const Checkout: NextPageWithLayout = ({ query }) => {
     const paymentTypeQuery = trpc.useQuery(["paymentTypeRouter.findAll"])
     const orderMutation = trpc.useMutation(["orderRouter.create"])
     const cartQuery = trpc.useQuery(["cartRouter.findById", { id: cartId }])
+    const cartMutation = trpc.useMutation(["cartRouter.updateState"])
     const form = useForm<CheckoutFormInput>();
     const paymentTypeIdWatcher = form.watch('paymentTypeId');
     const mercadoPagoPaymentTypeId = paymentTypeQuery?.data?.find((paymentType) => paymentType.name == 'Mercadopago')?.id
     const onSubmitForm: SubmitHandler<CheckoutFormInput> = async (input) => {
         if (!input.paymentTypeId) input.paymentTypeId = paymentTypeQuery.data?.[0]?.id || '123';
         const result = await orderMutation.mutateAsync({ ...input, cartId })
+        await cartMutation.mutateAsync({ cartId, state: 'FINISHED' })
         router.push(`/store/checkout/success/${result.id}`)
     };
     const finalPrice = cartQuery.data?.productStoreCarts.reduce((acc, value) => (value.finalPrice + acc), 0)

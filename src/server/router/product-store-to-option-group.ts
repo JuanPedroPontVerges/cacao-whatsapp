@@ -68,7 +68,7 @@ export const productStoreToOptionGroupRouter = createProtectedRouter()
         }
       })
       if (productStoreToOptionGroup) {
-        await ctx.prisma.productStoreToOptionGroup.updateMany({ // TODO [] This is actually wrong, i should've declared as unique in [productStoreId, optionGroupId]
+        await ctx.prisma.productStoreToOptionGroup.updateMany({
           where: {
             productStoreId,
             optionGroupId,
@@ -109,31 +109,5 @@ export const productStoreToOptionGroupRouter = createProtectedRouter()
         })
       }
 
-    },
-  })
-  // .mutation("delete", {
-  //   input: z.object({
-  //     categoryId: z.string(),
-  //   }),
-  //   async resolve({ ctx, input }) {
-  //     const { categoryId } = input;
-  //     return await ctx.prisma.category.delete({
-  //       where: { id: categoryId },
-  //     })
-
-  //   },
-  // })
-  .query("findByCategoryId", {
-    input: z.object({ id: z.string().nullish() }).nullish(),
-    async resolve({ ctx, input }) {
-      if (input && input.id != null) {
-        // return await ctx.prisma.productStoreToOptionGroup.findMany({
-        //   where: {
-        //     category: {
-        //       id: input.id
-        //     }
-        //   },
-        // });
-      }
     },
   })

@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER } from "../../pages/api/whatsapp/constants";
+import { sendCartDetail } from "../../pages/api/whatsapp/utils";
 import { createRouter } from "./context";
 
 // Example router with queries that can only be hit if the user requesting is signed in
@@ -62,15 +64,53 @@ export const orderRouter = createRouter()
         }
       }) || { id: '123' }
       const total: number = cart?.productStoreCarts.reduce((acc, value) => (value.finalPrice + acc), 0) || 42069
-      return await ctx.prisma.order.create({
-        data: {
+      const order = await ctx.prisma.order.upsert({
+        where: {
+          cartId,
+        },
+        create: {
           total,
           additionalInfo,
           Cart: {
             connect: {
               id: cartId,
+            },
+          },
+          PaymentType: {
+            connect: {
+              id: paymentTypeId,
             }
           },
+          State: {
+            connect: {
+              id: orderStatePendingId.id,
+            }
+          },
+          Type: {
+            connect: {
+              id: orderPickupTypeId.id,
+            }
+          },
+          customer: {
+            connectOrCreate: {
+              create: {
+                phoneNumber,
+                fullName,
+                venue: {
+                  connect: {
+                    id: venueId
+                  }
+                }
+              },
+              where: {
+                phoneNumber,
+              }
+            }
+          },
+        },
+        update: {
+          total,
+          additionalInfo,
           PaymentType: {
             connect: {
               id: paymentTypeId,
@@ -105,8 +145,43 @@ export const orderRouter = createRouter()
         },
         select: {
           id: true,
+          cartId: true,
         }
       })
+      const foundCart = await ctx.prisma.cart.findFirst({
+        where: {
+          id: cartId,
+        },
+        include: {
+          productStoreCarts: {
+            include: {
+              productStore: {
+                select: {
+                  product: true,
+                }
+              },
+              productStoreCartToOptions: {
+                include: {
+                  option: {
+                    include: {
+                      optionGroup: true,
+                    }
+                  },
+                },
+                where: {
+                  amount: {
+                    gt: 0,
+                  }
+                },
+              },
+            }
+          },
+        }
+      })
+      if (foundCart?.productStoreCarts) {
+        await sendCartDetail(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, foundCart?.productStoreCarts)
+      }
+      return order;
     },
   })
   .mutation("updateState", {

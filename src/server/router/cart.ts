@@ -1,3 +1,4 @@
+import { CartState } from "@prisma/client";
 import { z } from "zod";
 import { createRouter } from "./context";
 
@@ -30,6 +31,25 @@ export const cartRouter = createRouter()
           id,
         }
       })
+    },
+  })
+  .mutation("updateState", {
+    input: z.object({
+      cartId: z.string().nullish(),
+      state: z.enum(['FINISHED', 'PENDING']),
+    }),
+    async resolve({ ctx, input }) {
+      const { cartId, state } = input;
+      if (cartId && cartId != null) {
+        return await ctx.prisma.cart.update({
+          where: {
+            id: cartId,
+          },
+          data: {
+            state,
+          }
+        })
+      }
     },
   })
   .query("findById", {
