@@ -1,6 +1,5 @@
-import { ProductStoreCart } from "@prisma/client";
 import { PHONE_NUMBER_ID } from "./constants";
-import { BuildInteractiveMessageInput, SendRequestInput, TInteractive, WhatsappProductStoreCartInput } from "./types";
+import { BuildInteractiveMessageInput, SendRequestInput, TButtonsType, TInteractive, WhatsappProductStoreCartInput } from "./types";
 
 export const sendRequest = async (input: SendRequestInput) => {
     const { data } = input;
@@ -37,22 +36,19 @@ export const sendCartLink = async (to: number, link: string) => {
 
 export const sendCartDetail = async (to: number, productStoreCarts: WhatsappProductStoreCartInput[]) => {
     const finalPrice = productStoreCarts.reduce((acc, value) => (value.finalPrice + acc), 0)
-    console.log('Product Store Carts TO Options', productStoreCarts[0]?.productStoreCartToOptions);
     await sendRequest({
         data: {
             messaging_product: 'whatsapp',
             to,
             type: 'text',
-            text:{
-                 body: `Me antojaste 🤤 este es el resumen de tu pedido 👇🏼
+            text: {
+                body: `Me antojaste 🤤 este es el resumen de tu pedido 👇🏼
 ${productStoreCarts.map((productStoreCart, index) => (
                     `
 ${index + 1}) ${productStoreCart.amount} x *${productStoreCart.productStore.product.name}* ($${productStoreCart.finalPrice})
 ${productStoreCart.productStoreCartToOptions.map((option, index) => (
                         `${index === 0 ? `- ${option.option.optionGroup.name}` : ''}
-  * ${option.amount} x ${option.option.name} ${option.option.price ? (`($${option.option.price})`) : ('')}
-
-`
+  * ${option.amount} x ${option.option.name} ${option.option.price ? (`($${option.option.price})`) : ('')}`
                     ))}`
                 ))}
 
@@ -60,6 +56,42 @@ Total: *$${finalPrice}*`,
             }
         }
     })
+    const payload = {
+        to,
+        interactive: {
+            type: 'button' as TInteractive,
+            body: {
+                text: '¿Todo bien con tu pedido?'
+            },
+            action: {
+                buttons: [
+                    {
+                        type: 'reply' as TButtonsType,
+                        reply: {
+                            id: 'yes',
+                            title: 'Si'
+                        }
+                    },
+                    {
+                        type: 'reply' as TButtonsType,
+                        reply: {
+                            id: 'update',
+                            title: 'Modificar pedido'
+                        }
+                    },
+                    {
+                        type: 'reply' as TButtonsType,
+                        reply: {
+                            id: 'cancel',
+                            title: 'Cancelar pedido'
+                        }
+                    }
+                ]
+            }
+        }
+    }
+    const data = buildInteractiveMessage(payload);
+    await sendRequest({ data });
 }
 
 export const buildInteractiveMessage = (input: BuildInteractiveMessageInput) => {

@@ -1,5 +1,3 @@
-import { ProductStoreCart } from "@prisma/client"
-
 export interface SendRequestInput {
     data: any,
 }
@@ -19,8 +17,15 @@ export interface BuildInteractiveMessageInput {
             text: string,
         },
         action: {
-            button: string,
-            sections: {
+            button?: string,
+            buttons?: {
+                type: TButtonsType,
+                reply: {
+                    id: string,
+                    title: string,
+                }
+            }[],
+            sections?: {
                 title: string,
                 rows: {
                     id: string,
@@ -32,6 +37,7 @@ export interface BuildInteractiveMessageInput {
 }
 
 export type TInteractive = 'list' | 'button'
+export type TButtonsType = 'reply'
 
 export type WhatsappProductStoreCartInput = {
     id: string;

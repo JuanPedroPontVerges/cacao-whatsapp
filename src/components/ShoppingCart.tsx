@@ -1,7 +1,7 @@
 import { Transition, Dialog } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
-import { Fragment } from "react";
+import { ButtonHTMLAttributes, Fragment } from "react";
 import Cursed from 'public/assets/alien.png'
 import { useLocalSession } from "../helpers/session.hooks";
 import { trpc } from "../utils/trpc";
@@ -15,7 +15,8 @@ const ShoppingCart: React.FC<{ visible: boolean, toggleShoppingCart: () => void 
     })
     if (cartQuery.isLoading) return <>Loading...</>
     if (cartQuery.error) return <>Error!</>
-    const onClickDelete = (productStoreCartId: string) => {
+    const onClickDelete = (e: React.MouseEvent, productStoreCartId: string) => {
+        e.stopPropagation();
         cartProductDelete.mutate({ productStoreCartId })
     }
     const finalPrice = cartQuery.data?.productStoreCarts.reduce((acc, value) => (value.finalPrice + acc), 0)
@@ -97,9 +98,9 @@ const ShoppingCart: React.FC<{ visible: boolean, toggleShoppingCart: () => void 
                                                                                     <button
                                                                                         type="button"
                                                                                         className="font-medium text-indigo-600 hover:text-indigo-500"
-                                                                                        onClick={() => (onClickDelete(productStoreCart.id))}
+                                                                                        onClick={(e) => (onClickDelete(e, productStoreCart.id))}
                                                                                     >
-                                                                                        Remove
+                                                                                        Eliminar
                                                                                     </button>
                                                                                 </div>
                                                                             </div>

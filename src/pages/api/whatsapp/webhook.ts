@@ -35,7 +35,7 @@ export default async function handler(
                     })
                     if (!venue) return;
                     console.log('message list_reply', message.interactive.list_reply);
-                    const id = message.interactive.list_reply.id as 'status' | 'order';
+                    const id = message.interactive.list_reply.id as 'status' | 'order' | 'yes' | 'update' | 'confirm';
                     if (id === 'status') {
                         // Verificar estado del pedido
                     } else if (id === 'order') {
@@ -75,6 +75,12 @@ export default async function handler(
                                 await sendCartLink(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, initPoint);
                             }
                         }
+                    } else if (id === 'yes') {
+                        // 
+                    } else if (id === 'update') {
+                        //
+                    } else if (id === 'confirm') {
+                        //
                     }
                 } else if (message.type === 'text') {
                     await sendMenu(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, customer?.fullName);
