@@ -41,15 +41,16 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
     });
     const [productPrice, setProductPrice] = useState<number | null | undefined>(data?.[0]?.productStore.product.price);
     useEffect(() => {
-        if (!productPrice && data) {
-            if (data[0]) {
-                if (data[0].productStore.product.price) {
-                    setProductPrice(data?.[0]?.productStore.product.price)
-                    form.setValue('finalPrice', data?.[0]?.productStore.product.price);
-                }
+        if (!productPrice && data && data[0]) {
+            if (data[0].productStore.product.price) {
+                setProductPrice(data?.[0]?.productStore.product.price)
             }
         }
     }, [data])
+
+    useEffect(() => {
+        form.setValue('finalPrice', data?.[0]?.productStore.product.price || 0);
+    }, [])
 
     useEffect(() => {
         if (productStoreCartQuery.data) {

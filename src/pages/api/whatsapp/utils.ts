@@ -45,7 +45,7 @@ export const sendCartDetail = async (to: number, productStoreCarts: WhatsappProd
                 body: `Me antojaste 🤤 este es el resumen de tu pedido 👇🏼
 ${productStoreCarts.map((productStoreCart, index) => (
                     `
-${index + 1}) ${productStoreCart.amount} x *${productStoreCart.productStore.product.name}* ($${productStoreCart.finalPrice})
+${index + 1}) ${productStoreCart.amount} x *${productStoreCart.productStore.product.name}* ($${productStoreCart.productStore.product.price})
 ${productStoreCart.productStoreCartToOptions.map((option, index) => (
                         `${index === 0 ? `- ${option.option.optionGroup.name}` : ''}
   * ${option.amount} x ${option.option.name} ${option.option.price ? (`($${option.option.price})`) : ('')}`

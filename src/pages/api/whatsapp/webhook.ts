@@ -23,6 +23,7 @@ export default async function handler(
                         phoneNumber: NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER.toString(),
                     }
                 })
+                console.log('message',);
                 if (message.type === 'interactive') {
                     const venue = await prisma.venue.findUnique({
                         where: {
@@ -34,60 +35,74 @@ export default async function handler(
                         }
                     })
                     if (!venue) return;
-                    console.log('message list_reply', message.interactive.list_reply);
-                    const id = message.interactive.list_reply.id as 'status' | 'order' | 'yes' | 'update' | 'confirm';
-                    if (id === 'status') {
-                        // Verificar estado del pedido
-                    } else if (id === 'order') {
-                        // Not sure if is in mvp's scope
-                        if (!customer) {
-                            await prisma.customer.create({
-                                data: {
-                                    fullName: 'Juan Pedro Pont Vergés',
-                                    phoneNumber: NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER.toString(),
-                                    venue: {
-                                        connect: {
-                                            id: venue.id,
+                    if (message.interactive.list_reply) {
+                        const id = message.interactive.list_reply.id as 'status' | 'order';
+                        if (id === 'status') {
+                            // Verificar estado del pedido
+                        } else if (id === 'order') {
+                            // Not sure if is in mvp's scope
+                            if (!customer) {
+                                await prisma.customer.create({
+                                    data: {
+                                        fullName: 'Juan Pedro Pont Vergés',
+                                        phoneNumber: NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER.toString(),
+                                        venue: {
+                                            connect: {
+                                                id: venue.id,
+                                            }
                                         }
                                     }
-                                }
-                            })
-                        } else {
-                            const cart = await prisma.cart.findFirst({
-                                where: {
-                                    customerId: customer.id,
-                                    state: 'PENDING'
-                                },
-                            })
-                            if (cart) {
-                                // Has a pending cart
-                                const initPoint = `${process.env.NEXTAUTH_URL}/store/${venue.menus[0]?.id}?cartId=${cart.id}`
-                                await sendCartLink(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, initPoint);
-                            } else {
-                                // Creates a new one
-                                const cart = await prisma.cart.create({
-                                    data: {
-                                        customerId: customer.id,
-                                        finalPrice: 0,
-                                    }
                                 })
-                                const initPoint = `${process.env.NEXTAUTH_URL}/store/${venue.menus[0]?.id}?cartId=${cart.id}`
-                                await sendCartLink(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, initPoint);
+                            } else {
+                                const cart = await prisma.cart.findFirst({
+                                    where: {
+                                        customerId: customer.id,
+                                        state: 'PENDING'
+                                    },
+                                })
+                                if (cart) {
+                                    // Has a pending cart
+                                    const initPoint = `${process.env.NEXTAUTH_URL}/store/${venue.menus[0]?.id}?cartId=${cart.id}`
+                                    await sendCartLink(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, initPoint);
+                                } else {
+                                    // Creates a new one
+                                    const cart = await prisma.cart.create({
+                                        data: {
+                                            customerId: customer.id,
+                                            finalPrice: 0,
+                                        }
+                                    })
+                                    const initPoint = `${process.env.NEXTAUTH_URL}/store/${venue.menus[0]?.id}?cartId=${cart.id}`
+                                    await sendCartLink(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, initPoint);
+                                }
                             }
                         }
-                    } else if (id === 'yes') {
-                        // 
-                    } else if (id === 'update') {
-                        //
-                    } else if (id === 'confirm') {
-                        //
+                    } else if (message.interactive.button_reply) {
+                        const id = message.interactive.button_reply.id as 'yes' | 'update' | 'cancel';
+                        if (id === 'yes') {
+                            /** TODO
+                             *  []- Detectar método de pago de la orden
+                             *  []- Si es mercadopago, generar link a mercadopago
+                             *  []- La orden se deberia 'confirmar' una vez que es pagada
+                             */
+                        } else if (id === 'update') {
+                            /** TODO
+                             * []- Enviar mensaje diciendo ¡No te preocupes! Ingresa nuevamente a este enlace para hacer cambios a tu pedido 👉🏽 {link}
+                             */
+                        } else if (id === 'cancel') {
+                            /** TODO
+                             * []- Cancelar orden || carrito
+                             * []- Enviar mensaje diciendo ¡Orden cancelada!
+                             * []- Enviar menu
+                             */
+                        }
+
                     }
                 } else if (message.type === 'text') {
                     await sendMenu(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, customer?.fullName);
                 }
+                return res.status(200).end()
             }
-            console.log('iegue');
-            return res.status(200).end()
         }
     } else if (req.method === 'GET') {
         // Parse params from the webhook verification request
