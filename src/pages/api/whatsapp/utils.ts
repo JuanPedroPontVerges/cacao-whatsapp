@@ -17,7 +17,7 @@ export const sendRequest = async (input: SendRequestInput) => {
             return res.text().then(text => { throw new Error(text) })
         }
     } catch (err) {
-        console.log('err', err);
+        console.log('errr', err);
     }
 }
 
