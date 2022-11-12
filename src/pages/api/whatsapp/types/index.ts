@@ -47,7 +47,7 @@ export type WhatsappProductStoreCartInput = {
     productStore: {
         product: {
             name: string;
-            price: number;
+            price: number | null;
         }
     }
     productStoreCartToOptions: {
