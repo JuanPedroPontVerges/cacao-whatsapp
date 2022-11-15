@@ -64,9 +64,9 @@ export const cartRouter = createRouter()
             id,
           },
           include: {
+            customer: true,
             order: {
               select: {
-                customer: true,
                 PaymentType: true,
                 additionalInfo: true,
               }

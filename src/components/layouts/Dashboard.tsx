@@ -80,8 +80,10 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                                     </div>
                                     <div className="hidden md:block">
                                         <div className="ml-4 flex items-center md:ml-6">
-                                            <Link href={`/store/${venueQuery.data?.venue?.menus[0]?.id}`}>
-                                                <BuildingStorefrontIcon className="h-6 w-6 text-gray-400" aria-hidden="true" />
+                                            <Link href={`/store/${venueQuery.data?.venue?.menus[0]?.id}`} passHref>
+                                                <a target={'_blank'} rel='noopener noreferrer'>
+                                                    <BuildingStorefrontIcon className="h-6 w-6 text-gray-400 cursor-pointer hover:text-white" aria-hidden="true" />
+                                                </a>
                                             </Link>
                                             <button
                                                 type="button"

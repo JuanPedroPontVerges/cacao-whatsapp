@@ -1,3 +1,4 @@
+import { PaymentState } from "@prisma/client";
 import React from "react"
 type OrderDetailProps = {
     customer?: {
@@ -5,11 +6,15 @@ type OrderDetailProps = {
         fullName: string;
     };
     finalAmount?: number;
-    state?: {
+    payment?: {
         id: string;
-        status: string;
+        status: PaymentState;
     } | null;
     id?: string;
+    paymentType?: {
+        id: string;
+        name: string;
+    };
     className?: string;
     additionalInfo?: string | null;
     productStoreCarts?: {
@@ -25,18 +30,17 @@ type OrderDetailProps = {
     }[],
 }
 
-const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCarts, additionalInfo, finalAmount, state, className }) => {
+const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCarts, additionalInfo, finalAmount, payment, paymentType, className }) => {
     return (
         <div className="flex flex-col w-full gap-2">
             <div className="flex justify-between p-2">
                 <p>Logo!</p>
                 <p>#{id?.slice(4, 8)}</p>
             </div>
-            <div className="flex mt-2 pt-2 px-2">
-                <div>
-                    <p className="mb-2"><strong> Nombre de cliente</strong>: {customer?.fullName}</p>
-                    <p><strong>Comentarios adicionales</strong>: {additionalInfo}</p>
-                </div>
+            <div className="mt-2 pt-2 px-2">
+                <p className="mb-2"><strong> Nombre de cliente</strong>: {customer?.fullName}</p>
+                <p className="mb-2"><strong>Comentarios adicionales</strong>: {additionalInfo}</p>
+                <p><strong>Tipo de pago</strong>: {paymentType?.name}</p>
             </div>
             {
                 productStoreCarts?.map((productStoreCart, index) => (
@@ -61,9 +65,9 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCar
                 <p className="text-1xl">Total: ${finalAmount}</p>
             </div>
             {
-                state?.status === 'CANCELLED' ? (null) : (
+                payment?.status === 'CANCELLED' ? (null) : (
                     <div className="flex justify-center mb-2">
-                        <button className="p-2 border-4 rounded-md border-stone-200 bg-stone-100">Pedir Cuenta</button>
+                        <button className="p-2 border-4 rounded-md border-stone-200 bg-stone-100">Cerrar Cuenta</button>
                     </div>
                 )
             }

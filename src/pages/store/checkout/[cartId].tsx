@@ -26,14 +26,17 @@ const Checkout: NextPageWithLayout = ({ query }) => {
     const cartMutation = trpc.useMutation(["cartRouter.updateState"])
     const form = useForm<CheckoutFormInput>();
     useEffect(() => {
-        form.setValue('additionalInfo', cartQuery.data?.order?.additionalInfo || '')
-        form.setValue('fullName', cartQuery.data?.order?.customer.fullName || '')
-        form.setValue('phoneNumber', cartQuery.data?.order?.customer.phoneNumber || '')
-        form.setValue('paymentTypeId', cartQuery.data?.order?.PaymentType.id || '')
+        if (cartQuery.data?.order) {
+            form.setValue('additionalInfo', cartQuery.data?.order?.additionalInfo || '')
+            form.setValue('paymentTypeId', cartQuery.data?.order?.PaymentType.id || '')
+        }
+        if (cartQuery.data?.customer) {
+            form.setValue('fullName', cartQuery.data?.customer?.fullName || '')
+            form.setValue('phoneNumber', cartQuery.data?.customer?.phoneNumber || '')
+        }
     }, [cartQuery])
     if (cartQuery.isLoading) return <>Loading...</>
     const mercadoPagoPaymentTypeId = paymentTypeQuery?.data?.find((paymentType) => paymentType.name == 'Mercadopago')?.id
-    // useEffect(() =>)
     const onSubmitForm: SubmitHandler<CheckoutFormInput> = async (input) => {
         if (!input.paymentTypeId) input.paymentTypeId = paymentTypeQuery.data?.[0]?.id || '123';
         const result = await orderMutation.mutateAsync({ ...input, cartId })
@@ -41,7 +44,7 @@ const Checkout: NextPageWithLayout = ({ query }) => {
             await cartMutation.mutateAsync({ cartId, state: 'FINISHED' })
         } else {
             // Cart is not finished yet, will be when user pays with mercadopago
-        } 
+        }
         if (!result.payment) {
             await paymentMutation.mutateAsync({ orderId: result.id })
         }

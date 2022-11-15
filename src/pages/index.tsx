@@ -60,7 +60,7 @@ const Index: NextPageWithLayout = () => {
       <div className="h-96 rounded-lg border-4 border-dashed border-gray-200" >
         Inicio
       </div>
-      <Modal isOpen={isCreateVenueModalOpen} title={'Crear sucursal'}>
+      <Modal isOpen={isCreateVenueModalOpen} title={<>Crear sucursal</>}>
         <Form form={form} onSubmitForm={onSubmitForm}>
           <div className="overflow-hidden shadow sm:rounded-md">
             <div className="bg-white px-4 py-5 sm:p-6">

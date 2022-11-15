@@ -1,3 +1,4 @@
+import { PaymentState } from "@prisma/client";
 import { z } from "zod";
 import { NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER } from "../../pages/api/whatsapp/constants";
 import { sendCartDetail } from "../../pages/api/whatsapp/utils";
@@ -232,25 +233,43 @@ export const orderRouter = createRouter()
     },
   })
   .query("findByVenueId", {
-    input: z.object({ id: z.string().nullish() }).nullish(),
+    input: z.object({
+      id: z.string().nullish(),
+      paymentTypeId: z.string().nullish(),
+      orderStateId: z.string().nullish(),
+      paymentState: z.enum(['PENDING', 'APPROVED', 'CANCELLED']).nullish(),
+    }).nullish(),
     async resolve({ ctx, input }) {
       if (input && input.id != null) {
-        const { id } = input;
+        const { id, paymentTypeId, paymentState, orderStateId } = input;
         return await ctx.prisma.order.findMany({
           where: {
             customer: {
               venueId: id,
-            }
+            },
+            AND: [
+              {
+                paymentTypeId: paymentTypeId as string | undefined,
+              },
+              {
+                payment: {
+                  status: paymentState as undefined | PaymentState
+                }
+              },
+              {
+                stateId: orderStateId as string | undefined,
+              }
+            ]
           },
-          select: {
-            id: true,
+          orderBy: {
+            createdAt: 'desc',
+          },
+          include: {
             customer: true,
-            total: true,
             State: true,
             Type: true,
-            additionalInfo: true,
             payment: true,
-            createdAt: true,
+            PaymentType: true,
             Cart: {
               include: {
                 productStoreCarts: {

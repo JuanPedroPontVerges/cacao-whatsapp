@@ -44,6 +44,11 @@ export default async function handler(
                                 where: {
                                     customer: {
                                         id: customer.id,
+                                    },
+                                    State: {
+                                        name: {
+                                            not: 'Despachado'
+                                        }
                                     }
                                 },
                                 orderBy: {
@@ -53,10 +58,10 @@ export default async function handler(
                                     State: true,
                                 }
                             })
-                            await sendTextMessage(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, `Estado de orden: ${order?.State.name}`);
+                            await sendTextMessage(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, order ? `Estado de orden: ${order?.State.name}` : 'No tienes ordenes pendientes!');
                         } else if (id === 'order') {
-                            // Not sure if is in mvp's scope
                             if (!customer) {
+                                // Not sure if is in mvp's scope
                                 await prisma.customer.create({
                                     data: {
                                         fullName: 'Juan Pedro Pont Vergés',
@@ -95,9 +100,32 @@ export default async function handler(
                     } else if (message.interactive.button_reply) {
                         const id = message.interactive.button_reply.id as 'yes' | 'update' | 'cancel';
                         const cart = await prisma.cart.findFirst({
+                            orderBy: {
+                                createdAt: 'desc',
+                            },
                             where: {
                                 customerId: customer.id,
-                                state: 'PENDING'
+                                OR: [
+                                    {
+                                        state: 'FINISHED',
+                                        order: {
+                                            PaymentType: {
+                                                name: 'Efectivo'
+                                            },
+                                            payment: {
+                                                status: 'PENDING',
+                                            }
+                                        }
+                                    },
+                                    {
+                                        state: 'PENDING',
+                                        order: {
+                                            PaymentType: {
+                                                name: 'Mercadopago'
+                                            }
+                                        }
+                                    },
+                                ]
                             },
                             include: {
                                 order: {
@@ -116,6 +144,7 @@ export default async function handler(
                                 }
                             }
                         })
+                        console.log('cart', cart);
                         if (cart) {
                             if (id === 'yes') {
                                 if (cart?.order?.PaymentType.name === 'Efectivo') {

@@ -257,8 +257,8 @@ const Catalog: NextPageWithLayout = () => {
     const displayTypeWatcher: any = productForm.watch(`optionGroups` || [])
     const optionForm = useForm<OptionFormInput>();
     const form = useForm<{ name: string }>();
-    const [products, setProducts] = React.useState(() => productQuery.data ? [...productQuery.data] : [])
-    const [options, setOptions] = React.useState(() => optionQuery.data ? [...optionQuery.data] : [])
+    const [products, setProducts] = useState(() => productQuery.data ? [...productQuery.data] : [])
+    const [options, setOptions] = useState(() => optionQuery.data ? [...optionQuery.data] : [])
     const [isModalOpen, setIsModalOpen] = useState(false)
     const buttonClass = 'flex w-full justify-between rounded-lg bg-wapi-light-blue px-4 py-2 text-left text-sm font-medium  hover:bg-purple-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75'
     const [selectedTab, setSelectedTab] = useState<'category' | 'optionGroup'>('category')
@@ -270,8 +270,8 @@ const Catalog: NextPageWithLayout = () => {
     const [isProductDeleteModalOpen, setIsProductDeleteModalOpen] = useState(false);
     const [isProductDrawerOpen, setIsProductDrawerOpen] = useState(false);
     const [isOptionDrawerOpen, setIsOptionDrawerOpen] = useState(false);
-    const [optionColumns] = React.useState(() => [...optionDefaultColumns])
-    const [productColumns] = React.useState(() => [...productDefaultColumns])
+    const [optionColumns] = useState(() => [...optionDefaultColumns])
+    const [productColumns] = useState(() => [...productDefaultColumns])
     const fixedAmountDisplayTypeId = displayTypeQuery?.data?.find((displayType) => displayType.name == 'Cantidad Fija')?.id
     const isEnabled = selectedCategory ? selectedCategory.enabled : selectedOptionGroup ? selectedOptionGroup.enabled : false;
     const optionsTable = useReactTable({
@@ -718,7 +718,7 @@ const Catalog: NextPageWithLayout = () => {
                 </div>
                 {/** Modals */}
                 {/* Create and Edit Modal*/}
-                <Modal title={`${parseModalTitle()} ${parseName(selectedTab)}`} isOpen={isModalOpen} onClose={toggleModal}>
+                <Modal title={<>{parseModalTitle()} {parseName(selectedTab)}</>} isOpen={isModalOpen} onClose={toggleModal}>
                     <Form form={form} onSubmitForm={selectedTab === 'category' ? onSubmitCategoryForm : onSubmitOptionGroupForm}>
                         <label htmlFor="street-address" className="block text-sm font-medium text-gray-700">
                             Nombre
@@ -735,7 +735,7 @@ const Catalog: NextPageWithLayout = () => {
                 </Modal>
                 {/* Delete Modal*/}
                 <Modal
-                    title={`¿Estas seguro que desea eliminar ${selectedCategory ? selectedCategory.name : selectedOptionGroup?.name}?`}
+                    title={<>¿Estas seguro que desea eliminar {selectedCategory ? selectedCategory.name : selectedOptionGroup?.name}?</>}
                     isOpen={isDeleteModalOpen}
                     onClose={toggleDeleteModal}
                 >
@@ -745,7 +745,7 @@ const Catalog: NextPageWithLayout = () => {
                     </div>
                 </Modal>
                 <Modal
-                    title={`¿Estas seguro que desea eliminar ${selectedOption.option?.name}?`}
+                    title={<>¿Estas seguro que desea eliminar {selectedOption.option?.name}?</>}
                     isOpen={isOptionDeleteModalOpen}
                     onClose={toggleOptionDeleteModal}
                 >
@@ -755,7 +755,7 @@ const Catalog: NextPageWithLayout = () => {
                     </div>
                 </Modal>
                 <Modal
-                    title={`¿Estas seguro que desea eliminar ${selectedProduct.product?.name}?`}
+                    title={<>¿Estas seguro que desea eliminar ${selectedProduct.product?.name}?</>}
                     isOpen={isProductDeleteModalOpen}
                     onClose={toggleProductDeleteModal}
                 >
