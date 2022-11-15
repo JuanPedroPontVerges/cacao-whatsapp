@@ -7,8 +7,8 @@ type OrderDetailProps = {
     finalAmount?: number;
     state?: {
         id: string;
-        name: string;
-    };
+        status: string;
+    } | null;
     id?: string;
     className?: string;
     additionalInfo?: string | null;
@@ -32,10 +32,10 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCar
                 <p>Logo!</p>
                 <p>#{id?.slice(4, 8)}</p>
             </div>
-            <div className="flex my-2 p-2">
+            <div className="flex mt-2 pt-2 px-2">
                 <div>
-                    <p className="mb-2">Nombre de cliente: {customer?.fullName}</p>
-                    <p>Comentarios adicionales: {additionalInfo}</p>
+                    <p className="mb-2"><strong> Nombre de cliente</strong>: {customer?.fullName}</p>
+                    <p><strong>Comentarios adicionales</strong>: {additionalInfo}</p>
                 </div>
             </div>
             {
@@ -60,9 +60,14 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCar
             <div className="flex justify-center">
                 <p className="text-1xl">Total: ${finalAmount}</p>
             </div>
-            <div className="flex justify-center mb-2">
-                <button className="p-2 border-4 rounded-md border-stone-200 bg-stone-100">Pedir Cuenta</button>
-            </div>
+            {
+                state?.status === 'CANCELLED' ? (null) : (
+                    <div className="flex justify-center mb-2">
+                        <button className="p-2 border-4 rounded-md border-stone-200 bg-stone-100">Pedir Cuenta</button>
+                    </div>
+                )
+            }
+
         </div>
     )
 }

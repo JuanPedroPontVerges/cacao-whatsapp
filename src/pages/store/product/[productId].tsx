@@ -1,10 +1,10 @@
 import { Disclosure } from "@headlessui/react";
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline";
-import { NextPage, GetServerSideProps, GetServerSidePropsContext } from "next";
+import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import Image from "next/image";
 import { useRouter } from "next/router";
 import { trpc } from "../../../utils/trpc";
-import Cursed from 'public/assets/alien.png'
+import Cursed from 'public/assets/pizza-margarita.jpg'
 import ProductDetailAction from "../../../components/ProductDetailAction";
 import Button from "../../../components/Button";
 import { DisplayType } from "@prisma/client";
@@ -46,11 +46,10 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
                 setProductPrice(data?.[0]?.productStore.product.price)
             }
         }
+        if (!query.productStoreCartId) {
+            form.setValue('finalPrice', data?.[0]?.productStore.product.price || 0);
+        }
     }, [data])
-
-    useEffect(() => {
-        form.setValue('finalPrice', data?.[0]?.productStore.product.price || 0);
-    }, [])
 
     useEffect(() => {
         if (productStoreCartQuery.data) {
@@ -121,7 +120,7 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
     const onSubmitForm: SubmitHandler<ProductStoreCartFormInput> = async (input) => {
         const { additionalInfo, amount, finalPrice, productStoreToOptionGroups } = input;
         if (query.productStoreCartId) { /* If is edit */
-            await productStoreCartUpdate.mutateAsync({ id: query.productStoreCartId, additionalInfo, amount, finalPrice })
+            await productStoreCartUpdate.mutateAsync({ id: query.productStoreCartId, additionalInfo, amount, finalPrice: finalPrice / amount })
             for (const productStoreToOptionGroupId in productStoreToOptionGroups) {
                 const options = productStoreToOptionGroups[productStoreToOptionGroupId]?.option
                 if (options && query.productStoreCartId) {
@@ -137,8 +136,7 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
         }
         if (data[0]?.productStoreId) {
             if (cartId) {
-                console.log({ finalPrice });
-                const { id: productStoreCartId } = await productStoreCartMutation.mutateAsync({ cartId, productStoreId: data[0]?.productStoreId, additionalInfo, amount, finalPrice });
+                const { id: productStoreCartId } = await productStoreCartMutation.mutateAsync({ cartId, productStoreId: data[0]?.productStoreId, additionalInfo, amount, finalPrice: finalPrice / amount });
                 for (const productStoreToOptionGroupId in productStoreToOptionGroups) {
                     const options = productStoreToOptionGroups[productStoreToOptionGroupId]?.option
                     if (options && productStoreCartId) {
@@ -151,7 +149,7 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
             } else {
                 const { id: cartId } = await cartMutation.mutateAsync({ finalPrice });
                 setSession({ cartId });
-                const { id: productStoreCartId } = await productStoreCartMutation.mutateAsync({ cartId, productStoreId: data[0]?.productStoreId, additionalInfo, amount, finalPrice });
+                const { id: productStoreCartId } = await productStoreCartMutation.mutateAsync({ cartId, productStoreId: data[0]?.productStoreId, additionalInfo, amount, finalPrice: finalPrice / amount });
                 for (const productStoreToOptionGroupId in productStoreToOptionGroups) {
                     const options = productStoreToOptionGroups[productStoreToOptionGroupId]?.option
                     if (options && productStoreCartId) {
@@ -206,9 +204,9 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
                     </div>
                     <div className="my-4">
                         {
-                            data?.map((productStoreToOptionGroup) => (
+                            data?.map((productStoreToOptionGroup, index) => (
                                 <div key={productStoreToOptionGroup.id} className="my-2">
-                                    <Disclosure as="div" defaultOpen={query.productStoreCartId ? true : false}>
+                                    <Disclosure as="div" defaultOpen={true}>
                                         {({ open }) => (
                                             <>
                                                 <Disclosure.Button className="flex w-full justify-between items-center rounded-lg bg-purple-100 px-4 py-2 text-left text-base font-medium text-purple-900 hover:bg-purple-200 focus:outline-none focus-visible:ring focus-visible:ring-purple-500 focus-visible:ring-opacity-75">

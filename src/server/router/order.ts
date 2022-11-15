@@ -146,6 +146,7 @@ export const orderRouter = createRouter()
         select: {
           id: true,
           cartId: true,
+          payment: true,
         }
       })
       const foundCart = await ctx.prisma.cart.findFirst({
@@ -191,8 +192,14 @@ export const orderRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       const { orderId, action } = input;
-      const orderStates = await ctx.prisma.orderState.findMany();
-      const { id: stateId } = orderStates.find((state) => state.name === action) || { id: '123' }
+      const orderState = await ctx.prisma.orderState.findFirst({
+        where: {
+          name: action,
+        },
+        select: {
+          id: true,
+        }
+      });
       return await ctx.prisma.order.update({
         where: {
           id: orderId,
@@ -200,7 +207,7 @@ export const orderRouter = createRouter()
         data: {
           State: {
             connect: {
-              id: stateId,
+              id: orderState?.id,
             }
           }
         }
@@ -242,6 +249,8 @@ export const orderRouter = createRouter()
             State: true,
             Type: true,
             additionalInfo: true,
+            payment: true,
+            createdAt: true,
             Cart: {
               include: {
                 productStoreCarts: {

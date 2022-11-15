@@ -7,7 +7,7 @@ import { Disclosure } from '@headlessui/react'
 import { Bars3Icon, ShoppingCartIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import Image from "next/image";
 import Link from "next/link";
-import Cursed from 'public/assets/alien.png'
+import Cursed from 'public/assets/pizza-margarita.jpg'
 import ShoppingCart from "../../components/ShoppingCart";
 import { useLocalSession } from "../../helpers/session.hooks";
 
@@ -26,7 +26,14 @@ const Store: NextPageWithLayout = ({ query }) => {
             setSession({ cartId: query.cartId })
         }
     }, [query])
+
+    useEffect(() => {
+        if (data?.length) {
+            setSelectedCategory(data?.[0]);
+        }
+    }, [data])
     if (!data) return (<>Loading...</>)
+    if (cartQuery.data?.[0]?.cart?.state === 'CANCELLED') return (<>¡Carrito de compras cancelado! Porfavor, genera uno nuevo</>)
     const onClickCategory = (categoryId: string) => {
         const category = data?.find((category) => category.id === categoryId);
         setSelectedCategory(category);

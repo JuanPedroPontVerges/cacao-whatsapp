@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
@@ -32,7 +33,7 @@ const Orders: NextPageWithLayout = () => {
 
     const handleOnClickAction = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>, action: Action, id?: string) => {
         e.stopPropagation();
-        const parsedState = action === 'confirm' ? 'Confirmado' : action === 'cancel' ? 'Cancelado' : 'no se';
+        const parsedState = action === 'confirm' ? 'En Preparación' : action === 'cancel' ? 'Cancelado' : 'no se';
         if (id) {
             await orderStateMutation.mutateAsync({ orderId: id, action: parsedState });
             await orderQuery.refetch()
@@ -52,6 +53,8 @@ const Orders: NextPageWithLayout = () => {
                         {
                             orderQuery.data?.map((order, index) => (
                                 <OrderCard
+                                    createdAt={dayjs(order.createdAt).toDate()}
+                                    payment={order.payment}
                                     onClickAction={handleOnClickAction}
                                     onClick={onClickOrder}
                                     key={index}
@@ -69,6 +72,7 @@ const Orders: NextPageWithLayout = () => {
                         <div className="flex">
                             <OrderDetail
                                 id={selectedOrder?.id}
+                                state={selectedOrder?.payment}
                                 customer={selectedOrder?.customer}
                                 additionalInfo={selectedOrder?.additionalInfo}
                                 finalAmount={selectedOrder?.total}

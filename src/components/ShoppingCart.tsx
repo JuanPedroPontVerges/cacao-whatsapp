@@ -19,7 +19,7 @@ const ShoppingCart: React.FC<{ visible: boolean, toggleShoppingCart: () => void 
         e.stopPropagation();
         cartProductDelete.mutate({ productStoreCartId })
     }
-    const finalPrice = cartQuery.data?.productStoreCarts.reduce((acc, value) => (value.finalPrice + acc), 0)
+    const finalPrice = cartQuery.data?.productStoreCarts.reduce((acc, value) => ((value.finalPrice * value.amount) + acc), 0)
     return (
         <Transition.Root show={visible} as={Fragment}>
             <Dialog as="div" className="relative z-10" onClose={toggleShoppingCart}>

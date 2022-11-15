@@ -1,29 +1,62 @@
-import React from "react"
+import React, { useEffect, useState } from "react"
+import dayjs from 'dayjs';
+import duration from 'dayjs/plugin/duration';
+dayjs.extend(duration)
 export type Action = 'confirm' | 'cancel'
 type OrderCardProps = {
     customer?: {
         id: string;
         fullName: string;
     };
+    createdAt: Date,
     price?: number;
     state?: {
         id: string;
         name: string;
     };
+    payment?: {
+        id: string;
+        status: string;
+    } | null,
     id?: string;
     className?: string;
     onClick: (id?: string) => void;
     onClickAction: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>, action: Action, id?: string) => void;
 }
 
-const OrderCard: React.FC<OrderCardProps> = ({ id, customer, price, state, className, onClick, onClickAction }) => {
+const OrderCard: React.FC<OrderCardProps> = ({ id, customer, price, state, payment, className, createdAt, onClick, onClickAction }) => {
+    const [timer, setTimer] = useState<string>();
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const ft = dayjs(createdAt);
+            const tt = dayjs();
+            const mins = tt.diff(ft, "minutes", true);
+            const seconds = tt.diff(ft, "seconds", true);
+            const totalHours = parseInt((mins / 60).toString());
+            const totalMins = dayjs().minute(mins).minute()
+            const totalSeconds = dayjs().second(seconds).second()
+            setTimer(`${totalHours}:${totalMins}:${totalSeconds}`)
+        }, 1000)
+        return () => {
+            clearInterval(interval);
+        }
+    }, [])
+
     return (
         <div id={id} onClick={() => onClick(id)} className='cursor-pointer hover:p-1 transition-all'>
             <div className={`border-2 rounded-lg w-52  bg-${state?.name === 'Pendiente' ? 'slate' : state?.name === 'Cancelado' ? 'red' : state?.name === 'Confirmado' ? 'green' : 'purple'}-300 ${className}`}>
                 <div className="flex flex-col gap-2">
-                    {/* <div className="flex justify-end">
-                        Time
-                    </div> */}
+                    <div className="flex justify-between">
+                        <p>{timer}</p>
+                        <p>
+                            {
+                                payment?.status === 'PENDING' ? 'Pendiente'
+                                    : payment?.status === 'CANCELLED' ? 'Cancelado'
+                                        : payment?.status === 'APPROVED' ? 'Pagado'
+                                            : payment?.status
+                            }
+                        </p>
+                    </div>
                     <div className="flex justify-start">
                         #{id?.slice(4, 8)}
                     </div>
@@ -50,6 +83,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ id, customer, price, state, class
                                         Confirmar
                                     </button>
                                 </>
+                            ) : state?.name === 'Cancelado' ? (
+                                null
                             ) : (
                                 <button
                                     onClick={(e) => onClickAction(e, 'cancel', id)}
@@ -62,7 +97,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ id, customer, price, state, class
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     )
 }
 

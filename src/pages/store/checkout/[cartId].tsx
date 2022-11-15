@@ -2,6 +2,7 @@ import { Disclosure } from "@headlessui/react"
 import { ArrowLeftCircleIcon } from "@heroicons/react/24/outline"
 import { GetServerSideProps, GetServerSidePropsContext } from "next"
 import { useRouter } from "next/router"
+import { useEffect } from "react"
 import { SubmitHandler, useForm } from "react-hook-form"
 import Form from "../../../components/Form"
 import StoreNav from "../../../components/layouts/StoreNav"
@@ -20,18 +21,33 @@ const Checkout: NextPageWithLayout = ({ query }) => {
     const router = useRouter();
     const paymentTypeQuery = trpc.useQuery(["paymentTypeRouter.findAll"])
     const orderMutation = trpc.useMutation(["orderRouter.create"])
+    const paymentMutation = trpc.useMutation(["paymentRouter.create"])
     const cartQuery = trpc.useQuery(["cartRouter.findById", { id: cartId }])
     const cartMutation = trpc.useMutation(["cartRouter.updateState"])
     const form = useForm<CheckoutFormInput>();
-    const paymentTypeIdWatcher = form.watch('paymentTypeId');
+    useEffect(() => {
+        form.setValue('additionalInfo', cartQuery.data?.order?.additionalInfo || '')
+        form.setValue('fullName', cartQuery.data?.order?.customer.fullName || '')
+        form.setValue('phoneNumber', cartQuery.data?.order?.customer.phoneNumber || '')
+        form.setValue('paymentTypeId', cartQuery.data?.order?.PaymentType.id || '')
+    }, [cartQuery])
+    if (cartQuery.isLoading) return <>Loading...</>
     const mercadoPagoPaymentTypeId = paymentTypeQuery?.data?.find((paymentType) => paymentType.name == 'Mercadopago')?.id
+    // useEffect(() =>)
     const onSubmitForm: SubmitHandler<CheckoutFormInput> = async (input) => {
         if (!input.paymentTypeId) input.paymentTypeId = paymentTypeQuery.data?.[0]?.id || '123';
         const result = await orderMutation.mutateAsync({ ...input, cartId })
-        await cartMutation.mutateAsync({ cartId, state: 'FINISHED' })
+        if (mercadoPagoPaymentTypeId !== input.paymentTypeId) {
+            await cartMutation.mutateAsync({ cartId, state: 'FINISHED' })
+        } else {
+            // Cart is not finished yet, will be when user pays with mercadopago
+        } 
+        if (!result.payment) {
+            await paymentMutation.mutateAsync({ orderId: result.id })
+        }
         router.push(`/store/checkout/success/${result.id}`)
     };
-    const finalPrice = cartQuery.data?.productStoreCarts.reduce((acc, value) => (value.finalPrice + acc), 0)
+    const finalPrice = cartQuery.data?.productStoreCarts.reduce((acc, value) => ((value.finalPrice * value.amount) + acc), 0)
     return (
         <>
             <Disclosure as="nav" className="bg-gray-800">
@@ -120,7 +136,7 @@ const Checkout: NextPageWithLayout = ({ query }) => {
                                 border-transparent bg-[#128c7e] px-6 py-3 text-base font-medium
                                  text-white shadow-sm"
                             >
-                                {paymentTypeIdWatcher === mercadoPagoPaymentTypeId ? 'Pagar con Mercadopago' : 'Finalizar compra'}
+                                Finalizar compra
                             </button>
                         </div>
                     </Form>

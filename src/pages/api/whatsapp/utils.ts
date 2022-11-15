@@ -21,21 +21,21 @@ export const sendRequest = async (input: SendRequestInput) => {
     }
 }
 
-export const sendCartLink = async (to: number, link: string) => {
+export const sendTextMessage = async (to: number, message: string) => {
     await sendRequest({
         data: {
             messaging_product: 'whatsapp',
             to,
             type: 'text',
             text: {
-                body: `Genial! Acá tenes tu link de compra: ${link}`,
+                body: `${message}`,
             }
         }
     })
 }
 
 export const sendCartDetail = async (to: number, productStoreCarts: WhatsappProductStoreCartInput[]) => {
-    const finalPrice = productStoreCarts.reduce((acc, value) => (value.finalPrice + acc), 0)
+    const finalPrice = productStoreCarts.reduce((acc, value) => ((value.finalPrice * value.amount) + acc), 0)
     await sendRequest({
         data: {
             messaging_product: 'whatsapp',

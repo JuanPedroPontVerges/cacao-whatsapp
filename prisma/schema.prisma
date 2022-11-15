@@ -211,6 +211,8 @@ model ProductStoreCart {
     productStore              ProductStore               @relation(fields: [productStoreId], references: [id], onDelete: Cascade)
     cart                      Cart?                      @relation(fields: [cartId], references: [id], onDelete: Cascade)
     productStoreCartToOptions ProductStoreCartToOption[]
+    createdAt                 DateTime                   @default(now())
+    updatedAt                 DateTime?                  @updatedAt
 }
 
 model ProductStoreCartToOption {
@@ -231,6 +233,8 @@ model Cart {
     order             Order?
     customer          Customer?          @relation(fields: [customerId], references: [id], onDelete: Cascade)
     productStoreCarts ProductStoreCart[]
+    createdAt         DateTime           @default(now())
+    updatedAt         DateTime?          @updatedAt
 }
 
 enum CartState {
@@ -240,13 +244,15 @@ enum CartState {
 }
 
 model Customer {
-    id          String  @id @default(cuid())
+    id          String    @id @default(cuid())
     venueId     String
     fullName    String
-    phoneNumber String  @unique
-    venue       Venue   @relation(fields: [venueId], references: [id], onDelete: Cascade)
+    phoneNumber String    @unique
+    venue       Venue     @relation(fields: [venueId], references: [id], onDelete: Cascade)
     orders      Order[]
     carts       Cart[]
+    createdAt   DateTime  @default(now())
+    updatedAt   DateTime? @updatedAt
 }
 
 model Order {
@@ -254,15 +260,35 @@ model Order {
     cartId         String      @unique
     stateId        String
     typeId         String
+    paymentId      String?
     paymentTypeId  String
     customerId     String
     additionalInfo String?
     total          Int
+    payment        Payment?
     PaymentType    PaymentType @relation(fields: [paymentTypeId], references: [id], onDelete: Cascade)
     customer       Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
     Cart           Cart        @relation(fields: [cartId], references: [id])
     State          OrderState  @relation(fields: [stateId], references: [id], onDelete: Cascade)
     Type           OrderType   @relation(fields: [typeId], references: [id], onDelete: Cascade)
+    createdAt      DateTime    @default(now())
+    updatedAt      DateTime?   @updatedAt
+}
+
+model Payment {
+    id                   String       @id @default(cuid())
+    mercadoPagoPaymentId String?
+    orderId              String       @unique
+    order                Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+    status               PaymentState @default(PENDING)
+    createdAt            DateTime     @default(now())
+    updatedAt            DateTime?    @updatedAt
+}
+
+enum PaymentState {
+    PENDING
+    APPROVED
+    CANCELLED
 }
 
 model OrderType {
