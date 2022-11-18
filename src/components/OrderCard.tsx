@@ -1,8 +1,6 @@
-import React, { useEffect, useState } from "react"
-import dayjs from 'dayjs';
-import duration from 'dayjs/plugin/duration';
-dayjs.extend(duration)
-export type Action = 'confirm' | 'cancel'
+import React from "react"
+import Timer from "./Timer";
+export type Action = 'confirm' | 'cancel' | 'dispatch';
 type OrderCardProps = {
     customer?: {
         id: string;
@@ -25,29 +23,13 @@ type OrderCardProps = {
 }
 
 const OrderCard: React.FC<OrderCardProps> = ({ id, customer, price, state, payment, className, createdAt, onClick, onClickAction }) => {
-    const [timer, setTimer] = useState<string>();
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const ft = dayjs(createdAt);
-            const tt = dayjs();
-            const mins = tt.diff(ft, "minutes", true);
-            const seconds = tt.diff(ft, "seconds", true);
-            const totalHours = parseInt((mins / 60).toString());
-            const totalMins = dayjs().minute(mins).minute()
-            const totalSeconds = dayjs().second(seconds).second()
-            setTimer(`${totalHours}:${totalMins}:${totalSeconds}`)
-        }, 1000)
-        return () => {
-            clearInterval(interval);
-        }
-    }, [])
-
+    const bgColor = state?.name === 'Pendiente' ? 'slate' : state?.name === 'Cancelado' ? 'red' : (state?.name === 'Confirmado' || state?.name === 'Despachado') ? 'green' : 'purple'
     return (
         <div id={id} onClick={() => onClick(id)} className='cursor-pointer hover:p-1 transition-all'>
-            <div className={`border-2 rounded-lg w-52  bg-${state?.name === 'Pendiente' ? 'slate' : state?.name === 'Cancelado' ? 'red' : state?.name === 'Confirmado' ? 'green' : 'purple'}-300 ${className}`}>
+            <div className={`border-2 rounded-lg w-auto bg-${bgColor}-300 ${className}`}>
                 <div className="flex flex-col gap-2">
                     <div className="flex justify-between">
-                        <p>{timer}</p>
+                        <p>{(state?.name === 'Despachado' || state?.name === 'Cancelado') ? null : <Timer createdAt={createdAt} />}</p>
                         <p>Pago: {' '}
                             {
                                 payment?.status === 'PENDING' ? 'Pendiente'
@@ -85,9 +67,11 @@ const OrderCard: React.FC<OrderCardProps> = ({ id, customer, price, state, payme
                                 </>
                             ) : state?.name === 'Cancelado' ? (
                                 null
+                            ) : state?.name === 'Despachado' ? (
+                                '¡Finalizada!'
                             ) : (
                                 <button
-                                    onClick={(e) => onClickAction(e, 'cancel', id)}
+                                    onClick={(e) => onClickAction(e, 'dispatch', id)}
                                     className="inline-flex justify-center rounded-md border border-white bg-blue-100 px-4 py-2 text-sm font-medium text-wapi-blue hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
                                 >
                                     Despachar

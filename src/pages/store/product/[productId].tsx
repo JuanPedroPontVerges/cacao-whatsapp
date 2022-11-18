@@ -14,6 +14,7 @@ import { useEffect, useState } from "react";
 import { NextPageWithLayout } from "../../_app";
 import StoreNav from "../../../components/layouts/StoreNav";
 import { useLocalSession } from "../../../helpers/session.hooks";
+import Loader from "../../../components/Loader";
 export type ProductStoreCartFormInput = {
     additionalInfo?: string,
     amount: number,
@@ -33,7 +34,8 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
     const productStoreCartUpdate = trpc.useMutation(['productStoreCartRouter.update']);
     const productStoreCartToOptionMutation = trpc.useMutation(['productStoreCartToOptionRouter.create']);
     const [isLoaded, setIsLoaded] = useState(false);
-    const { data } = trpc.useQuery(["storeRouter.getProductDetailsByProductId", { id: query.productId }]);
+    const [isLoading, setIsLoading] = useState(false);
+    const { data, isLoading: isQueryLoading } = trpc.useQuery(["storeRouter.getProductDetailsByProductId", { id: query.productId }]);
     const form = useForm<ProductStoreCartFormInput>({
         defaultValues: {
             amount: 1,
@@ -71,7 +73,11 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
             setIsLoaded(true)
         }
     }, [productStoreCartQuery])
-    if (!data) return (<>Loading...</>)
+    if (!data) {
+        return <Loader />
+    } else if (isQueryLoading || isLoading) {
+        return <Loader />
+    }
 
     const product = data[0]?.productStore.product
     const handleDescriptionText = (displayType: DisplayType, amount: number | null): string => {
@@ -118,6 +124,7 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
     }
 
     const onSubmitForm: SubmitHandler<ProductStoreCartFormInput> = async (input) => {
+        setIsLoading(true)
         const { additionalInfo, amount, finalPrice, productStoreToOptionGroups } = input;
         if (query.productStoreCartId) { /* If is edit */
             await productStoreCartUpdate.mutateAsync({ id: query.productStoreCartId, additionalInfo, amount, finalPrice: finalPrice / amount })
@@ -131,6 +138,7 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
                 }
             }
             await productStoreCartQuery.refetch()
+            setIsLoading(false)
             router.back()
             return;
         }
@@ -162,6 +170,7 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
                     }
                 }
             }
+            setIsLoading(false)
             router.back()
         }
     }

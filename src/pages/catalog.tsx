@@ -21,6 +21,7 @@ import Dashboard from "../components/layouts/Dashboard";
 import { NextPageWithLayout } from "./_app";
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
+import Loader from "../components/Loader";
 type Option = {
     id: string;
     name: string;
@@ -298,8 +299,9 @@ const Catalog: NextPageWithLayout = () => {
         }
     }, [productQuery.data])
 
-    if (categoryQuery.isLoading || optionGroupQuery.isLoading || displayTypeQuery.isLoading) return (<>Loading...</>)
-    else if (categoryQuery.error || optionGroupQuery.error || displayTypeQuery.error) return (<>Error!</>)
+    if (categoryQuery.error || optionGroupQuery.error || displayTypeQuery.error) return (<>Error!</>)
+
+    if (optionGroupQuery.isLoading || categoryQuery.isLoading) return <Loader />
 
     const reorderOptionsRow = (draggedRowIndex: number, targetRowIndex: number) => {
         if (options) {
@@ -710,9 +712,9 @@ const Catalog: NextPageWithLayout = () => {
                     {/* Tables */}
                     {
                         selectedCategory ? (
-                            <Table table={productsTable} reorderRow={reorderProductsRow} />
+                            <Table table={productsTable} isLoading={productQuery.isLoading} reorderRow={reorderProductsRow} />
                         ) : (
-                            <Table table={optionsTable} reorderRow={reorderOptionsRow} />
+                            <Table table={optionsTable} isLoading={optionQuery.isLoading} reorderRow={reorderOptionsRow} />
                         )
                     }
                 </div>

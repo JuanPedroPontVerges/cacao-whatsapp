@@ -1,14 +1,17 @@
-import { flexRender, RowData, Table } from "@tanstack/react-table";
+import { flexRender, Table } from "@tanstack/react-table";
 import React from "react"
 import DraggableRow from "./DraggableRow";
+import Loader from "./Loader";
 interface TableProps {
     reorderRow?: (draggedRowIndex: number, targetRowIndex: number) => void
     table: Table<any>;
     className?: string;
+    isLoading?: boolean;
     onClick?: () => void;
 }
 
-const Table: React.FC<TableProps> = ({ table, reorderRow, className }) => {
+const Table: React.FC<TableProps> = ({ isLoading, table, reorderRow, className }) => {
+    if (isLoading) return <Loader />
     return (
         <div className="flex">
             <table className={`w-full text-left ${className}`}>

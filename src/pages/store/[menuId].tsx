@@ -10,6 +10,7 @@ import Link from "next/link";
 import Cursed from 'public/assets/pizza-margarita.jpg'
 import ShoppingCart from "../../components/ShoppingCart";
 import { useLocalSession } from "../../helpers/session.hooks";
+import Loader from "../../components/Loader";
 
 function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ')
@@ -32,7 +33,7 @@ const Store: NextPageWithLayout = ({ query }) => {
             setSelectedCategory(data?.[0]);
         }
     }, [data])
-    if (!data) return (<>Loading...</>)
+    if (!data) return <Loader />
     if (cartQuery.data?.[0]?.cart?.state === 'CANCELLED') return (<>¡Carrito de compras cancelado! Porfavor, genera uno nuevo</>)
     const onClickCategory = (categoryId: string) => {
         const category = data?.find((category) => category.id === categoryId);

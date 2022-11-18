@@ -6,6 +6,7 @@ import { useEffect } from "react"
 import { SubmitHandler, useForm } from "react-hook-form"
 import Form from "../../../components/Form"
 import StoreNav from "../../../components/layouts/StoreNav"
+import Loader from "../../../components/Loader"
 import { trpc } from "../../../utils/trpc"
 import { NextPageWithLayout } from "../../_app"
 
@@ -35,7 +36,7 @@ const Checkout: NextPageWithLayout = ({ query }) => {
             form.setValue('phoneNumber', cartQuery.data?.customer?.phoneNumber || '')
         }
     }, [cartQuery])
-    if (cartQuery.isLoading) return <>Loading...</>
+    if (cartQuery.isLoading) return <Loader />
     const mercadoPagoPaymentTypeId = paymentTypeQuery?.data?.find((paymentType) => paymentType.name == 'Mercadopago')?.id
     const onSubmitForm: SubmitHandler<CheckoutFormInput> = async (input) => {
         if (!input.paymentTypeId) input.paymentTypeId = paymentTypeQuery.data?.[0]?.id || '123';
