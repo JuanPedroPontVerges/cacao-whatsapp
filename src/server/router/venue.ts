@@ -23,7 +23,11 @@ export const venueRouter = createProtectedRouter()
             }
           },
           menus: {
-            create: {}
+            create: {
+              setting: {
+                create: {}
+              }
+            }
           }
         },
       })

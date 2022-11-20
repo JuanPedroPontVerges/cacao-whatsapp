@@ -16,15 +16,17 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
   },
-  // Configure one or more authentication providers
   adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
       clientSecret: env.NEXT_PUBLIC_GOOGLE_CLIENT_SECRET,
     }),
-    // ...add more providers here
   ],
+  pages: {
+    // signIn: '/auth/signin',
+    // newUser: '/auth/new-user' // New users will be directed here on first sign in (leave the property out if not of interest)
+  }
 };
 
 export default NextAuth(authOptions);

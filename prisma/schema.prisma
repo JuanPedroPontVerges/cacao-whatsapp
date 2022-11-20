@@ -76,28 +76,32 @@ model Venue {
 }
 
 model Menu {
-    id           String        @id @default(cuid())
-    venueId      String
-    createdAt    DateTime      @default(now())
-    updatedAt    DateTime?     @updatedAt
-    venue        Venue?        @relation(fields: [venueId], references: [id], onDelete: Cascade)
-    categories   Category[]
-    optionGroups OptionGroup[]
+    id            String        @id @default(cuid())
+    venueId       String
+    menuSettingId String?       @unique()
+    createdAt     DateTime      @default(now())
+    updatedAt     DateTime?     @updatedAt
+    venue         Venue?        @relation(fields: [venueId], references: [id], onDelete: Cascade)
+    setting       MenuSetting?  @relation(fields: [menuSettingId], references: [id], onDelete: Cascade)
+    categories    Category[]
+    optionGroups  OptionGroup[]
 }
 
 model MenuSetting {
     id                String     @id @default(cuid())
     minPurchaseAmount Int?
+    menu              Menu?
     schedules         Schedule[]
 }
 
 model Schedule {
     id            String       @id @default(cuid())
     menuSettingId String
-    fromMinute    Int?
-    fromHour      Int?
-    toMinute      Int?
-    toHour        Int?
+    day           String?
+    fromMinute    String?
+    fromHour      String?
+    toMinute      String?
+    toHour        String?
     createdAt     DateTime     @default(now())
     updatedAt     DateTime?    @updatedAt
     menuSetting   MenuSetting? @relation(fields: [menuSettingId], references: [id], onDelete: Cascade)

@@ -14,10 +14,18 @@ export const userRouter = createProtectedRouter()
           select: {
             venueId: true,
             venue: {
-              select: {
-                menus: true
+              include: {
+                menus: {
+                  include: {
+                    setting: {
+                      include: {
+                        schedules: true,
+                      }
+                    }
+                  }
+                }
               }
-            }
+            },
           }
         });
         return user;

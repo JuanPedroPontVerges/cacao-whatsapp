@@ -107,7 +107,6 @@ const Reports: NextPageWithLayout = () => {
         getCoreRowModel: getCoreRowModel(),
     })
     if (salesByProductQuery.isLoading || salesByProductQuery.isLoading || moneyPerDayQuery.isLoading) return <Loader />;
-    if (!salesByProductQuery.data || !salesByProductQuery.data || !moneyPerDayQuery.data) return <>No data available...</>;
     if (!pieChartData.datasets[0].data.length) {
         salesByProductQuery.data?.forEach((saleByProduct) => {
             pieChartLabels.push(saleByProduct?.product?.name);

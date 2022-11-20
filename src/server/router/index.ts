@@ -21,6 +21,8 @@ import { customerRouter } from "./customer";
 import { paymentRouter } from "./payment";
 import { orderStateRouter } from "./order-state";
 import { reportRouter } from "./report";
+import { menuSettingRouter } from "./menuSetting";
+import { scheduleRouter } from "./schedule";
 
 export const appRouter = createRouter()
   .transformer(superjson)
@@ -43,7 +45,9 @@ export const appRouter = createRouter()
   .merge("customerRouter.", customerRouter)
   .merge("paymentRouter.", paymentRouter)
   .merge("orderStateRouter.", orderStateRouter)
-  .merge("reportRouter.", reportRouter);
+  .merge("reportRouter.", reportRouter)
+  .merge("menuSettingRouter.", menuSettingRouter)
+  .merge("scheduleRouter.", scheduleRouter);
 
   
 
