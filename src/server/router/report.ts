@@ -70,8 +70,8 @@ export const reportRouter = createProtectedRouter()
               }
             },
             createdAt: {
-              lt: dayjs().startOf('month').toDate(),
-              gt: dayjs().endOf('month').toDate()
+              lt: dayjs().endOf('month').toDate(),
+              gt: dayjs().startOf('month').toDate()
             },
             cart: {
               order: {
@@ -82,14 +82,11 @@ export const reportRouter = createProtectedRouter()
             }
           },
         })
-        console.log('productStoreCarts',productStoreCarts);
         const newProductStoreCarts = [];
         for (const productStoreCart of productStoreCarts) {
-          newProductStoreCarts.push({...productStoreCart, dayOfTheMonth: dayjs(productStoreCart.createdAt).format('D')})
+          newProductStoreCarts.push({ ...productStoreCart, dayOfTheMonth: dayjs(productStoreCart.createdAt).format('D') })
         }
-        console.log('newProductStoreCarts',newProductStoreCarts);
-        const groupedQuery = groupBy(productStoreCarts, 'createdAt')
-        console.log('groupedQuery', groupedQuery);
+        return groupBy(newProductStoreCarts, 'dayOfTheMonth')
       }
     },
   })
@@ -102,6 +99,35 @@ export const reportRouter = createProtectedRouter()
           where: {
             venueId,
           },
+        })
+      }
+    },
+  })
+  .query("weeklyFinishedOrders", {
+    input: z.object({ venueId: z.string().nullish() }).nullish(),
+    async resolve({ ctx, input }) {
+      if (input && input.venueId != null) {
+        return await prisma?.order.findMany({
+          where: {
+            State: {
+              name: 'Despachado'
+            },
+            payment: {
+              status: 'APPROVED'
+            },
+            customer: {
+              venueId: input.venueId
+            }
+          },
+          include: {
+            payment: true,
+            customer: true,
+            Cart: {
+              select: {
+                productStoreCarts: true,
+              }
+            }
+          }
         })
       }
     },

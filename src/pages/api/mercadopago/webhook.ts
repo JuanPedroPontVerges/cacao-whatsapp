@@ -22,7 +22,7 @@ export default async function handler(
                     });
                     const parsedResponse = await response.json();
                     if (parsedResponse.external_reference) {
-                        const customer = await prisma.customer.findUnique({
+                        const customer = await prisma.customer.findFirst({
                             where: {
                                 id: parsedResponse.external_reference,
                             },

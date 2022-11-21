@@ -64,92 +64,145 @@ export const orderRouter = createRouter()
           id: true,
         }
       }) || { id: '123' }
+      let order: any;
       const total: number = cart?.productStoreCarts.reduce((acc, value) => (value.finalPrice + acc), 0) || 42069
-      const order = await ctx.prisma.order.upsert({
+      const customer = await ctx.prisma.customer.findFirst({
         where: {
-          cartId,
-        },
-        create: {
-          total,
-          additionalInfo,
-          Cart: {
-            connect: {
-              id: cartId,
-            },
-          },
-          PaymentType: {
-            connect: {
-              id: paymentTypeId,
-            }
-          },
-          State: {
-            connect: {
-              id: orderStatePendingId.id,
-            }
-          },
-          Type: {
-            connect: {
-              id: orderPickupTypeId.id,
-            }
-          },
-          customer: {
-            connectOrCreate: {
-              create: {
-                phoneNumber,
-                fullName,
-                venue: {
-                  connect: {
-                    id: venueId
-                  }
-                }
-              },
-              where: {
-                phoneNumber,
-              }
-            }
-          },
-        },
-        update: {
-          total,
-          additionalInfo,
-          PaymentType: {
-            connect: {
-              id: paymentTypeId,
-            }
-          },
-          State: {
-            connect: {
-              id: orderStatePendingId.id,
-            }
-          },
-          Type: {
-            connect: {
-              id: orderPickupTypeId.id,
-            }
-          },
-          customer: {
-            connectOrCreate: {
-              create: {
-                phoneNumber,
-                fullName,
-                venue: {
-                  connect: {
-                    id: venueId
-                  }
-                }
-              },
-              where: {
-                phoneNumber,
-              }
-            }
-          },
-        },
-        select: {
-          id: true,
-          cartId: true,
-          payment: true,
+          venueId,
+          phoneNumber,
         }
       })
+      if (customer) {
+        order = await ctx.prisma.order.upsert({
+          where: {
+            cartId,
+          },
+          create: {
+            total,
+            additionalInfo,
+            Cart: {
+              connect: {
+                id: cartId,
+              },
+            },
+            PaymentType: {
+              connect: {
+                id: paymentTypeId,
+              }
+            },
+            State: {
+              connect: {
+                id: orderStatePendingId.id,
+              }
+            },
+            Type: {
+              connect: {
+                id: orderPickupTypeId.id,
+              }
+            },
+            customer: {
+              connect: {
+                id: customer.id
+              }
+            }
+          },
+          update: {
+            total,
+            additionalInfo,
+            PaymentType: {
+              connect: {
+                id: paymentTypeId,
+              }
+            },
+            State: {
+              connect: {
+                id: orderStatePendingId.id,
+              }
+            },
+            Type: {
+              connect: {
+                id: orderPickupTypeId.id,
+              }
+            },
+          },
+          select: {
+            id: true,
+            cartId: true,
+            payment: true,
+          }
+        })
+      } else if (!customer) {
+        const createdCustomer = await ctx.prisma.customer.create({
+          data: {
+            phoneNumber,
+            fullName,
+            venue: {
+              connect: {
+                id: venueId
+              }
+            }
+          },
+        })
+        order = await ctx.prisma.order.upsert({
+          where: {
+            cartId,
+          },
+          create: {
+            total,
+            additionalInfo,
+            Cart: {
+              connect: {
+                id: cartId,
+              },
+            },
+            PaymentType: {
+              connect: {
+                id: paymentTypeId,
+              }
+            },
+            State: {
+              connect: {
+                id: orderStatePendingId.id,
+              }
+            },
+            Type: {
+              connect: {
+                id: orderPickupTypeId.id,
+              }
+            },
+            customer: {
+              connect: {
+                id: createdCustomer.id
+              }
+            }
+          },
+          update: {
+            total,
+            additionalInfo,
+            PaymentType: {
+              connect: {
+                id: paymentTypeId,
+              }
+            },
+            State: {
+              connect: {
+                id: orderStatePendingId.id,
+              }
+            },
+            Type: {
+              connect: {
+                id: orderPickupTypeId.id,
+              }
+            },
+          },
+          select: {
+            id: true,
+            cartId: true,
+            payment: true,
+          }
+        })
+      }
+
       const foundCart = await ctx.prisma.cart.findFirst({
         where: {
           id: cartId,

@@ -251,7 +251,7 @@ model Customer {
     id          String    @id @default(cuid())
     venueId     String
     fullName    String
-    phoneNumber String    @unique
+    phoneNumber String    
     venue       Venue     @relation(fields: [venueId], references: [id], onDelete: Cascade)
     orders      Order[]
     carts       Cart[]

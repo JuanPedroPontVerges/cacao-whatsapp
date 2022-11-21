@@ -101,6 +101,19 @@ const Reports: NextPageWithLayout = () => {
             setCustomers(customerQuery.data);
         }
     }, [customerQuery.data])
+    useEffect(() => {
+        if (moneyPerDayQuery.data) {
+            console.log('lineChartLabels', lineChartLabels);
+            for (const day of lineChartLabels) {
+                if (moneyPerDayQuery.data[day]) {
+                    const finalPrice = moneyPerDayQuery.data[day].reduce((acc: number, value: any) => ((value.finalPrice * value.amount) + acc), 0)
+                    lineCharData.datasets[0].data.push(finalPrice)
+                } else {
+                    lineCharData.datasets[0].data.push(0)
+                }
+            }
+        }
+    }, [moneyPerDayQuery.data])
     const customersTable = useReactTable({
         data: customers,
         columns: customerColumns,
@@ -113,12 +126,8 @@ const Reports: NextPageWithLayout = () => {
             pieChartData.datasets[0].data.push(saleByProduct.productStoreCart._count.productStoreId)
         })
     }
-    // if (!lineCharData.datasets[0].data.length) {
-    //     salesByProductQuery.data?.forEach((saleByProduct) => {
-    //         pieChartLabels.push(saleByProduct?.product?.name);
-    //         pieChartData.datasets[0].data.push(saleByProduct.productStoreCart._count.productStoreId)
-    //     })
-    // }
+
+
     return (
         <>
             <Head>
@@ -127,7 +136,10 @@ const Reports: NextPageWithLayout = () => {
                 <link rel="icon" href="/favicon.ico" />
             </Head>
             <div className="flex w-full">
-                <Line data={lineCharData} />;
+                <div className="w-full">
+                    <h2 className="text-2xl mb-4">Facturación x Día</h2>
+                    <Line data={lineCharData} />;
+                </div>
             </div>
             <div className="flex justify-around w-full">
                 <div>

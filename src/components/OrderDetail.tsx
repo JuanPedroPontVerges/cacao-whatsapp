@@ -64,14 +64,6 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCar
             <div className="flex justify-center">
                 <p className="text-1xl">Total: ${finalAmount}</p>
             </div>
-            {
-                payment?.status === 'CANCELLED' ? (null) : (
-                    <div className="flex justify-center mb-2">
-                        <button className="p-2 border-4 rounded-md border-stone-200 bg-stone-100">Cerrar Cuenta</button>
-                    </div>
-                )
-            }
-
         </div>
     )
 }

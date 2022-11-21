@@ -1,5 +1,5 @@
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
-import { getCsrfToken, getProviders, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import Head from "next/head";
 import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
@@ -10,6 +10,10 @@ import Modal from "../components/Modal";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
 import { NextPageWithLayout } from "./_app";
+import Loader from "../components/Loader";
+import { isOpen } from "./api/whatsapp/utils";
+import exceljs from 'exceljs';
+import dayjs from "dayjs";
 
 export type DaysType = 'monday' | 'tuesday' | 'wendsday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 
@@ -65,6 +69,7 @@ const Index: NextPageWithLayout = ({ providers, csrfToken }) => {
   const settingsForm = useForm<CreateSettingsFormValue>();
   const { data } = useSession();
   const userQuery = trpc.useQuery(["userRouter.getVenues", { id: data?.user?.id }]);
+  const ordersQuery = trpc.useQuery(["reportRouter.weeklyFinishedOrders", { venueId: userQuery.data?.venueId }]);
   const venueMutation = trpc.useMutation(["venueRouter.create"]);
   const menuSettingMutation = trpc.useMutation(["menuSettingRouter.create"]);
   const scheduleMutation = trpc.useMutation(["scheduleRouter.create"]);
@@ -77,6 +82,7 @@ const Index: NextPageWithLayout = ({ providers, csrfToken }) => {
 
   useEffect(() => {
     if (userQuery.data?.venue?.menus?.[0]?.setting?.schedules) {
+      settingsForm.setValue('minPurchaseAmount', userQuery.data.venue.menus?.[0].setting.minPurchaseAmount || 0)
       for (const schedule of userQuery.data?.venue?.menus?.[0]?.setting?.schedules) {
         const day = schedule?.day as DaysType;
         settingsForm.setValue(`${day}.from`, `${schedule.fromHour}:${schedule.fromMinute}`)
@@ -84,12 +90,12 @@ const Index: NextPageWithLayout = ({ providers, csrfToken }) => {
       }
     }
 
-  }, [userQuery])
+  }, [userQuery.data])
 
   const onSubmitForm: SubmitHandler<ICreateVenueFormValues> = async (input) => {
     console.log('input', input);
     if (data?.user?.id) {
-      venueMutation.mutate({ ...input, userId: data?.user.id })
+      venueMutation.mutateAsync({ ...input, userId: data?.user.id })
       toggleVisibility();
     }
     return;
@@ -159,7 +165,7 @@ const Index: NextPageWithLayout = ({ providers, csrfToken }) => {
                     : sundayInput
       await scheduleMutation.mutateAsync({ day, menuSettingId: userQuery.data?.venue?.menus[0]?.menuSettingId || '123', [day]: currentDay })
     }
-
+    userQuery.refetch()
   }
 
   useEffect(() => {
@@ -175,6 +181,51 @@ const Index: NextPageWithLayout = ({ providers, csrfToken }) => {
     )
   }
 
+  const handleOnClickDownloadReport = async () => {
+    try {
+      const workbook = new exceljs.Workbook();
+      const worksheet = workbook.addWorksheet('Ordenes de la semana');
+      const orderColumns = [
+        { key: 'customerFullName', header: 'Nombre Completo' },
+        { key: 'customerPhoneNumber', header: 'Número de Teléfono' },
+        { key: 'total', header: 'Total' },
+        { key: 'mercadoPagoPaymentId', header: 'Mercadopago ID' },
+        { key: 'createdAt', header: 'Fecha' },
+      ];
+      worksheet.columns = orderColumns
+      if (userQuery?.data?.venueId) {
+        if (ordersQuery.data) {
+          for (const { customer, payment, createdAt, Cart } of ordersQuery?.data) {
+            const total = Cart?.productStoreCarts.reduce((acc: any, value: any) => ((value.finalPrice * value.amount) + acc), 0)
+            worksheet.addRow({
+              customerFullName: customer.fullName,
+              customerPhoneNumber: customer.phoneNumber,
+              total,
+              mercadoPagoPaymentId: payment?.mercadoPagoPaymentId,
+              createdAt
+            })
+          }
+          const buffer = await workbook.xlsx.writeBuffer();
+          const blob = new Blob([buffer],
+            { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          const url = window.URL.createObjectURL(blob);
+          const anchor = document.createElement('a');
+          anchor.href = url;
+          anchor.download = `Reporte semanal WAPI.xls`;
+          anchor.click();
+          window.URL.revokeObjectURL(url);
+        } else {
+          alert('No hay suficientes datos disponibles')
+          return;
+        }
+      }
+    } catch (err) {
+      console.log('errr', err);
+    }
+  }
+
+  const schedules = userQuery.data.venue?.menus[0]?.setting?.schedules
+
   return (
     <>
       <Head>
@@ -184,53 +235,85 @@ const Index: NextPageWithLayout = ({ providers, csrfToken }) => {
       </Head>
       <div className="rounded-lg border-4 border-dashed border-gray-200 container mx-auto">
         <div className="flex justify-around my-4">
-          <div className="basis-2/4">
+          <div>
             <h2 className="text-3xl">Estado</h2>
             <div className="mt-4">
-              Ahora te encuenstras <span className="text-green-600">ABIERTO!</span>
+              Ahora te encuentras
+              <span className={`${isOpen(schedules) ? 'text-green-600' : 'text-red-600'} text-2xl font-bold mx-2`}>
+                {isOpen(schedules) ? 'Abierto!' : 'Cerrado!'}
+              </span>
+            </div>
+            <div className='mt-4'>
+              <button
+                onClick={handleOnClickDownloadReport}
+                className="
+                    inline-flex justify-center rounded-md border border-transparent bg-green-600 py-2 px-4 text-sm font-medium 
+                    text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                    ">
+                Descargar informe semanal
+              </button>
+              {/* <p style={{ marginTop: '16px' }}>
+                <a
+                  href="/csv/ejemplo.csv"
+                  download
+                  style={{
+                    textDecoration: 'underline',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Descargar
+                </a>{' '}
+                plantilla de ejemplo
+              </p> */}
             </div>
           </div>
-          <div className="basis-2/4">
+          <div>
             <h2 className="text-3xl">Configuraciones</h2>
-            <div className="m-4 w-2/3">
-              <Form form={settingsForm} onSubmitForm={onSubmitSettingsForm}>
-                <h3 className="text-2xl">Horarios</h3>
-                {days.map(({ label, day }) => (
-                  <div key={day} className='flex items-center justify-around my-2'>
-                    <div className="basis-1/3">
-                      <p className="text-left">{label}</p>
+            {
+              scheduleMutation.isLoading ? (
+                <Loader />
+              ) : (
+                <div className="m-4">
+                  <Form form={settingsForm} onSubmitForm={onSubmitSettingsForm}>
+                    <h3 className="text-2xl">Horarios</h3>
+                    {days.map(({ label, day }) => (
+                      <div key={day} className='flex items-center justify-around my-2'>
+                        <div className="basis-1/3">
+                          <p className="text-left">{label}</p>
+                        </div>
+                        <input type="time" {...settingsForm.register(`${day}.from`)} />
+                        <span>{'=>'}</span>
+                        <input type="time" {...settingsForm.register(`${day}.to`)} />
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-around">
+                      <p>Monto mínimo de compra</p>
+                      <div className="relative mt-1 rounded-md shadow-sm">
+                        <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                          <span className="text-gray-500 sm:text-sm">$</span>
+                        </div>
+                        <input
+                          type="number"
+                          className="rounded-md border-gray-300 pl-7 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                          placeholder="0.00"
+                          {...settingsForm.register('minPurchaseAmount', { valueAsNumber: true })}
+                        />
+                      </div>
                     </div>
-                    <input type="time" {...settingsForm.register(`${day}.from`)} />
-                    <span>{'=>'}</span>
-                    <input type="time" {...settingsForm.register(`${day}.to`)} />
-                  </div>
-                ))}
-                <div className="flex items-center justify-around">
-                  <p>Monto mínimo de compra</p>
-                  <div className="relative mt-1 rounded-md shadow-sm">
-                    <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                      <span className="text-gray-500 sm:text-sm">$</span>
+                    <div className="pt-4 text-right">
+                      <button
+                        type="submit"
+                        className="
+                      inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium 
+                    text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
+                    ">
+                        Guardar cambios
+                      </button>
                     </div>
-                    <input
-                      type="number"
-                      className="block w-full rounded-md border-gray-300 pl-7 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
-                      placeholder="0.00"
-                      {...settingsForm.register('minPurchaseAmount', { valueAsNumber: true })}
-                    />
-                  </div>
+                  </Form>
                 </div>
-                <div className="bg-gray-50 pt-4 text-right">
-                  <button
-                    type="submit"
-                    className="
-                    inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium 
-                  text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
-                  ">
-                    Guardar cambios
-                  </button>
-                </div>
-              </Form>
-            </div>
+              )
+            }
           </div>
         </div>
       </div>

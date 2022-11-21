@@ -505,12 +505,14 @@ const Catalog: NextPageWithLayout = () => {
         if (selectedOption.isEdit && selectedOption.option) {
             const { id } = selectedOption.option
             optionUpdate.mutate({ ...input, maxAmount, price, optionId: id })
+            optionGroupQuery.refetch();
             toggleOptionDrawer()
             return;
         }
         /* Creation */
         if (selectedOptionGroup) {
             optionMutation.mutate({ ...input, maxAmount, price, optionGroupId: selectedOptionGroup.id });
+            optionGroupQuery.refetch();
             toggleOptionDrawer()
             return;
         }

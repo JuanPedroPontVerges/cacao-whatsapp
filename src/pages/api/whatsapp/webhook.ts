@@ -1,8 +1,9 @@
+import { ReceiptRefundIcon } from '@heroicons/react/24/outline';
 import { NextApiRequest, NextApiResponse } from 'next'
 import { prisma } from "../../../server/db/client";
 import { CreatePreferenceInput, PreferenceItem } from '../mercadopago/preference';
 import { NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, NOT_SURE_HARDCODED_VENUE_ID, VERIFY_TOKEN } from './constants';
-import { sendTextMessage, sendMenu } from './utils';
+import { sendTextMessage, sendMenu, isOpen } from './utils';
 
 export default async function handler(
     req: NextApiRequest,
@@ -18,8 +19,9 @@ export default async function handler(
                 body.entry[0].changes[0].value.messages &&
                 body.entry[0].changes[0].value.messages[0]
             ) {
+                res.status(200).end()
                 const message = body.entry[0].changes[0].value.messages[0];
-                const customer = await prisma.customer.findUnique({
+                const customer = await prisma.customer.findFirst({
                     where: {
                         phoneNumber: NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER.toString(),
                     }
@@ -32,10 +34,38 @@ export default async function handler(
                         },
                         select: {
                             id: true,
-                            menus: true,
+                            menus: {
+                                include: {
+                                    setting: {
+                                        include: {
+                                            schedules: true,
+                                        }
+                                    }
+                                }
+                            },
                         }
                     })
                     if (!venue || !customer) return;
+                    const isVenueOpen = isOpen(venue.menus[0]?.setting?.schedules)
+                    if (!isVenueOpen) {
+                        await sendTextMessage(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, `Hola! El local se encuentra cerrado, no dudes contactarnos en nuestros días habilitados!👇🏽
+${venue.menus[0]?.setting?.schedules.map(({ day, fromHour, fromMinute, toHour, toMinute }) => {
+                            if (fromHour === '0' && fromMinute === '0' && toHour === '0' && toMinute === '0') { }
+                            else {
+                                return (`
+${day === 'monday' ? 'Lunes'
+                                        : day === 'tuesday' ? 'Martes'
+                                            : day === 'wendsday' ? 'Miércoles'
+                                                : day === 'thursday' ? 'Jueves'
+                                                    : day === 'friday' ? 'Viernes'
+                                                        : day === 'saturday' ? 'Sabado'
+                                                            : 'Domingo'
+                                    }: ${fromHour}:${fromMinute} => ${toHour}:${toMinute}
+`)
+                            }
+                        }).join('')}`);
+                        return;
+                    }
                     if (message.interactive.list_reply) {
                         const id = message.interactive.list_reply.id as 'status' | 'order';
                         if (id === 'status') {
@@ -233,7 +263,6 @@ ${parsedRes.init_point}`);
                     await sendMenu(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, customer?.fullName);
                 }
             }
-            return res.status(200).end()
         }
     } else if (req.method === 'GET') {
         // Parse params from the webhook verification request
