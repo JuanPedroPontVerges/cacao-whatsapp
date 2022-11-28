@@ -19,7 +19,6 @@ export default async function handler(
                 body.entry[0].changes[0].value.messages &&
                 body.entry[0].changes[0].value.messages[0]
             ) {
-                res.status(200).end()
                 const message = body.entry[0].changes[0].value.messages[0];
                 const customer = await prisma.customer.findFirst({
                     where: {
@@ -64,7 +63,7 @@ ${day === 'monday' ? 'Lunes'
 `)
                             }
                         }).join('')}`);
-                        return;
+                        return res.status(200).end();
                     }
                     if (message.interactive.list_reply) {
                         const id = message.interactive.list_reply.id as 'status' | 'order';
@@ -284,5 +283,5 @@ ${parsedRes.init_point}`);
         }
         return res.status(200).end()
     }
-
+    return res.status(200).end();
 }
