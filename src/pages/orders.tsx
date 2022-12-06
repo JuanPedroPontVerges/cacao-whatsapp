@@ -95,8 +95,9 @@ const Orders: NextPageWithLayout = () => {
             <div className="w-full">
                 <div className="container mx-auto p-2 rounded-lg border-4 border-dashed border-gray-200 w-full">
                     <div className='p-2'>
-                        <h2 className='text-xl mb-1'>Filtros</h2>
+                        
                         <Form form={form} onSubmitForm={onSubmitForm}>
+                        <h2 className='text-xl mb-1'>Filtros</h2>
                             <div className="flex justify-around">
                                 <div>
                                     <label>Tipo de pago</label>
