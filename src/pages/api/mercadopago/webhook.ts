@@ -64,5 +64,5 @@ export default async function handler(
         }
         console.log('WEBHOOK!!', req.body);
     }
-    res.status(200).end();
+    return res.status(200).end();
 }
