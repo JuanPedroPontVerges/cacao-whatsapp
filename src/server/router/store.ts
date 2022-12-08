@@ -31,9 +31,12 @@ export const storeRouter = createRouter()
         return await ctx.prisma.category.findMany({
           where: {
             menuId: input.id,
+            enabled: true,
             AND: {
               products: {
-                some: {}
+                some: {
+                  enabled: true,
+                }
               }
             }
           },

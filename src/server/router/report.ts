@@ -5,11 +5,15 @@ import { createProtectedRouter } from "./context";
 
 export const reportRouter = createProtectedRouter()
   .query("sellsByProduct", {
-    input: z.object({ venueId: z.string().nullish() }).nullish(),
+    input: z.object({
+      venueId: z.string().nullish(),
+      startDate: z.date().nullish(),
+      endDate: z.date().nullish()
+    }).nullish(),
     async resolve({ ctx, input }) {
       const completeProductStoreCarts = []
       if (input && input.venueId != null) {
-        const { venueId } = input;
+        const { venueId, startDate, endDate } = input;
         const productStoreCarts = await ctx.prisma.productStoreCart.groupBy({
           by: ['productStoreId'],
           _count: {
@@ -27,6 +31,10 @@ export const reportRouter = createProtectedRouter()
             },
             cart: {
               order: {
+                createdAt: {
+                  lt: endDate || dayjs().set('day', 1).toDate(),
+                  gt: startDate || dayjs().set('day', -1).toDate(),
+                },
                 payment: {
                   status: 'APPROVED'
                 }
@@ -57,8 +65,8 @@ export const reportRouter = createProtectedRouter()
       endDate: z.date().nullish()
     }).nullish(),
     async resolve({ ctx, input }) {
-      if ((input && input.venueId != null) && (input?.startDate != null) && (input?.endDate != null)) {
-        const { venueId, startDate, endDate} = input;
+      if (input && input.venueId != null) {
+        const { venueId, startDate, endDate } = input;
         const productStoreCarts = await ctx.prisma.productStoreCart.findMany({
           where: {
             productStore: {
@@ -71,8 +79,8 @@ export const reportRouter = createProtectedRouter()
               }
             },
             createdAt: {
-              lt: endDate,
-              gt: startDate,
+              lt: endDate || dayjs().set('day', 1).toDate(),
+              gt: startDate || dayjs().set('day', -1).toDate(),
             },
             cart: {
               order: {
@@ -133,6 +141,43 @@ export const reportRouter = createProtectedRouter()
       }
     },
   })
+  .query("paymentTypes", {
+    input: z.object({
+      venueId: z.string().nullish(),
+      startDate: z.date().nullish(),
+      endDate: z.date().nullish()
+    }).nullish(),
+    async resolve({ ctx, input }) {
+      if ((input && input.venueId != null) && (input?.startDate != null) && (input?.endDate != null)) {
+        const { venueId, startDate, endDate } = input;
+        const paymentTypes = await ctx.prisma.order.groupBy({
+          by: ['paymentTypeId'],
+          where: {
+            customer: {
+              venueId,
+            },
+            createdAt: {
+              lt: endDate,
+              gt: startDate,
+            },
+            State: {
+              name: 'Despachado'
+            },
+            payment: {
+              status: 'APPROVED'
+            },
+          },
+          _count: true,
+        })
+        const result = [];
+        for await (const paymentType of paymentTypes) {
+          const paymentTypeFound = await prisma?.paymentType.findFirst({ where: { id: paymentType.paymentTypeId } });
+          result.push({ ...paymentType, paymentTypeFound });
+        }
+        return result;
+      }
+    },
+  })
   .query("totalSales", {
     input: z.object({
       venueId: z.string().nullish(),
@@ -169,10 +214,15 @@ export const reportRouter = createProtectedRouter()
       }
     },
   })
-  .query("weeklyFinishedOrders", {
-    input: z.object({ venueId: z.string().nullish() }).nullish(),
+  .query("finishedOrders", {
+    input: z.object({
+      venueId: z.string().nullish(),
+      startDate: z.date().nullish(),
+      endDate: z.date().nullish()
+    }).nullish(),
     async resolve({ ctx, input }) {
       if (input && input.venueId != null) {
+        const { venueId, startDate, endDate } = input;
         return await prisma?.order.findMany({
           where: {
             State: {
@@ -182,8 +232,12 @@ export const reportRouter = createProtectedRouter()
               status: 'APPROVED'
             },
             customer: {
-              venueId: input.venueId
-            }
+              venueId
+            },
+            createdAt: {
+              lt: endDate || dayjs().set('day', 1).toDate(),
+              gt: startDate || dayjs().set('day', -1).toDate(),
+            },
           },
           include: {
             payment: true,
