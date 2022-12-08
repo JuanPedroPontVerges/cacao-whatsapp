@@ -51,13 +51,14 @@ export const reportRouter = createProtectedRouter()
     },
   })
   .query("moneyPerDay", {
-    input: z.object({ venueId: z.string().nullish() }).nullish(),
+    input: z.object({
+      venueId: z.string().nullish(),
+      startDate: z.date().nullish(),
+      endDate: z.date().nullish()
+    }).nullish(),
     async resolve({ ctx, input }) {
-      /** TODO
-       * [] Terminar linea de grafico para saber money x day
-       */
-      if (input && input.venueId != null) {
-        const { venueId } = input;
+      if ((input && input.venueId != null) && (input?.startDate != null) && (input?.endDate != null)) {
+        const { venueId, startDate, endDate} = input;
         const productStoreCarts = await ctx.prisma.productStoreCart.findMany({
           where: {
             productStore: {
@@ -70,8 +71,8 @@ export const reportRouter = createProtectedRouter()
               }
             },
             createdAt: {
-              lt: dayjs().endOf('month').toDate(),
-              gt: dayjs().startOf('month').toDate()
+              lt: endDate,
+              gt: startDate,
             },
             cart: {
               order: {
@@ -84,7 +85,7 @@ export const reportRouter = createProtectedRouter()
         })
         const newProductStoreCarts = [];
         for (const productStoreCart of productStoreCarts) {
-          newProductStoreCarts.push({ ...productStoreCart, dayOfTheMonth: dayjs(productStoreCart.createdAt).format('D') })
+          newProductStoreCarts.push({ ...productStoreCart, dayOfTheMonth: dayjs(productStoreCart.createdAt).format('DD-MM') })
         }
         return groupBy(newProductStoreCarts, 'dayOfTheMonth')
       }
@@ -98,6 +99,71 @@ export const reportRouter = createProtectedRouter()
         return await ctx.prisma.customer.findMany({
           where: {
             venueId,
+          },
+        })
+      }
+    },
+  })
+  .query("amountOfOperations", {
+    input: z.object({
+      venueId: z.string().nullish(),
+      startDate: z.date().nullish(),
+      endDate: z.date().nullish()
+    }).nullish(),
+    async resolve({ ctx, input }) {
+      if ((input && input.venueId != null) && (input?.startDate != null) && (input?.endDate != null)) {
+        const { venueId, startDate, endDate } = input;
+        return await ctx.prisma.order.count({
+          where: {
+            customer: {
+              venueId,
+            },
+            createdAt: {
+              lt: endDate,
+              gt: startDate,
+            },
+            State: {
+              name: 'Despachado'
+            },
+            payment: {
+              status: 'APPROVED'
+            },
+          },
+        })
+      }
+    },
+  })
+  .query("totalSales", {
+    input: z.object({
+      venueId: z.string().nullish(),
+      startDate: z.date().nullish(),
+      endDate: z.date().nullish()
+    }).nullish(),
+    async resolve({ ctx, input }) {
+      if ((input && input.venueId != null) && (input?.startDate != null) && (input?.endDate != null)) {
+        const { venueId, startDate, endDate } = input;
+        return await ctx.prisma.productStoreCart.findMany({
+          where: {
+            productStore: {
+              product: {
+                category: {
+                  menu: {
+                    venueId,
+                  }
+                }
+              }
+            },
+            createdAt: {
+              lt: endDate,
+              gt: startDate,
+            },
+            cart: {
+              order: {
+                payment: {
+                  status: 'APPROVED'
+                }
+              }
+            }
           },
         })
       }
@@ -127,6 +193,38 @@ export const reportRouter = createProtectedRouter()
                 productStoreCarts: true,
               }
             }
+          }
+        })
+      }
+    },
+  })
+  .query("averageSalesPerDay", {
+    input: z.object({
+      venueId: z.string().nullish(),
+      startDate: z.date().nullish(),
+      endDate: z.date().nullish()
+    }).nullish(),
+    async resolve({ ctx, input }) {
+      if ((input && input.venueId != null) && (input?.startDate != null) && (input?.endDate != null)) {
+        const { venueId, startDate, endDate } = input;
+        return await prisma?.order.aggregate({
+          where: {
+            State: {
+              name: 'Despachado'
+            },
+            payment: {
+              status: 'APPROVED'
+            },
+            customer: {
+              venueId
+            },
+            createdAt: {
+              lt: endDate,
+              gt: startDate,
+            },
+          },
+          _avg: {
+            total: true,
           }
         })
       }

@@ -15,6 +15,7 @@ type OrderDetailProps = {
         id: string;
         name: string;
     };
+    createdAt?: Date;
     className?: string;
     additionalInfo?: string | null;
     productStoreCarts?: {
@@ -30,7 +31,7 @@ type OrderDetailProps = {
     }[],
 }
 
-const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCarts, additionalInfo, finalAmount, payment, paymentType, className }) => {
+const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCarts, additionalInfo, createdAt, finalAmount, payment, paymentType, className }) => {
     return (
         <div className="flex flex-col w-full gap-2">
             <div className="flex justify-between p-2">
@@ -38,6 +39,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCar
                 <p>#{id?.slice(4, 8)}</p>
             </div>
             <div className="mt-2 pt-2 px-2">
+                <p className="mb-2"><strong> Fecha de creación</strong>: {createdAt?.toString()}</p>
                 <p className="mb-2"><strong> Nombre de cliente</strong>: {customer?.fullName}</p>
                 <p className="mb-2"><strong>Comentarios adicionales</strong>: {additionalInfo}</p>
                 <p><strong>Tipo de pago</strong>: {paymentType?.name}</p>

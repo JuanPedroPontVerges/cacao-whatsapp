@@ -37,11 +37,12 @@ const Checkout: NextPageWithLayout = ({ query }) => {
         }
     }, [cartQuery])
     if (cartQuery.isLoading) return <Loader />
+    const finalPrice = cartQuery.data?.productStoreCarts.reduce((acc: any, value: any) => ((value.finalPrice * value.amount) + acc), 0)
     const mercadoPagoPaymentTypeId = paymentTypeQuery?.data?.find((paymentType: any) => paymentType.name == 'Mercadopago')?.id
     const onSubmitForm: SubmitHandler<CheckoutFormInput> = async (input) => {
         if (!input.paymentTypeId) input.paymentTypeId = paymentTypeQuery.data?.[0]?.id || '123';
         if (cartQuery.data?.customer?.venue.menus?.[0]?.setting) {
-            if (cartQuery.data?.customer?.venue.menus?.[0]?.setting.minPurchaseAmount || 10_000 < finalPrice) {
+            if (cartQuery.data?.customer?.venue.menus?.[0]?.setting.minPurchaseAmount || 10_000_000 < finalPrice) {
                 alert(`Min purchase amount is: ${cartQuery.data?.customer?.venue.menus?.[0]?.setting.minPurchaseAmount}`)
                 return;
             }
@@ -57,7 +58,6 @@ const Checkout: NextPageWithLayout = ({ query }) => {
         }
         router.push(`/store/checkout/success/${result.id}`)
     };
-    const finalPrice = cartQuery.data?.productStoreCarts.reduce((acc: any, value: any) => ((value.finalPrice * value.amount) + acc), 0)
     return (
         <>
             {orderMutation.isLoading ? <Loader /> : (

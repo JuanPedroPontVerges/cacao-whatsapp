@@ -175,6 +175,7 @@ const Orders: NextPageWithLayout = () => {
                             <div className="flex">
                                 <OrderDetail
                                     id={selectedOrder?.id}
+                                    createdAt={selectedOrder?.createdAt}
                                     paymentType={selectedOrder?.PaymentType}
                                     payment={selectedOrder?.payment}
                                     customer={selectedOrder?.customer}

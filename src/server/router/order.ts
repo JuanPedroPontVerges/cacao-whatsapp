@@ -15,7 +15,7 @@ export const orderRouter = createRouter()
       fullName: z.string(),
     }),
     async resolve({ ctx, input }) {
-      const { cartId, additionalInfo, phoneNumber, fullName, paymentTypeId } = input;
+      const { cartId, additionalInfo, phoneNumber, fullName, paymentTypeId  } = input;
       const cart = await ctx.prisma.cart.findFirst({
         where: { id: cartId },
         select: {
