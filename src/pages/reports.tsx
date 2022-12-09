@@ -29,32 +29,8 @@ ChartJS.register(
     Legend,
 );
 const barChartLabels: any[] = [];
-const pieChartData = {
-    labels: ['Efectivo', 'Mercado Pago'],
-    datasets: [
-        {
-            label: '# of Votes',
-            data: [12, 19],
-            backgroundColor: [
-                'rgba(255, 99, 132, 0.2)',
-                'rgba(54, 162, 235, 0.2)',
-                'rgba(255, 206, 86, 0.2)',
-                'rgba(75, 192, 192, 0.2)',
-                'rgba(153, 102, 255, 0.2)',
-                'rgba(255, 159, 64, 0.2)',
-            ],
-            borderColor: [
-                'rgba(255, 99, 132, 1)',
-                'rgba(54, 162, 235, 1)',
-                'rgba(255, 206, 86, 1)',
-                'rgba(75, 192, 192, 1)',
-                'rgba(153, 102, 255, 1)',
-                'rgba(255, 159, 64, 1)',
-            ],
-            borderWidth: 1,
-        },
-    ],
-};
+const pieChartLabels: any[] = [];
+
 const lineChartOptions = {
     responsive: true,
     scales: {
@@ -165,6 +141,33 @@ const Reports: NextPageWithLayout = () => {
             }
         ],
     };
+    // PieChart data
+    const pieChartData: { labels?: any[] | undefined; datasets: any[] } = {
+        labels: pieChartLabels,
+        datasets: [
+            {
+                label: '# of Votes',
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)',
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                ],
+                borderWidth: 1,
+                data: []
+            },
+        ],
+    };
 
     useEffect(() => {
         if (customerQuery.data) {
@@ -199,6 +202,15 @@ const Reports: NextPageWithLayout = () => {
                 barChartLabels.push(saleByProduct?.product?.name);
             }
             barChartData.datasets[0].data.push(saleByProduct.productStoreCart._count.productStoreId)
+        })
+    }
+
+    if (!pieChartData.datasets[0].data.length) {
+        paymentTypesQuery.data?.forEach((paymentType) => {
+            if (!pieChartLabels.some((label) => label === paymentType?.paymentTypeFound?.name)) {
+                pieChartLabels.push(paymentType?.paymentTypeFound?.name);
+            }
+            pieChartData.datasets[0].data.push(paymentType._count)
         })
     }
 
