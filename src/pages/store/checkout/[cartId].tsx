@@ -42,7 +42,7 @@ const Checkout: NextPageWithLayout = ({ query }) => {
     const onSubmitForm: SubmitHandler<CheckoutFormInput> = async (input) => {
         if (!input.paymentTypeId) input.paymentTypeId = paymentTypeQuery.data?.[0]?.id || '123';
         if (cartQuery.data?.customer?.venue.menus?.[0]?.setting) {
-            if (cartQuery.data?.customer?.venue.menus?.[0]?.setting.minPurchaseAmount || 10_000_000 < finalPrice) {
+            if ((cartQuery.data?.customer?.venue.menus?.[0]?.setting.minPurchaseAmount || 10_000_000) > finalPrice) {
                 alert(`Min purchase amount is: ${cartQuery.data?.customer?.venue.menus?.[0]?.setting.minPurchaseAmount}`)
                 return;
             }

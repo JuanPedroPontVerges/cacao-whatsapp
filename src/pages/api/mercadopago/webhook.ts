@@ -8,6 +8,7 @@ export default async function handler(
 ) {
     if (req.method === 'POST') {
         if (req.body.action) {
+            console.log('Mercadopago Webhook', req.body);
             if (req.body.action === 'payment.created') {
                 // Se creo link de pago
             } else if (req.body.action === 'payment.updated') {
