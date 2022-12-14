@@ -151,13 +151,14 @@ const Catalog: NextPageWithLayout = () => {
     const optionDefaultColumns: ColumnDef<Option>[] = [
         {
             accessorKey: 'name',
+            header: 'Nombre',
             cell: info => info.getValue(),
         },
         {
             accessorFn: row => row.description,
             id: 'description',
             cell: info => info.getValue(),
-            header: () => <span>description</span>,
+            header: () => <span>Descripción</span>,
         },
         {
             header: 'Precio',
@@ -200,6 +201,7 @@ const Catalog: NextPageWithLayout = () => {
     ]
     const productDefaultColumns: ColumnDef<Product>[] = [
         {
+            header: 'Nombre',
             accessorKey: 'name',
             cell: info => info.getValue(),
         },
@@ -207,7 +209,7 @@ const Catalog: NextPageWithLayout = () => {
             accessorFn: row => row.description,
             id: 'description',
             cell: info => info.getValue(),
-            header: () => <span>description</span>,
+            header: () => <span>Descripción</span>,
         },
         {
             header: 'Precio',

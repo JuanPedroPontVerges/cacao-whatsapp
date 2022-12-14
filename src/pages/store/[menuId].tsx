@@ -125,10 +125,10 @@ const Store: NextPageWithLayout = ({ query }) => {
             </Disclosure>
             <header className="relative bg-white">
                 <p className="flex h-10 items-center justify-center bg-indigo-600 px-4 text-sm font-medium text-white sm:px-6 lg:px-8">
-                    Recomendanos con tus amigos y gana $100
+                    {selectedCategory?.name}
                 </p>
             </header>
-            <div className="mx-auto max-w-2xl py-16 px-4 sm:py-24 sm:px-6 lg:max-w-7xl lg:px-8">
+            <div className="mx-auto max-w-2xl py-8 px-4 sm:py-24 sm:px-6 lg:max-w-7xl lg:px-8">
                 <div className="grid grid-cols-2 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 xl:gap-x-8">
                     {
                         selectedCategory?.products.map((product) => {

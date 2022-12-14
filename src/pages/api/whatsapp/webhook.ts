@@ -173,7 +173,6 @@ ${day === 'monday' ? 'Lunes'
                                 }
                             }
                         })
-                        console.log('cart', cart);
                         if (cart) {
                             if (id === 'yes') {
                                 if (cart?.order?.PaymentType.name === 'Efectivo') {
@@ -204,7 +203,6 @@ ${day === 'monday' ? 'Lunes'
                                             },
                                         });
                                         const parsedRes = await res.json();
-                                        console.log('res', parsedRes);
                                         if (!res.ok) {
                                             return res.text().then(text => { throw new Error(text) })
                                         }

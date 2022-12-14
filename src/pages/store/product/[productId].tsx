@@ -263,8 +263,8 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
                             <div className="w-full p-1">
                                 <div className="flex justify-around items-center">
                                     <Button type='button' onClick={handleOnClickSubstract}>-</Button>
-                                    <div className="border-2 p-1 border-white basis-1/3">
-                                        <input readOnly aria-readonly className="w-full" type="number" {...form.register('amount', { valueAsNumber: true })} />
+                                    <div className="p-1 basis-1/3">
+                                        <input readOnly aria-readonly className="w-full bg-slate-600 text-center text-white border-0 border-b-2 border-b-slate-50" type="number" {...form.register('amount', { valueAsNumber: true })} />
                                     </div>
                                     <Button type='button' onClick={handleOnClickAdd}>+</Button>
                                 </div>
@@ -274,6 +274,7 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
                             <Button className="w-full" type='submit'>
                                 <div className="flex justify-around items-center">
                                     <p>Agregar</p>
+                                    <span className="mr-[-12px] ml-2">$</span>
                                     <input
                                         readOnly
                                         aria-readonly

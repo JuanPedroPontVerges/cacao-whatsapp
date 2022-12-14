@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Form from "../components/Form";
 import Dashboard from "../components/layouts/Dashboard";
@@ -156,7 +156,7 @@ const Orders: NextPageWithLayout = () => {
                                         onClickAction={handleOnClickAction}
                                         onClick={onClickOrder}
                                         key={index}
-                                        price={order.total}
+                                        price={order?.Cart.productStoreCarts.reduce((acc, value) => ((value.finalPrice * value.amount) + acc), 0)}
                                         state={order.State}
                                         customer={order.customer}
                                         id={order.id}
@@ -180,7 +180,6 @@ const Orders: NextPageWithLayout = () => {
                                     payment={selectedOrder?.payment}
                                     customer={selectedOrder?.customer}
                                     additionalInfo={selectedOrder?.additionalInfo}
-                                    finalAmount={selectedOrder?.total}
                                     productStoreCarts={selectedOrder?.Cart.productStoreCarts} />
                             </div>
                         </div>

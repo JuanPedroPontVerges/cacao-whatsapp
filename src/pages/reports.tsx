@@ -297,12 +297,12 @@ const Reports: NextPageWithLayout = () => {
                         </>
                     )
                 }
-                <div className="flex justify-around w-full">
+                {/* <div className="flex justify-around w-full">
                     <div>
                         <h2 className="text-2xl mb-4">Clientes</h2>
                         <Table table={customersTable} className='border border-1 border-black p-6' />
                     </div>
-                </div>
+                </div> */}
             </div>
         </>
     );

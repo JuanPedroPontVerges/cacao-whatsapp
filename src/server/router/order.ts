@@ -1,7 +1,8 @@
 import { PaymentState } from "@prisma/client";
+import dayjs from "dayjs";
 import { z } from "zod";
 import { NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER } from "../../pages/api/whatsapp/constants";
-import { sendCartDetail } from "../../pages/api/whatsapp/utils";
+import { sendCartDetail, sendTextMessage } from "../../pages/api/whatsapp/utils";
 import { createRouter } from "./context";
 
 // Example router with queries that can only be hit if the user requesting is signed in
@@ -15,7 +16,7 @@ export const orderRouter = createRouter()
       fullName: z.string(),
     }),
     async resolve({ ctx, input }) {
-      const { cartId, additionalInfo, phoneNumber, fullName, paymentTypeId  } = input;
+      const { cartId, additionalInfo, phoneNumber, fullName, paymentTypeId } = input;
       const cart = await ctx.prisma.cart.findFirst({
         where: { id: cartId },
         select: {
@@ -246,6 +247,7 @@ export const orderRouter = createRouter()
     }),
     async resolve({ ctx, input }) {
       const { orderId, action } = input;
+      console.log('action', action);
       const orderState = await ctx.prisma.orderState.findFirst({
         where: {
           name: action,
@@ -254,7 +256,7 @@ export const orderRouter = createRouter()
           id: true,
         }
       });
-      return await ctx.prisma.order.update({
+      const updatedOrder = await ctx.prisma.order.update({
         where: {
           id: orderId,
         },
@@ -264,8 +266,21 @@ export const orderRouter = createRouter()
               id: orderState?.id,
             }
           }
+        },
+        include: {
+          customer: {
+            select: {
+              phoneNumber: true,
+            }
+          }
         }
       })
+      if (action === 'En Preparación') {
+        await sendTextMessage(+updatedOrder.customer.phoneNumber, `¡Orden confirmada!
+
+⏱️Hora estimada: ${dayjs().add(30, 'minutes').format('hh:mm')}`)
+      }
+      return orderState;
     },
   })
   .query("findById", {

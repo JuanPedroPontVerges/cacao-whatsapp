@@ -59,7 +59,6 @@ export const productStoreCartRouter = createRouter()
     async resolve({ ctx, input }) {
       const { amount, finalPrice, additionalInfo, id } = input;
       const cart = await ctx.prisma.productStoreCart.findUnique({ where: { id }, select: { finalPrice: true } })
-      console.log('cart', cart);
       console.log('finalPrice', finalPrice);
       return await ctx.prisma.productStoreCart.update({
         where: {
