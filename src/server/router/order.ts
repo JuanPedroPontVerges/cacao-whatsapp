@@ -21,8 +21,7 @@ export const orderRouter = createRouter()
         where: { id: cartId },
         select: {
           productStoreCarts: {
-            select: {
-              finalPrice: true,
+            include: {
               productStore: {
                 select: {
                   product: {
@@ -66,7 +65,7 @@ export const orderRouter = createRouter()
         }
       }) || { id: '123' }
       let order: any;
-      const total = cartQuery.data?.productStoreCarts.reduce((acc: any, value: any) => ((value.finalPrice * value.amount) + acc), 0)
+      const total = cart?.productStoreCarts.reduce((acc: any, value: any) => ((value.finalPrice * value.amount) + acc), 0) || 42069
       const customer = await ctx.prisma.customer.findFirst({
         where: {
           venueId,
