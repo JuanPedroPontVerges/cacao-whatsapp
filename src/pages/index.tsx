@@ -239,7 +239,7 @@ const Index: NextPageWithLayout = ({ providers, csrfToken }) => {
       <div className="rounded-lg border-4 border-dashed border-gray-200 container mx-auto">
         <div className="flex justify-around my-4">
           <div>
-            <h2 className="text-3xl">Estado</h2>
+            <h2 className="text-3xl">Estado de tu local</h2>
             <div className="mt-4">
               Ahora te encuentras
               <span className={`${isOpen(schedules) ? 'text-green-600' : 'text-red-600'} text-2xl font-bold mx-2`}>

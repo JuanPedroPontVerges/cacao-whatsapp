@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Disclosure, Menu, Transition } from '@headlessui/react'
-import { Bars3Icon, BellIcon, XMarkIcon, ArrowLeftCircleIcon, BuildingStorefrontIcon } from '@heroicons/react/24/outline'
+import { Bars3Icon, BellIcon, XMarkIcon, ArrowRightOnRectangleIcon, BuildingStorefrontIcon } from '@heroicons/react/24/outline'
 import { Fragment } from "react";
 import { signOut, useSession } from 'next-auth/react';
 import Link from 'next/link';
@@ -38,8 +38,9 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
     const navigation = [
         { name: 'Inicio', href: '/', current: current == 0 ? true : false },
         { name: 'Catálogo', href: '/catalog', current: current == 1 ? true : false },
-        { name: 'Reports', href: '/reports', current: current == 2 ? true : false },
-        { name: 'Ordenes', href: '/orders', current: current == 3 ? true : false },
+        { name: 'Órdenes', href: '/orders', current: current == 2 ? true : false },
+        { name: 'Reportes', href: '/reports', current: current == 3 ? true : false },
+       
     ]
     return (
         <DndProvider backend={HTML5Backend}>
@@ -79,19 +80,23 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                                         </div>
                                     </div>
                                     <div className="hidden md:block">
-                                        <div className="ml-4 flex items-center md:ml-6">
-                                            <Link href={`/store/${venueQuery.data?.venue?.menus[0]?.id}`} passHref>
-                                                <a target={'_blank'} rel='noopener noreferrer'>
-                                                    <BuildingStorefrontIcon className="h-6 w-6 text-gray-400 cursor-pointer hover:text-white" aria-hidden="true" />
+                                        <div className="flex flex-row">
+                                        <div className='items-center justify-center'>
+                                            <Link href={`/store/${venueQuery.data?.venue?.menus[0]?.id}`} passHref className=''>
+                                                <a target={'_blank'} rel='noopener noreferrer'  className="text-gray-400 cursor-pointer hover:text-white">
+                                                    <BuildingStorefrontIcon className="w-6" aria-hidden="true" />
+                                                    Ir a la tienda         
                                                 </a>
                                             </Link>
+                                            </div>
+                                            <div className='items-center justify-center'>
                                             <button
-                                                type="button"
+                                                type="button" onClick={killSession}
                                                 className="rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                                            >
-                                                <ArrowLeftCircleIcon onClick={killSession} className="h-6 w-6" aria-hidden="true" />
+                                            > <p>Cerrar sesión</p>
+                                                <ArrowRightOnRectangleIcon  className="w-6" aria-hidden="true" />
                                             </button>
-
+                                            </div>
                                             {/* Profile dropdown */}
                                             <Menu as="div" className="relative ml-3">
                                                 <div>
@@ -172,8 +177,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                                         </div>
                                         <button
                                             type="button"
-                                            className="ml-auto flex-shrink-0 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                                        >
+                                            className="ml-auto flex-shrink-0 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800">
                                             <span className="sr-only">View notifications</span>
                                             <BellIcon className="h-6 w-6" aria-hidden="true" />
                                         </button>
@@ -202,7 +206,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                     </div>
                 </header>
                 <main>
-                    <div className="mx-auto max-w-7xl py-6 sm:px-6 lg:px-8">
+                    <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">
                         {/* Replace with your content */}
                         <div className="px-4 py-6 sm:px-0">
                             {children}

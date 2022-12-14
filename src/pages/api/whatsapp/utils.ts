@@ -11,6 +11,7 @@ dayjs.extend(isBetween)
 export const sendRequest = async (input: SendRequestInput) => {
     const { data } = input;
     const url = `https://graph.facebook.com/v15.0/${PHONE_NUMBER_ID}/messages`
+    console.log('');
     try {
         const res = await fetch(url, {
             method: "POST",

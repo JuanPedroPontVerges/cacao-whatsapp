@@ -14,202 +14,249 @@ import OrderDetail from "../components/OrderDetail";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
 import { NextPageWithLayout } from "./_app";
+import { FunnelIcon } from "@heroicons/react/24/outline";
 
 const paymentStatus = [
-    {
-        label: 'Pendiente',
-        value: 'PENDING'
-    },
-    {
-        label: 'Pagado',
-        value: 'APPROVED'
-    },
-    {
-        label: 'Cancelado',
-        value: 'CANCELLED'
-    },
-]
+  {
+    label: "Pendiente",
+    value: "PENDING",
+  },
+  {
+    label: "Pagado",
+    value: "APPROVED",
+  },
+  {
+    label: "Cancelado",
+    value: "CANCELLED",
+  },
+];
 type FilterFormInput = {
-    paymentTypeId: string | 'all';
-    orderStateId: string | 'all';
-    paymentState: PaymentState | 'all';
-}
+  paymentTypeId: string | "all";
+  orderStateId: string | "all";
+  paymentState: PaymentState | "all";
+};
 
 const Orders: NextPageWithLayout = () => {
-    const { data } = useSession();
-    const [paymentTypeId, setPaymentTypeId] = useState<string>();
-    const [orderStateId, setOrderStateId] = useState<string>();
-    const [paymentState, setPaymentState] = useState<PaymentState>();
-    const userQuery = trpc.useQuery(["userRouter.getVenues", { id: data?.user?.id }]);
-    const venueId = userQuery.data?.venueId;
-    const paymentTypeQuery = trpc.useQuery(["paymentTypeRouter.findAll"])
-    const orderStateQuery = trpc.useQuery(["orderStateRouter.findAll"])
-    const orderQuery = trpc.useQuery(["orderRouter.findByVenueId", { id: venueId, paymentState, paymentTypeId, orderStateId }])
-    const orderStateMutation = trpc.useMutation(["orderRouter.updateState"])
-    const [selectedOrderId, setSelectedOrderId] = useState<string>();
-    const [isModalOpen, setIsModalOpen] = useState(false);
+  const { data } = useSession();
+  const [paymentTypeId, setPaymentTypeId] = useState<string>();
+  const [orderStateId, setOrderStateId] = useState<string>();
+  const [paymentState, setPaymentState] = useState<PaymentState>();
+  const userQuery = trpc.useQuery([
+    "userRouter.getVenues",
+    { id: data?.user?.id },
+  ]);
+  const venueId = userQuery.data?.venueId;
+  const paymentTypeQuery = trpc.useQuery(["paymentTypeRouter.findAll"]);
+  const orderStateQuery = trpc.useQuery(["orderStateRouter.findAll"]);
+  const orderQuery = trpc.useQuery([
+    "orderRouter.findByVenueId",
+    { id: venueId, paymentState, paymentTypeId, orderStateId },
+  ]);
+  const orderStateMutation = trpc.useMutation(["orderRouter.updateState"]);
+  const [selectedOrderId, setSelectedOrderId] = useState<string>();
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const form = useForm<FilterFormInput>()
+  const form = useForm<FilterFormInput>();
 
-    const selectedOrder = orderQuery.data?.find((order) => order.id === selectedOrderId)
+  const selectedOrder = orderQuery.data?.find(
+    (order) => order.id === selectedOrderId
+  );
 
-    const toggleModalVisiblity = () => {
-        setIsModalOpen(!isModalOpen);
+  const toggleModalVisiblity = () => {
+    setIsModalOpen(!isModalOpen);
+  };
+
+  const onClickOrder = (id?: string) => {
+    setSelectedOrderId(id);
+    toggleModalVisiblity();
+  };
+
+  const handleOnClickAction = async (
+    e: React.MouseEvent<HTMLButtonElement, MouseEvent>,
+    action: Action,
+    id?: string
+  ) => {
+    e.stopPropagation();
+    const parsedState =
+      action === "confirm"
+        ? "En Preparación"
+        : action === "cancel"
+        ? "Cancelado"
+        : action === "dispatch"
+        ? "Despachado"
+        : "";
+    if (id) {
+      await orderStateMutation.mutateAsync({
+        orderId: id,
+        action: parsedState,
+      });
+      await orderQuery.refetch();
     }
+  };
 
-    const onClickOrder = (id?: string) => {
-        setSelectedOrderId(id);
-        toggleModalVisiblity();
-    }
+  const onSubmitForm: SubmitHandler<FilterFormInput> = async (input) => {
+    const { paymentState, paymentTypeId, orderStateId } = input;
+    setPaymentState(paymentState === "all" ? undefined : paymentState);
+    setPaymentTypeId(paymentTypeId === "all" ? undefined : paymentTypeId);
+    setOrderStateId(orderStateId === "all" ? undefined : orderStateId);
+    await orderQuery.refetch();
+  };
 
-    const handleOnClickAction = async (e: React.MouseEvent<HTMLButtonElement, MouseEvent>, action: Action, id?: string) => {
-        e.stopPropagation();
-        const parsedState = action === 'confirm' ? 'En Preparación' : action === 'cancel' ? 'Cancelado' : action === 'dispatch' ? 'Despachado' : '';
-        if (id) {
-            await orderStateMutation.mutateAsync({ orderId: id, action: parsedState });
-            await orderQuery.refetch()
-        }
-    }
+  if (
+    userQuery.isLoading ||
+    paymentTypeQuery.isLoading ||
+    orderStateQuery.isLoading ||
+    orderQuery.isLoading
+  )
+    return <Loader />;
+  return (
+    <>
+      <Head>
+        <title>Wapi - Órdenes</title>
+        <meta name="description" content="Generated by create-t3-app" />
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <div className="w-full">
+        <div className="container mx-auto p-2 rounded-lg border-4 border-dashed border-gray-200 w-full">
+          <div className="p-2">
+            <Form form={form} onSubmitForm={onSubmitForm}>
+            <div className="flex flex-row mb-2">
+                    <FunnelIcon className="w-6 mr-2" />
+                    <h2 className="text-xl">Filtrar</h2>
+                  </div>
 
-    const onSubmitForm: SubmitHandler<FilterFormInput> = async (input) => {
-        const { paymentState, paymentTypeId, orderStateId } = input;
-        setPaymentState(paymentState === 'all' ? undefined : paymentState)
-        setPaymentTypeId(paymentTypeId === 'all' ? undefined : paymentTypeId)
-        setOrderStateId(orderStateId === 'all' ? undefined : orderStateId)
-        await orderQuery.refetch();
-    }
-
-    if (
-        userQuery.isLoading ||
-        paymentTypeQuery.isLoading ||
-        orderStateQuery.isLoading ||
-        orderQuery.isLoading
-    ) return <Loader />
-    return (
-        <>
-            <Head>
-                <title>Wapi - Ordenes</title>
-                <meta name="description" content="Generated by create-t3-app" />
-                <link rel="icon" href="/favicon.ico" />
-            </Head>
-            <div className="w-full">
-                <div className="container mx-auto p-2 rounded-lg border-4 border-dashed border-gray-200 w-full">
-                    <div className='p-2'>
-                        <h2 className='text-xl mb-1'>Filtros</h2>
-                        <Form form={form} onSubmitForm={onSubmitForm}>
-                            <div className="flex justify-around">
-                                <div>
-                                    <label>Tipo de pago</label>
-                                    <select
-                                        {...form.register('paymentTypeId')}
-                                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                                    >
-                                        <option value={'all'}>Todos</option>
-                                        {paymentTypeQuery.data?.map((type) => (
-                                            <option value={type.id} key={type.id}>{type.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label>Estado de orden</label>
-                                    <select
-                                        {...form.register('orderStateId')}
-                                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                                    >
-                                        <option value={'all'}>Todos</option>
-                                        {orderStateQuery.data?.map((type) => (
-                                            <option value={type.id} key={type.id}>{type.name}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label>Estado de pago</label>
-                                    <select
-                                        {...form.register('paymentState')}
-                                        className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                                    >
-                                        <option value={'all'}>Todos</option>
-                                        {paymentStatus.map((status) => (
-                                            <option value={status.value} key={status.value}>{status.label}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
-                            <div className="flex justify-center mt-6">
-                                <button
-                                    type='submit'
-                                    className="inline-flex justify-center rounded-md border border-white bg-blue-100 px-4 py-2 text-sm font-medium text-wapi-blue hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-                                >
-                                    Aplicar filtros
-                                </button>
-                            </div>
-                        </Form>
-                    </div>
-                    <div className="border p-2 w-full">
-                        <h2 className='text-xl'>Ordenes</h2>
-                        <div className="flex gap-6 justify-around">
-                            {
-                                orderQuery.data?.map((order, index) => (
-                                    <OrderCard
-                                        createdAt={dayjs(order.createdAt).toDate()}
-                                        payment={order.payment}
-                                        onClickAction={handleOnClickAction}
-                                        onClick={onClickOrder}
-                                        key={index}
-                                        price={order?.Cart.productStoreCarts.reduce((acc, value) => ((value.finalPrice * value.amount) + acc), 0)}
-                                        state={order.State}
-                                        customer={order.customer}
-                                        id={order.id}
-                                    />
-                                ))
-                            }
-                        </div>
-                    </div>
-                    <Modal isOpen={isModalOpen} title={
-                        <div className="flex justify-between mb-1">
-                            <p>Detalle de orden</p>
-                            <p>{selectedOrder?.payment?.status === 'APPROVED' ? 'Pagado' : selectedOrder?.payment?.status === 'PENDING' ? 'Por cobrar' : 'Cancelado'}</p>
-                        </div>}
-                        onClose={toggleModalVisiblity}>
-                        <div className="mx-2 border">
-                            <div className="flex">
-                                <OrderDetail
-                                    id={selectedOrder?.id}
-                                    createdAt={selectedOrder?.createdAt}
-                                    paymentType={selectedOrder?.PaymentType}
-                                    payment={selectedOrder?.payment}
-                                    customer={selectedOrder?.customer}
-                                    additionalInfo={selectedOrder?.additionalInfo}
-                                    productStoreCarts={selectedOrder?.Cart.productStoreCarts} />
-                            </div>
-                        </div>
-                    </Modal>
+              <div className="flex flex-row gap-x-12 p-4 border rounded-md bg-gray-50 border-gray-50"> 
+                <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
+                  <div className="flex flex-col">
+                    <label>Tipo de pago</label>
+                    <select
+                      {...form.register("paymentTypeId")}
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                    >
+                      <option value={"all"}>Todos</option>
+                      {paymentTypeQuery.data?.map((type) => (
+                        <option value={type.id} key={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
+                <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
+                  <div className="flex flex-col">
+                    <label>Estado de orden</label>
+                    <select
+                      {...form.register("orderStateId")}
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                    >
+                      <option value={"all"}>Todos</option>
+                      {orderStateQuery.data?.map((type) => (
+                        <option value={type.id} key={type.id}>
+                          {type.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
+                  <div className="flex flex-col">
+                    <label>Estado de pago</label>
+                    <select
+                      {...form.register("paymentState")}
+                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
+                    >
+                      <option value={"all"}>Todos</option>
+                      {paymentStatus.map((status) => (
+                        <option value={status.value} key={status.value}>
+                          {status.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
+                  <button
+                    type="submit"
+                    className="inline-flex justify-center rounded-md border border-white bg-blue-100 px-4 py-2 text-sm font-medium text-wapi-blue hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                  >
+                    Aplicar filtros
+                  </button>
+                </div>
+              </div>
+            </Form>
+          </div>
+          <div className="p-2 w-full">
+            <h2 className="text-xl">Órdenes</h2>
+            <div className="flex flex-row gap-6 mt-3">
+              {orderQuery.data?.map((order, index) => (
+                <OrderCard
+                  createdAt={dayjs(order.createdAt).toDate()}
+                  payment={order.payment}
+                  onClickAction={handleOnClickAction}
+                  onClick={onClickOrder}
+                  key={index}
+                  price={order.Cart.productStoreCarts?.reduce((acc, value) => ((value.finalPrice * value.amount) + acc), 0)}
+                  state={order.State}
+                  customer={order.customer}
+                  id={order.id}
+                />
+              ))}
             </div>
-        </>
-    );
+          </div>
+          <Modal
+            isOpen={isModalOpen}
+            title={
+              <div className="flex justify-between mb-1">
+                <p>Detalle de orden</p>
+                <p>
+                  {selectedOrder?.payment?.status === "APPROVED"
+                    ? "Pagado"
+                    : selectedOrder?.payment?.status === "PENDING"
+                    ? "Por cobrar"
+                    : "Cancelado"}
+                </p>
+              </div>
+            }
+            onClose={toggleModalVisiblity}
+          >
+            <div className="mx-2 border">
+              <div className="flex">
+                <OrderDetail
+                  id={selectedOrder?.id}
+                  createdAt={selectedOrder?.createdAt}
+                  paymentType={selectedOrder?.PaymentType}
+                  payment={selectedOrder?.payment}
+                  customer={selectedOrder?.customer}
+                  additionalInfo={selectedOrder?.additionalInfo}
+                  productStoreCarts={selectedOrder?.Cart.productStoreCarts}
+                />
+              </div>
+            </div>
+          </Modal>
+        </div>
+      </div>
+    </>
+  );
 };
 
 Orders.getLayout = function getLayout(page) {
-    return (
-        <Dashboard>
-            {page}
-        </Dashboard>
-    )
-}
+  return <Dashboard>{page}</Dashboard>;
+};
 
-export const getServerSideProps: GetServerSideProps = async (ctx: GetServerSidePropsContext) => {
-    const session = await getServerAuthSession(ctx);
+export const getServerSideProps: GetServerSideProps = async (
+  ctx: GetServerSidePropsContext
+) => {
+  const session = await getServerAuthSession(ctx);
 
-    if (!session) {
-        return {
-            redirect: { destination: "/api/auth/signin", permanent: false },
-        }
-    }
-
+  if (!session) {
     return {
-        props: session
-    }
-}
+      redirect: { destination: "/api/auth/signin", permanent: false },
+    };
+  }
+
+  return {
+    props: session,
+  };
+};
 
 export default Orders;
