@@ -13,8 +13,9 @@ import { NextPageWithLayout } from "./_app";
 import Loader from "../components/Loader";
 import { isOpen } from "./api/whatsapp/utils";
 import exceljs from 'exceljs';
+import DatePicker from "react-datepicker";
 import dayjs from "dayjs";
-
+import "react-datepicker/dist/react-datepicker.css";
 export type DaysType = 'monday' | 'tuesday' | 'wendsday' | 'thursday' | 'friday' | 'saturday' | 'sunday';
 
 const days: { label: string; day: DaysType }[] = [
@@ -69,7 +70,9 @@ const Index: NextPageWithLayout = ({ providers, csrfToken }) => {
   const settingsForm = useForm<CreateSettingsFormValue>();
   const { data } = useSession();
   const userQuery = trpc.useQuery(["userRouter.getVenues", { id: data?.user?.id }]);
-  const ordersQuery = trpc.useQuery(["reportRouter.weeklyFinishedOrders", { venueId: userQuery.data?.venueId }]);
+  const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([dayjs().set('month', dayjs().month() - 1).startOf('month').toDate(), new Date()]);
+  const [startDate, endDate] = dateRange;
+  const ordersQuery = trpc.useQuery(["reportRouter.finishedOrders", { venueId: userQuery.data?.venueId, startDate, endDate }]);
   const venueMutation = trpc.useMutation(["venueRouter.create"]);
   const menuSettingMutation = trpc.useMutation(["menuSettingRouter.create"]);
   const scheduleMutation = trpc.useMutation(["scheduleRouter.create"]);
@@ -236,35 +239,34 @@ const Index: NextPageWithLayout = ({ providers, csrfToken }) => {
       <div className="rounded-lg border-4 border-dashed border-gray-200 container mx-auto">
         <div className="flex justify-around my-4">
           <div>
-            <h2 className="text-3xl">Estado</h2>
+            <h2 className="text-3xl">Estado de tu local</h2>
             <div className="mt-4">
               Ahora te encuentras
               <span className={`${isOpen(schedules) ? 'text-green-600' : 'text-red-600'} text-2xl font-bold mx-2`}>
                 {isOpen(schedules) ? 'Abierto!' : 'Cerrado!'}
               </span>
             </div>
-            <div className='mt-4'>
-              <button
-                onClick={handleOnClickDownloadReport}
-                className="
+            <div className='mt-4 border-green-600 border-4 p-4'>
+              <h4>Rango de fechas: </h4>
+              <DatePicker
+                className="mt-2"
+                selectsRange={true}
+                startDate={startDate}
+                endDate={endDate}
+                onChange={(update) => {
+                  setDateRange(update)
+                }}
+              />
+              <div className='mt-6'>
+                <button
+                  onClick={handleOnClickDownloadReport}
+                  className="
                     inline-flex justify-center rounded-md border border-transparent bg-green-600 py-2 px-4 text-sm font-medium 
                     text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
                     ">
-                Descargar informe semanal
-              </button>
-              {/* <p style={{ marginTop: '16px' }}>
-                <a
-                  href="/csv/ejemplo.csv"
-                  download
-                  style={{
-                    textDecoration: 'underline',
-                    cursor: 'pointer',
-                  }}
-                >
-                  Descargar
-                </a>{' '}
-                plantilla de ejemplo
-              </p> */}
+                  Descargar informe semanal
+                </button>
+              </div>
             </div>
           </div>
           <div>

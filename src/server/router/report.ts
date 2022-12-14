@@ -5,11 +5,15 @@ import { createProtectedRouter } from "./context";
 
 export const reportRouter = createProtectedRouter()
   .query("sellsByProduct", {
-    input: z.object({ venueId: z.string().nullish() }).nullish(),
+    input: z.object({
+      venueId: z.string().nullish(),
+      startDate: z.date().nullish(),
+      endDate: z.date().nullish()
+    }).nullish(),
     async resolve({ ctx, input }) {
       const completeProductStoreCarts = []
       if (input && input.venueId != null) {
-        const { venueId } = input;
+        const { venueId, startDate, endDate } = input;
         const productStoreCarts = await ctx.prisma.productStoreCart.groupBy({
           by: ['productStoreId'],
           _count: {
@@ -27,6 +31,10 @@ export const reportRouter = createProtectedRouter()
             },
             cart: {
               order: {
+                createdAt: {
+                  lt: endDate || dayjs().set('day', 1).toDate(),
+                  gt: startDate || dayjs().set('day', -1).toDate(),
+                },
                 payment: {
                   status: 'APPROVED'
                 }
@@ -51,13 +59,14 @@ export const reportRouter = createProtectedRouter()
     },
   })
   .query("moneyPerDay", {
-    input: z.object({ venueId: z.string().nullish() }).nullish(),
+    input: z.object({
+      venueId: z.string().nullish(),
+      startDate: z.date().nullish(),
+      endDate: z.date().nullish()
+    }).nullish(),
     async resolve({ ctx, input }) {
-      /** TODO
-       * [] Terminar linea de grafico para saber money x day
-       */
       if (input && input.venueId != null) {
-        const { venueId } = input;
+        const { venueId, startDate, endDate } = input;
         const productStoreCarts = await ctx.prisma.productStoreCart.findMany({
           where: {
             productStore: {
@@ -70,8 +79,8 @@ export const reportRouter = createProtectedRouter()
               }
             },
             createdAt: {
-              lt: dayjs().endOf('month').toDate(),
-              gt: dayjs().startOf('month').toDate()
+              lt: endDate || dayjs().set('day', 1).toDate(),
+              gt: startDate || dayjs().set('day', -1).toDate(),
             },
             cart: {
               order: {
@@ -84,7 +93,7 @@ export const reportRouter = createProtectedRouter()
         })
         const newProductStoreCarts = [];
         for (const productStoreCart of productStoreCarts) {
-          newProductStoreCarts.push({ ...productStoreCart, dayOfTheMonth: dayjs(productStoreCart.createdAt).format('D') })
+          newProductStoreCarts.push({ ...productStoreCart, dayOfTheMonth: dayjs(productStoreCart.createdAt).format('DD-MM') })
         }
         return groupBy(newProductStoreCarts, 'dayOfTheMonth')
       }
@@ -103,10 +112,117 @@ export const reportRouter = createProtectedRouter()
       }
     },
   })
-  .query("weeklyFinishedOrders", {
-    input: z.object({ venueId: z.string().nullish() }).nullish(),
+  .query("amountOfOperations", {
+    input: z.object({
+      venueId: z.string().nullish(),
+      startDate: z.date().nullish(),
+      endDate: z.date().nullish()
+    }).nullish(),
+    async resolve({ ctx, input }) {
+      if ((input && input.venueId != null) && (input?.startDate != null) && (input?.endDate != null)) {
+        const { venueId, startDate, endDate } = input;
+        return await ctx.prisma.order.count({
+          where: {
+            customer: {
+              venueId,
+            },
+            createdAt: {
+              lt: endDate,
+              gt: startDate,
+            },
+            State: {
+              name: 'Despachado'
+            },
+            payment: {
+              status: 'APPROVED'
+            },
+          },
+        })
+      }
+    },
+  })
+  .query("paymentTypes", {
+    input: z.object({
+      venueId: z.string().nullish(),
+      startDate: z.date().nullish(),
+      endDate: z.date().nullish()
+    }).nullish(),
+    async resolve({ ctx, input }) {
+      if ((input && input.venueId != null) && (input?.startDate != null) && (input?.endDate != null)) {
+        const { venueId, startDate, endDate } = input;
+        const paymentTypes = await ctx.prisma.order.groupBy({
+          by: ['paymentTypeId'],
+          where: {
+            customer: {
+              venueId,
+            },
+            createdAt: {
+              lt: endDate,
+              gt: startDate,
+            },
+            State: {
+              name: 'Despachado'
+            },
+            payment: {
+              status: 'APPROVED'
+            },
+          },
+          _count: true,
+        })
+        const result = [];
+        for await (const paymentType of paymentTypes) {
+          const paymentTypeFound = await prisma?.paymentType.findFirst({ where: { id: paymentType.paymentTypeId } });
+          result.push({ ...paymentType, paymentTypeFound });
+        }
+        return result;
+      }
+    },
+  })
+  .query("totalSales", {
+    input: z.object({
+      venueId: z.string().nullish(),
+      startDate: z.date().nullish(),
+      endDate: z.date().nullish()
+    }).nullish(),
+    async resolve({ ctx, input }) {
+      if ((input && input.venueId != null) && (input?.startDate != null) && (input?.endDate != null)) {
+        const { venueId, startDate, endDate } = input;
+        return await ctx.prisma.productStoreCart.findMany({
+          where: {
+            productStore: {
+              product: {
+                category: {
+                  menu: {
+                    venueId,
+                  }
+                }
+              }
+            },
+            createdAt: {
+              lt: endDate,
+              gt: startDate,
+            },
+            cart: {
+              order: {
+                payment: {
+                  status: 'APPROVED'
+                }
+              }
+            }
+          },
+        })
+      }
+    },
+  })
+  .query("finishedOrders", {
+    input: z.object({
+      venueId: z.string().nullish(),
+      startDate: z.date().nullish(),
+      endDate: z.date().nullish()
+    }).nullish(),
     async resolve({ ctx, input }) {
       if (input && input.venueId != null) {
+        const { venueId, startDate, endDate } = input;
         return await prisma?.order.findMany({
           where: {
             State: {
@@ -116,8 +232,12 @@ export const reportRouter = createProtectedRouter()
               status: 'APPROVED'
             },
             customer: {
-              venueId: input.venueId
-            }
+              venueId
+            },
+            createdAt: {
+              lt: endDate || dayjs().set('day', 1).toDate(),
+              gt: startDate || dayjs().set('day', -1).toDate(),
+            },
           },
           include: {
             payment: true,
@@ -127,6 +247,38 @@ export const reportRouter = createProtectedRouter()
                 productStoreCarts: true,
               }
             }
+          }
+        })
+      }
+    },
+  })
+  .query("averageSalesPerDay", {
+    input: z.object({
+      venueId: z.string().nullish(),
+      startDate: z.date().nullish(),
+      endDate: z.date().nullish()
+    }).nullish(),
+    async resolve({ ctx, input }) {
+      if ((input && input.venueId != null) && (input?.startDate != null) && (input?.endDate != null)) {
+        const { venueId, startDate, endDate } = input;
+        return await prisma?.order.aggregate({
+          where: {
+            State: {
+              name: 'Despachado'
+            },
+            payment: {
+              status: 'APPROVED'
+            },
+            customer: {
+              venueId
+            },
+            createdAt: {
+              lt: endDate,
+              gt: startDate,
+            },
+          },
+          _avg: {
+            total: true,
           }
         })
       }

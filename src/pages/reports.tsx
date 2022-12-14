@@ -4,7 +4,7 @@ import Dashboard from "../components/layouts/Dashboard";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { NextPageWithLayout } from "./_app";
 import { Chart as ChartJS, ArcElement, LineElement, Tooltip, Legend, LinearScale, CategoryScale, BarElement, Filler, PointElement, Title } from 'chart.js';
-import { Pie, Bar, Line } from 'react-chartjs-2';
+import { Bar, Line, Pie } from 'react-chartjs-2';
 import { trpc } from "../utils/trpc";
 import { useSession } from "next-auth/react";
 import Table from "../components/Table";
@@ -12,6 +12,9 @@ import { ColumnDef, getCoreRowModel, useReactTable } from "@tanstack/react-table
 import { ReactNode, useEffect, useState } from "react";
 import dayjs from 'dayjs';
 import Loader from "../components/Loader";
+import ReportCard from "../components/ReportCard";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
 
 ChartJS.register(
     ArcElement,
@@ -26,7 +29,8 @@ ChartJS.register(
     Legend,
 );
 const barChartLabels: any[] = [];
-const lineChartLabels = new Array(dayjs().daysInMonth()).fill('').map((v, i) => i + 1)
+const pieChartLabels: any[] = [];
+
 const lineChartOptions = {
     responsive: true,
     scales: {
@@ -40,49 +44,16 @@ const lineChartOptions = {
         }
     }
 };
-const lineCharData: { labels: any[]; datasets: any[] } = {
-    labels: lineChartLabels,
-    datasets: [
-        {
-            label: 'Dinero',
-            data: [],
-            borderColor: 'rgb(255, 99, 132)',
-            backgroundColor: 'rgba(255, 99, 132, 0.5)',
-        },
-    ],
-}
 
-const barChartData: { labels: any[]; datasets: any[] } = {
-    labels: barChartLabels,
-    datasets: [{
-        label: 'Papanata',
-        backgroundColor: [
-            'rgba(255, 99, 132, 0.2)',
-            'rgba(54, 162, 235, 0.2)',
-            'rgba(255, 206, 86, 0.2)',
-            'rgba(75, 192, 192, 0.2)',
-            'rgba(153, 102, 255, 0.2)',
-            'rgba(255, 159, 64, 0.2)',
-        ],
-        borderColor: [
-            'rgba(255, 99, 132, 1)',
-            'rgba(54, 162, 235, 1)',
-            'rgba(255, 206, 86, 1)',
-            'rgba(75, 192, 192, 1)',
-            'rgba(153, 102, 255, 1)',
-            'rgba(255, 159, 64, 1)',
-        ],
-        borderWidth: 1,
-        data: [],
-    }],
-};
+function classNames(...classes: string[]) {
+    return classes.filter(Boolean).join(' ')
+}
 
 type Customer = {
     fullName: string;
     phoneNumber: string;
     createdAt: Date;
 }
-
 
 const customerDefaultColumns: ColumnDef<Customer>[] = [
     {
@@ -102,57 +73,148 @@ const customerDefaultColumns: ColumnDef<Customer>[] = [
     },
 ]
 
-
-function classNames(...classes: string[]) {
-    return classes.filter(Boolean).join(' ')
-}
+const getDaysArray = (start: Date, end: Date) => {
+    let arr = [];
+    let dt = new Date(start);
+    for (arr = [], dt = new Date(start); dt <= new Date(end); dt.setDate(dt.getDate() + 1)) {
+        arr.push(dayjs(dt).format('DD-MM'));
+    }
+    return arr;
+};
 
 const Reports: NextPageWithLayout = () => {
     const { data } = useSession();
     const userQuery = trpc.useQuery(["userRouter.getVenues", { id: data?.user?.id }]);
-    const salesByProductQuery = trpc.useQuery(["reportRouter.sellsByProduct", { venueId: userQuery?.data?.venueId }]);
-    const moneyPerDayQuery = trpc.useQuery(["reportRouter.moneyPerDay", { venueId: userQuery?.data?.venueId }]);
     const customerQuery = trpc.useQuery(["reportRouter.customersByVenueId", { venueId: userQuery.data?.venueId }]);
     const [customerColumns] = useState(() => [...customerDefaultColumns]);
     const [customers, setCustomers] = useState(() => customerQuery.data ? [...customerQuery.data] : []);
+    const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([dayjs().set('month', dayjs().month() - 1).startOf('month').toDate(), new Date()]);
+    const [startDate, endDate] = dateRange;
     const [currentNav, setCurrentNav] = useState('Ventas')
+    const totalSalesQuery = trpc.useQuery(["reportRouter.totalSales", { venueId: userQuery.data?.venueId, startDate, endDate }]);
+    const amountOfOperationsQuery = trpc.useQuery(["reportRouter.amountOfOperations", { venueId: userQuery.data?.venueId, startDate, endDate }]);
+    const averageSalesPerDayQuery = trpc.useQuery(["reportRouter.averageSalesPerDay", { venueId: userQuery.data?.venueId, startDate, endDate }]);
+    const moneyPerDayQuery = trpc.useQuery(["reportRouter.moneyPerDay", { venueId: userQuery?.data?.venueId, startDate, endDate }]);
+    const salesByProductQuery = trpc.useQuery(["reportRouter.sellsByProduct", { venueId: userQuery?.data?.venueId, startDate, endDate }]);
+    const paymentTypesQuery = trpc.useQuery(["reportRouter.paymentTypes", { venueId: userQuery?.data?.venueId, startDate, endDate }]);
+
     const chartNavigation = [
         { name: 'Ventas', current: currentNav === 'Ventas' },
         { name: 'Ordenes', current: currentNav === 'Ordenes' },
     ]
+    // Chart data
+    const lineCharData: { labels: any[]; datasets: any[] } = {
+        labels: getDaysArray(startDate || new Date(), endDate || new Date()),
+        datasets: [
+            {
+                label: 'Dinero',
+                data: [],
+                borderColor: 'rgb(255, 99, 132)',
+                backgroundColor: 'rgba(255, 99, 132, 0.5)',
+            },
+        ],
+    }
+    // Barchart data
+    const barChartData: { labels: any[]; datasets: any[] } = {
+        labels: barChartLabels,
+        datasets: [
+            {
+                label: 'Cantidad',
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)',
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                ],
+                borderWidth: 1,
+                data: [],
+            }
+        ],
+    };
+    // PieChart data
+    const pieChartData: { labels?: any[] | undefined; datasets: any[] } = {
+        labels: pieChartLabels,
+        datasets: [
+            {
+                label: '# of Votes',
+                backgroundColor: [
+                    'rgba(255, 99, 132, 0.2)',
+                    'rgba(54, 162, 235, 0.2)',
+                    'rgba(255, 206, 86, 0.2)',
+                    'rgba(75, 192, 192, 0.2)',
+                    'rgba(153, 102, 255, 0.2)',
+                    'rgba(255, 159, 64, 0.2)',
+                ],
+                borderColor: [
+                    'rgba(255, 99, 132, 1)',
+                    'rgba(54, 162, 235, 1)',
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)',
+                    'rgba(255, 159, 64, 1)',
+                ],
+                borderWidth: 1,
+                data: []
+            },
+        ],
+    };
+
     useEffect(() => {
         if (customerQuery.data) {
             setCustomers(customerQuery.data);
         }
     }, [customerQuery.data])
-    useEffect(() => {
+
+    // Is this good?  👇🏽👇🏽
+    do {
         if (moneyPerDayQuery.data) {
-            console.log('lineCharData', lineCharData);
-            for (const day of lineChartLabels) {
+            for (const day of lineCharData.labels) {
                 if (moneyPerDayQuery.data[day]) {
                     const finalPrice = moneyPerDayQuery.data[day].reduce((acc: number, value: { finalPrice: number, amount: number }) => ((value.finalPrice * value.amount) + acc), 0)
-                    console.log(`${finalPrice}`, finalPrice);
                     lineCharData.datasets[0].data.push(finalPrice)
                 } else {
                     lineCharData.datasets[0].data.push(0)
                 }
             }
         }
-    }, [moneyPerDayQuery.data])
+    }
+    while (!lineCharData.datasets[0].data);
+
     const customersTable = useReactTable({
         data: customers,
         columns: customerColumns,
         getCoreRowModel: getCoreRowModel(),
     })
-    if (salesByProductQuery.isLoading || salesByProductQuery.isLoading || moneyPerDayQuery.isLoading) return <Loader />;
+
     if (!barChartData.datasets[0].data.length) {
         salesByProductQuery.data?.forEach((saleByProduct) => {
-            barChartLabels.push(saleByProduct?.product?.name);
+            if (!barChartLabels.some((label) => label === saleByProduct?.product?.name)) {
+                barChartLabels.push(saleByProduct?.product?.name);
+            }
             barChartData.datasets[0].data.push(saleByProduct.productStoreCart._count.productStoreId)
         })
     }
 
+    if (!pieChartData.datasets[0].data.length) {
+        paymentTypesQuery.data?.forEach((paymentType) => {
+            if (!pieChartLabels.some((label) => label === paymentType?.paymentTypeFound?.name)) {
+                pieChartLabels.push(paymentType?.paymentTypeFound?.name);
+            }
+            pieChartData.datasets[0].data.push(paymentType._count)
+        })
+    }
 
+    const totalSales = totalSalesQuery.data?.reduce((acc: number, value: { finalPrice: number, amount: number }) => ((value.finalPrice * value.amount) + acc), 0)
     return (
         <>
             <Head>
@@ -160,48 +222,87 @@ const Reports: NextPageWithLayout = () => {
                 <meta name="description" content="Generated by create-t3-app" />
                 <link rel="icon" href="/favicon.ico" />
             </Head>
-            <div className="mt-3 flex px-2" >
-                {chartNavigation.map((item, index) => (
-                    <div key={item.name}>
-                        <div onClick={() => { setCurrentNav(item.name) }} className={`cursor-pointer ${classNames(
-                            item.current
-                                ? 'bg-gray-900 text-white'
-                                : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                            'px-3 py-2 rounded-md text-sm font-medium'
-                        )}`}>
-                            {item.name}
+            <div className='container mx-auto mt-[-26px]'>
+                <section className='mb-6'>
+                    <div className="flex justify-center mb-4">
+                        <div className="mt-3 flex p-4 border border-1 justify-around">
+                            {chartNavigation.map((item, index) => (
+                                <div key={item.name} className='mx-4'>
+                                    <div onClick={() => { setCurrentNav(item.name) }} className={`cursor-pointer ${classNames(
+                                        item.current
+                                            ? 'bg-gray-900 text-white'
+                                            : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                                        'px-3 py-2 rounded-md text-sm font-medium'
+                                    )}`}>
+                                        {item.name}
+                                    </div>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                ))}
-            </div>
-            <div className="flex w-full">
-                <div className="w-full">
-                    {
-                        currentNav === 'Ordenes' ? (
-                            <>
-                                <h2 className="text-2xl mb-4">Ventas x Producto</h2>
-                                <Bar data={barChartData} />
-                            </>
-                        ) : (
-                            <>
-                                <h2 className="text-2xl mb-4">Facturación x Día</h2>
-                                <Line data={lineCharData} options={lineChartOptions} />
-                            </>
-                        )
-                    }
-                    {/* <h2 className="text-2xl mb-4">Facturación x Día</h2>
-                    <Line data={lineCharData} options={lineChartOptions} />; */}
+                    <div className="flex justify-center">
+                        <div>
+                            <h4>Rango de fechas: </h4>
+                            <DatePicker
+                                className="mt-2"
+                                selectsRange={true}
+                                startDate={startDate}
+                                endDate={endDate}
+                                onChange={(update) => {
+                                    setDateRange(update)
+                                }}
+                            />
+                        </div>
+                    </div>
+                </section>
+                {
+                    currentNav === 'Ordenes' ? (
+                        <>
+                            <div className='flex gap-4'>
+                                <div className="basis-2/3">
+                                    <h2 className="text-2xl mb-4">Ventas x Producto</h2>
+                                    <Bar data={barChartData} />
+                                </div>
+                                <div className="basis-1/3">
+                                    <h2 className="text-2xl mb-4">Medios de pago</h2>
+                                    <Pie data={pieChartData} />
+                                </div>
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            <div className='flex gap-4'>
+                                <div className='flex flex-col basis-1/2'>
+                                    <div className='w-full'>
+                                        <ReportCard title={'Total de ventas'} value={totalSalesQuery.isLoading ? <Loader /> : (`$ ${totalSales?.toString() || '0'}`)} />
+                                    </div>
+                                    <div className='flex justify-between'>
+                                        <div className='w-full'>
+                                            <ReportCard title={'Cantidad de operaciones'} value={amountOfOperationsQuery.isLoading ? <Loader /> : (amountOfOperationsQuery.data?.toString() || '0')} />
+                                        </div>
+                                        <div className="w-full">
+                                            <ReportCard title={'Venta promedio'} value={averageSalesPerDayQuery.isLoading ? <Loader /> : (`$ ${averageSalesPerDayQuery.data?._avg?.total?.toString() || '0'}`)} />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="basis-1/2">
+                                    <div className="flex w-full">
+                                        <div className="w-full">
+                                            <h2 className="text-2xl mb-4">Facturación x Día</h2>
+                                            <Line data={lineCharData} options={lineChartOptions} />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </>
+                    )
+                }
+                <div className="flex justify-around w-full">
+                    <div>
+                        <h2 className="text-2xl mb-4">Clientes</h2>
+                        <Table table={customersTable} className='border border-1 border-black p-6' />
+                    </div>
                 </div>
-            </div>
-            <div className="flex justify-around w-full">
-                <div>
-                    <h2 className="text-2xl mb-4">Clientes</h2>
-                    <Table table={customersTable} className='border border-1 border-black p-6' />
-                </div>
-                {/* <div>
-                    <h2 className="text-2xl mb-4">Ventas x Producto</h2>
-                    <Bar data={barChartData} />
-                </div> */}
             </div>
         </>
     );

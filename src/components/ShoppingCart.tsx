@@ -1,7 +1,7 @@
 import { Transition, Dialog } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import Image from "next/image";
-import { ButtonHTMLAttributes, Fragment } from "react";
+import { Fragment } from "react";
 import Cursed from 'public/assets/alien.png'
 import { useLocalSession } from "../helpers/session.hooks";
 import { trpc } from "../utils/trpc";
@@ -13,7 +13,7 @@ const ShoppingCart: React.FC<{ visible: boolean, toggleShoppingCart: () => void 
     const cartProductDelete = trpc.useMutation(["cartRouter.deleteProductStoreCart"], {
         onSuccess: () => cartQuery.refetch()
     })
-    if (cartQuery.isLoading) return <>Loading...</>
+    if (cartQuery.isLoading) return <>Cargando...</>
     if (cartQuery.error) return <>Error!</>
     const onClickDelete = (e: React.MouseEvent, productStoreCartId: string) => {
         e.stopPropagation();
@@ -131,7 +131,7 @@ const ShoppingCart: React.FC<{ visible: boolean, toggleShoppingCart: () => void 
                                                         >
                                                             <a
                                                                 className="flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700">
-                                                                Checkout
+                                                                Ir a pagar
                                                             </a>
                                                         </Link>
                                                     </div>
