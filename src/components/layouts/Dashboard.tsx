@@ -40,7 +40,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
         { name: 'Catálogo', href: '/catalog', current: current == 1 ? true : false },
         { name: 'Órdenes', href: '/orders', current: current == 2 ? true : false },
         { name: 'Reportes', href: '/reports', current: current == 3 ? true : false },
-       
+
     ]
     return (
         <DndProvider backend={HTML5Backend}>
@@ -80,22 +80,21 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                                         </div>
                                     </div>
                                     <div className="hidden md:block">
-                                        <div className="flex flex-row">
-                                        <div className='items-center justify-center'>
-                                            <Link href={`/store/${venueQuery.data?.venue?.menus[0]?.id}`} passHref className=''>
-                                                <a target={'_blank'} rel='noopener noreferrer'  className="text-gray-400 cursor-pointer hover:text-white">
-                                                    <BuildingStorefrontIcon className="w-6" aria-hidden="true" />
-                                                    Ir a la tienda         
-                                                </a>
-                                            </Link>
+                                        <div className="flex flex-row align-middle gap-x-6">
+                                            {/* <Link href={`/store/${venueQuery.data?.venue?.menus[0]?.id}`} passHref> */}
+                                            {/* <a target={'_blank'} rel='noopener noreferrer' className="text-gray-400 cursor-pointer hover:text-white"> */}
+                                            <div className='cursor-pointer flex flex-col items-center bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800'>
+                                                <BuildingStorefrontIcon className="w-6 h-6" aria-hidden="true" />
+                                                <p>Ir a la tienda</p>
                                             </div>
-                                            <div className='items-center justify-center'>
-                                            <button
-                                                type="button" onClick={killSession}
-                                                className="rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
-                                            > <p>Cerrar sesión</p>
-                                                <ArrowRightOnRectangleIcon  className="w-6" aria-hidden="true" />
-                                            </button>
+                                            {/* </a> */}
+                                            {/* </Link> */}
+                                            <div
+                                                onClick={killSession}
+                                                className="cursor-pointer flex flex-col items-center bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                                            >
+                                                <ArrowRightOnRectangleIcon className="w-6 h-6" aria-hidden="true" />
+                                                <p>Cerrar sesión</p>
                                             </div>
                                             {/* Profile dropdown */}
                                             <Menu as="div" className="relative ml-3">
