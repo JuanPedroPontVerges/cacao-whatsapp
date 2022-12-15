@@ -14,7 +14,7 @@ import OrderDetail from "../components/OrderDetail";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
 import { NextPageWithLayout } from "./_app";
-import { FunnelIcon } from "@heroicons/react/24/outline";
+import { FunnelIcon, TagIcon } from "@heroicons/react/24/outline";
 
 const paymentStatus = [
   {
@@ -120,12 +120,12 @@ const Orders: NextPageWithLayout = () => {
         <div className="container mx-auto p-2 rounded-lg border-4 border-dashed border-gray-200 w-full">
           <div className="p-2">
             <Form form={form} onSubmitForm={onSubmitForm}>
-            <div className="flex flex-row mb-2">
-                    <FunnelIcon className="w-6 mr-2" />
-                    <h2 className="text-xl">Filtrar</h2>
-                  </div>
+              <div className="flex flex-row mb-2">
+                <FunnelIcon className="w-6 mr-2" />
+                <h2 className="text-xl">Filtrar</h2>
+              </div>
 
-              <div className="flex flex-row gap-x-12 p-4 border rounded-md bg-gray-50 border-gray-50"> 
+              <div className="flex flex-row gap-x-12 p-4 border rounded-md bg-gray-50 border-gray-50">
                 <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
                   <div className="flex flex-col">
                     <label>Tipo de pago</label>
@@ -186,7 +186,7 @@ const Orders: NextPageWithLayout = () => {
             </Form>
           </div>
           <div className="p-2 w-full">
-            <h2 className="text-xl">Órdenes</h2>
+            <h2 className="text-xl font-semibold">Órdenes</h2>
             <div className="flex flex-row gap-6 mt-3">
               {orderQuery.data?.map((order, index) => (
                 <OrderCard

@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { trpc } from '../../utils/trpc';
+import Image from "next/image";
+import WapiLogo from 'public/assets/wapi-logo.svg'
 
 const user = {
     name: 'Tom Cook',
@@ -52,11 +54,9 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                                 <div className="flex h-16 items-center justify-between">
                                     <div className="flex items-center">
                                         <div className="flex-shrink-0">
-                                            {/* <img
-                                                className="h-8 w-8"
-                                                src="https://tailwindui.com/img/logos/mark.svg?color=indigo&shade=500"
-                                                alt="Your Company"
-                                            /> */}
+                                        
+                                           <Image src={WapiLogo}></Image>
+                                           
                                         </div>
                                         <div className="hidden md:block">
                                             <div className="ml-10 flex items-baseline space-x-4">
@@ -78,9 +78,11 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                                                 ))}
                                             </div>
                                         </div>
+
                                     </div>
                                     <div className="hidden md:block">
                                         <div className="flex flex-row">
+                                        
                                         <div className='items-center justify-center'>
                                             <Link href={`/store/${venueQuery.data?.venue?.menus[0]?.id}`} passHref className=''>
                                                 <a target={'_blank'} rel='noopener noreferrer'  className="text-gray-400 cursor-pointer hover:text-white">

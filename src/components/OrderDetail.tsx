@@ -1,5 +1,8 @@
 import { PaymentState } from "@prisma/client";
 import React from "react"
+import Image from "next/image";
+import WapiLogo from 'public/assets/wapi-logo.svg'
+
 type OrderDetailProps = {
     customer?: {
         id: string;
