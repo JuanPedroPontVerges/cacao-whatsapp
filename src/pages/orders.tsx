@@ -14,7 +14,9 @@ import OrderDetail from "../components/OrderDetail";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
 import { NextPageWithLayout } from "./_app";
-import { FunnelIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, FunnelIcon } from "@heroicons/react/24/outline";
+import List from "../components/List";
+import { Listbox } from "@headlessui/react";
 
 const paymentStatus = [
   {
@@ -41,13 +43,13 @@ const Orders: NextPageWithLayout = () => {
   const [paymentTypeId, setPaymentTypeId] = useState<string>();
   const [orderStateId, setOrderStateId] = useState<string>();
   const [paymentState, setPaymentState] = useState<PaymentState>();
+  const orderStateQuery = trpc.useQuery(["orderStateRouter.findAll"]);
   const userQuery = trpc.useQuery([
     "userRouter.getVenues",
     { id: data?.user?.id },
   ]);
   const venueId = userQuery.data?.venueId;
   const paymentTypeQuery = trpc.useQuery(["paymentTypeRouter.findAll"]);
-  const orderStateQuery = trpc.useQuery(["orderStateRouter.findAll"]);
   const orderQuery = trpc.useQuery([
     "orderRouter.findByVenueId",
     { id: venueId, paymentState, paymentTypeId, orderStateId },
@@ -81,10 +83,10 @@ const Orders: NextPageWithLayout = () => {
       action === "confirm"
         ? "En Preparación"
         : action === "cancel"
-        ? "Cancelado"
-        : action === "dispatch"
-        ? "Despachado"
-        : "";
+          ? "Cancelado"
+          : action === "dispatch"
+            ? "Despachado"
+            : "";
     if (id) {
       await orderStateMutation.mutateAsync({
         orderId: id,
@@ -102,13 +104,6 @@ const Orders: NextPageWithLayout = () => {
     await orderQuery.refetch();
   };
 
-  if (
-    userQuery.isLoading ||
-    paymentTypeQuery.isLoading ||
-    orderStateQuery.isLoading ||
-    orderQuery.isLoading
-  )
-    return <Loader />;
   return (
     <>
       <Head>
@@ -120,12 +115,12 @@ const Orders: NextPageWithLayout = () => {
         <div className="container mx-auto p-2 rounded-lg border-4 border-dashed border-gray-200 w-full">
           <div className="p-2">
             <Form form={form} onSubmitForm={onSubmitForm}>
-            <div className="flex flex-row mb-2">
-                    <FunnelIcon className="w-6 mr-2" />
-                    <h2 className="text-xl">Filtrar</h2>
-                  </div>
+              <div className="flex flex-row mb-2">
+                <FunnelIcon className="w-6 mr-2" />
+                <h2 className="text-xl">Filtrar</h2>
+              </div>
 
-              <div className="flex flex-row gap-x-12 p-4 border rounded-md bg-gray-50 border-gray-50"> 
+              <div className="flex flex-row gap-x-12 p-4 border rounded-md bg-gray-50 border-gray-50">
                 <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
                   <div className="flex flex-col">
                     <label>Tipo de pago</label>
@@ -145,17 +140,15 @@ const Orders: NextPageWithLayout = () => {
                 <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
                   <div className="flex flex-col">
                     <label>Estado de orden</label>
-                    <select
-                      {...form.register("orderStateId")}
-                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                    >
-                      <option value={"all"}>Todos</option>
-                      {orderStateQuery.data?.map((type) => (
-                        <option value={type.id} key={type.id}>
-                          {type.name}
-                        </option>
-                      ))}
-                    </select>
+                    {
+                      orderStateQuery.data ? (
+                        <List
+                          name={`orderStateId`}
+                          form={form}
+                          options={orderStateQuery.data.map(({ id, name }) => ({ id, name }))}
+                        />
+                      ) : null
+                    }
                   </div>
                 </div>
                 <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
@@ -187,21 +180,27 @@ const Orders: NextPageWithLayout = () => {
           </div>
           <div className="p-2 w-full">
             <h2 className="text-xl">Órdenes</h2>
-            <div className="flex flex-row gap-6 mt-3">
-              {orderQuery.data?.map((order, index) => (
-                <OrderCard
-                  createdAt={dayjs(order.createdAt).toDate()}
-                  payment={order.payment}
-                  onClickAction={handleOnClickAction}
-                  onClick={onClickOrder}
-                  key={index}
-                  price={order.Cart.productStoreCarts?.reduce((acc, value) => ((value.finalPrice * value.amount) + acc), 0)}
-                  state={order.State}
-                  customer={order.customer}
-                  id={order.id}
-                />
-              ))}
-            </div>
+            {
+              userQuery.isLoading ||
+                paymentTypeQuery.isLoading ||
+                orderStateQuery.isLoading ||
+                orderQuery.isLoading ? <Loader /> : (
+                <div className="flex flex-row gap-6 mt-3">
+                  {orderQuery.data?.map((order, index) => (
+                    <OrderCard
+                      createdAt={dayjs(order.createdAt).toDate()}
+                      payment={order.payment}
+                      onClickAction={handleOnClickAction}
+                      onClick={onClickOrder}
+                      key={index}
+                      price={order.Cart.productStoreCarts?.reduce((acc, value) => ((value.finalPrice * value.amount) + acc), 0)}
+                      state={order.State}
+                      customer={order.customer}
+                      id={order.id}
+                    />
+                  ))}
+                </div>
+              )}
           </div>
           <Modal
             isOpen={isModalOpen}
@@ -212,8 +211,8 @@ const Orders: NextPageWithLayout = () => {
                   {selectedOrder?.payment?.status === "APPROVED"
                     ? "Pagado"
                     : selectedOrder?.payment?.status === "PENDING"
-                    ? "Por cobrar"
-                    : "Cancelado"}
+                      ? "Por cobrar"
+                      : "Cancelado"}
                 </p>
               </div>
             }

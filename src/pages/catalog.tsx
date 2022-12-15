@@ -820,6 +820,7 @@ const Catalog: NextPageWithLayout = () => {
                                                                 name={`optionGroups.${id}.displayTypeId`}
                                                                 form={productForm}
                                                                 options={displayTypeQuery.data.map(({ id, name }) => ({ id, name }))}
+                                                                label={'Cantidad seleccionable'}
                                                             />
                                                         ) : ('...Loading')
                                                     }

@@ -309,6 +309,7 @@ export const orderRouter = createRouter()
     async resolve({ ctx, input }) {
       if (input && input.id != null) {
         const { id, paymentTypeId, paymentState, orderStateId } = input;
+        const pendingOrderState = await ctx.prisma.orderState.findFirst({ where: { name: 'Pendiente' }, select: { id: true } })
         return await ctx.prisma.order.findMany({
           where: {
             customer: {
@@ -324,7 +325,7 @@ export const orderRouter = createRouter()
                 }
               },
               {
-                stateId: orderStateId as string | undefined,
+                stateId: orderStateId || pendingOrderState?.id,
               }
             ]
           },

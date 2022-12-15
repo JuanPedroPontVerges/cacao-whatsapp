@@ -6,10 +6,11 @@ interface ListProps {
     form: UseFormReturn<any, any>
     name: string;
     options: { id: string; name: string; }[]
+    label?: string;
 }
 
 
-const List: React.FC<ListProps> = ({ name, options, form }) => {
+const List: React.FC<ListProps> = ({ name, options, form, label }) => {
     const [selectedId, setSelectedId] = useState(options?.[0]?.id)
     const selected = options?.find(({ id }) => id == selectedId)
 
@@ -21,9 +22,13 @@ const List: React.FC<ListProps> = ({ name, options, form }) => {
 
     return (
         <div>
-            <label htmlFor={name} className="block text-sm font-medium text-gray-700">
-                Cantidad seleccionable
-            </label>
+            {
+                label ? (
+                    <label htmlFor={name} className="block text-sm font-medium text-gray-700">
+                        {label}
+                    </label>
+                ) : null
+            }
             <Controller
                 {...form.register(name)}
                 control={form.control}
