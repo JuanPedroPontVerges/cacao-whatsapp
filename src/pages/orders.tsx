@@ -14,13 +14,9 @@ import OrderDetail from "../components/OrderDetail";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
 import { NextPageWithLayout } from "./_app";
-<<<<<<< HEAD
-import { CheckIcon, FunnelIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, FunnelIcon, TagIcon } from "@heroicons/react/24/outline";
 import List from "../components/List";
 import { Listbox } from "@headlessui/react";
-=======
-import { FunnelIcon, TagIcon } from "@heroicons/react/24/outline";
->>>>>>> agus
 
 const paymentStatus = [
   {
