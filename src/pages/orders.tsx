@@ -14,9 +14,13 @@ import OrderDetail from "../components/OrderDetail";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
 import { NextPageWithLayout } from "./_app";
+<<<<<<< HEAD
 import { CheckIcon, FunnelIcon } from "@heroicons/react/24/outline";
 import List from "../components/List";
 import { Listbox } from "@headlessui/react";
+=======
+import { FunnelIcon, TagIcon } from "@heroicons/react/24/outline";
+>>>>>>> agus
 
 const paymentStatus = [
   {
@@ -179,7 +183,7 @@ const Orders: NextPageWithLayout = () => {
             </Form>
           </div>
           <div className="p-2 w-full">
-            <h2 className="text-xl">Órdenes</h2>
+            <h2 className="text-xl font-semibold">Órdenes</h2>
             {
               userQuery.isLoading ||
                 paymentTypeQuery.isLoading ||
