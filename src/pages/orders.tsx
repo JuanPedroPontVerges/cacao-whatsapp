@@ -14,9 +14,8 @@ import OrderDetail from "../components/OrderDetail";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
 import { NextPageWithLayout } from "./_app";
-import { CheckIcon, FunnelIcon, TagIcon } from "@heroicons/react/24/outline";
+import { FunnelIcon } from "@heroicons/react/24/outline";
 import List from "../components/List";
-import { Listbox } from "@headlessui/react";
 
 const paymentStatus = [
   {
@@ -185,21 +184,28 @@ const Orders: NextPageWithLayout = () => {
                 paymentTypeQuery.isLoading ||
                 orderStateQuery.isLoading ||
                 orderQuery.isLoading ? <Loader /> : (
-                <div className="flex flex-row gap-6 mt-3">
-                  {orderQuery.data?.map((order, index) => (
-                    <OrderCard
-                      createdAt={dayjs(order.createdAt).toDate()}
-                      payment={order.payment}
-                      onClickAction={handleOnClickAction}
-                      onClick={onClickOrder}
-                      key={index}
-                      price={order.Cart.productStoreCarts?.reduce((acc, value) => ((value.finalPrice * value.amount) + acc), 0)}
-                      state={order.State}
-                      customer={order.customer}
-                      id={order.id}
-                    />
-                  ))}
-                </div>
+                orderQuery.data?.length || 0 > 0 ? (
+                  <div className="flex flex-wrap justify-start gap-4">
+                    {orderQuery.data?.map((order, index) => (
+                      <OrderCard
+                        createdAt={dayjs(order.createdAt).toDate()}
+                        payment={order.payment}
+                        onClickAction={handleOnClickAction}
+                        onClick={onClickOrder}
+                        key={index}
+                        price={order.Cart.productStoreCarts?.reduce((acc, value) => ((value.finalPrice * value.amount) + acc), 0)}
+                        state={order.State}
+                        customer={order.customer}
+                        id={order.id}
+                        className='flex-none w-[280px]'
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex justify-center items-center align-middle">
+                    <h4 className="text-2xl">No hay datos... 😢</h4>
+                  </div>
+                )
               )}
           </div>
           <Modal

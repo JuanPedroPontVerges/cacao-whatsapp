@@ -55,7 +55,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                                     <div className="flex items-center">
                                         <div className="flex-shrink-0">
                                         
-                                           <Image src={WapiLogo}></Image>
+                                           <Image src={WapiLogo} alt='Icono de Wapi' />
                                            
                                         </div>
                                         <div className="hidden md:block">
@@ -84,7 +84,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                                         <div className="flex flex-row align-middle gap-x-6">
                                             <Link href={`/store/${venueQuery.data?.venue?.menus[0]?.id}`} passHref>
                                                 <a target={'_blank'} rel='noopener noreferrer' className="text-gray-400 cursor-pointer hover:text-white">
-                                                    <div className='cursor-pointer gap-x-4 flex items-center bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800'>
+                                                    <div className='cursor-pointer gap-x-2 flex items-center bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800'>
                                                         <BuildingStorefrontIcon className="w-6 h-6" aria-hidden="true" />
                                                         <p>Ir a la tienda</p>
                                                     </div>
@@ -92,7 +92,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                                             </Link>
                                             <div
                                                 onClick={killSession}
-                                                className="cursor-pointer flex gap-x-4 items-center bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
+                                                className="cursor-pointer flex gap-x-2 items-center bg-gray-800 p-1 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800"
                                             >
                                                 <ArrowRightOnRectangleIcon className="w-6 h-6" aria-hidden="true" />
                                                 <p>Cerrar sesión</p>
