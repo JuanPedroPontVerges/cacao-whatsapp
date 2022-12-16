@@ -264,20 +264,34 @@ export const orderRouter = createRouter()
             connect: {
               id: orderState?.id,
             }
-          }
+          },
         },
         include: {
           customer: {
             select: {
               phoneNumber: true,
             }
-          }
+          },
+          PaymentType: true,
         }
       })
       if (action === 'En Preparación') {
-        await sendTextMessage(+updatedOrder.customer.phoneNumber, `¡Orden confirmada!
+        await sendTextMessage(+updatedOrder.customer.phoneNumber, `¡Orden confirmada, se encuentra en preparación!
 
 ⏱️Hora estimada: ${dayjs().add(30, 'minutes').format('hh:mm')}`)
+      } else if (action === 'Despachado' && updatedOrder.PaymentType.name === 'Efectivo') {
+        await ctx.prisma.order.update({
+          where: {
+            id: orderId
+          },
+          data: {
+            payment: {
+              update: {
+                status: 'APPROVED',
+              }
+            }
+          }
+        })
       }
       return orderState;
     },
