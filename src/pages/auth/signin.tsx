@@ -26,18 +26,26 @@ const Signin: NextPage<{ csrfToken: any, providers: any }> = ({ providers }) => 
                     <div className="mt-10 sm:mt-0">
                         <div className="md:grid md:grid-cols-2 md:gap-6">
                             <div className="mt-5 md:col-span-2 md:mt-0">
-                                <div className="overflow-hidden shadow sm:rounded-md">
-                                    <div className="bg-white px-4 py-5 sm:p-6">
-                                        {providers &&
-                                            Object.values(providers).map((provider: any) => (
-                                                <div key={provider?.name} style={{ marginBottom: 0 }}>
-                                                    <button className='flex items-center gap-2' onClick={() => signIn(provider.id, { callbackUrl: '/' })}  >
-                                                        Iniciar sesión con {provider.name} <ArrowRightCircleIcon height={20} width={20} />
-                                                    </button>
-                                                </div>
-                                            ))}
+                                <div className="sm:rounded-md px-4 py-5 sm:p-6 border-4">
+                                    <div>
+                                        <h3 className="text-2xl font-medium">
+                                            Bienvenido!
+                                        </h3>
+                                    </div>
+                                    <div className="overflow-hidden shadow px-4 py-2 sm:p-4 mt-6">
+                                        <div className="bg-white">
+                                            {providers &&
+                                                Object.values(providers).map((provider: any) => (
+                                                    <div key={provider?.name} style={{ marginBottom: 0 }}>
+                                                        <button className='flex items-center gap-2' onClick={() => signIn(provider.id, { callbackUrl: '/' })}  >
+                                                            Iniciar sesión con {provider.name} <ArrowRightCircleIcon height={20} width={20} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                        </div>
                                     </div>
                                 </div>
+
                             </div>
                         </div>
                     </div>
