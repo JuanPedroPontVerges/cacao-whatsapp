@@ -16,7 +16,7 @@ import {
 } from '@tanstack/react-table'
 import Table from "../components/Table";
 import Upload from "../components/Upload";
-import List from "../components/List";
+import Select from "../components/Select";
 import Dashboard from "../components/layouts/Dashboard";
 import { NextPageWithLayout } from "./_app";
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
@@ -816,7 +816,7 @@ const Catalog: NextPageWithLayout = () => {
                                                 <div className="flex flex-col">
                                                     {
                                                         displayTypeQuery.data ? (
-                                                            <List
+                                                            <Select
                                                                 name={`optionGroups.${id}.displayTypeId`}
                                                                 form={productForm}
                                                                 options={displayTypeQuery.data.map(({ id, name }) => ({ id, name }))}

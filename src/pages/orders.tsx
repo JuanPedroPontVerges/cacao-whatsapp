@@ -15,7 +15,7 @@ import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
 import { NextPageWithLayout } from "./_app";
 import { FunnelIcon } from "@heroicons/react/24/outline";
-import List from "../components/List";
+import Select from "../components/Select";
 
 const paymentStatus = [
   {
@@ -123,17 +123,16 @@ const Orders: NextPageWithLayout = () => {
                 <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
                   <div className="flex flex-col">
                     <label>Tipo de pago</label>
-                    <select
-                      {...form.register("paymentTypeId")}
-                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                    >
-                      <option value={"all"}>Todos</option>
-                      {paymentTypeQuery.data?.map((type) => (
-                        <option value={type.id} key={type.id}>
-                          {type.name}
-                        </option>
-                      ))}
-                    </select>
+                    {
+                      paymentTypeQuery.data ? (
+                        <Select
+                          name='paymentTypeId'
+                          className="w-52"
+                          form={form}
+                          options={paymentTypeQuery.data.map(({ id, name }) => ({ id, name }))}
+                        />
+                      ) : null
+                    }
                   </div>
                 </div>
                 <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
@@ -141,9 +140,10 @@ const Orders: NextPageWithLayout = () => {
                     <label>Estado de orden</label>
                     {
                       orderStateQuery.data ? (
-                        <List
+                        <Select
                           name={`orderStateId`}
                           form={form}
+                          className="w-52"
                           options={orderStateQuery.data.map(({ id, name }) => ({ id, name }))}
                         />
                       ) : null
@@ -153,17 +153,12 @@ const Orders: NextPageWithLayout = () => {
                 <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
                   <div className="flex flex-col">
                     <label>Estado de pago</label>
-                    <select
-                      {...form.register("paymentState")}
-                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                    >
-                      <option value={"all"}>Todos</option>
-                      {paymentStatus.map((status) => (
-                        <option value={status.value} key={status.value}>
-                          {status.label}
-                        </option>
-                      ))}
-                    </select>
+                    <Select
+                      className="w-52"
+                      name={`paymentState`}
+                      form={form}
+                      options={paymentStatus.map(({ label, value }) => ({ id: value, name: label }))}
+                    />
                   </div>
                 </div>
                 <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
