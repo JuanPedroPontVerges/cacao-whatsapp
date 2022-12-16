@@ -173,7 +173,7 @@ const Orders: NextPageWithLayout = () => {
             </Form>
           </div>
           <div className="p-2 w-full">
-            <h2 className="text-xl font-semibold">Órdenes</h2>
+            <h2 className="text-xl font-semibold mb-4">Órdenes</h2>
             {
               userQuery.isLoading ||
                 paymentTypeQuery.isLoading ||

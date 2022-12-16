@@ -54,9 +54,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                                 <div className="flex h-16 items-center justify-between">
                                     <div className="flex items-center">
                                         <div className="flex-shrink-0">
-                                        
-                                           <Image src={WapiLogo} alt='Icono de Wapi' />
-                                           
+                                            <Image src={WapiLogo} alt='Icono de Wapi' />
                                         </div>
                                         <div className="hidden md:block">
                                             <div className="ml-10 flex items-baseline space-x-4">

@@ -88,7 +88,7 @@ const Reports: NextPageWithLayout = () => {
     const customerQuery = trpc.useQuery(["reportRouter.customersByVenueId", { venueId: userQuery.data?.venueId }]);
     const [customerColumns] = useState(() => [...customerDefaultColumns]);
     const [customers, setCustomers] = useState(() => customerQuery.data ? [...customerQuery.data] : []);
-    const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([dayjs().set('month', dayjs().month() - 1).startOf('month').toDate(), new Date()]);
+    const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([dayjs().set('days', -7).toDate(), new Date()]);
     const [startDate, endDate] = dateRange;
     const [currentNav, setCurrentNav] = useState('Ventas')
     const totalSalesQuery = trpc.useQuery(["reportRouter.totalSales", { venueId: userQuery.data?.venueId, startDate, endDate }]);
@@ -190,11 +190,11 @@ const Reports: NextPageWithLayout = () => {
     }
     while (!lineCharData.datasets[0].data);
 
-    const customersTable = useReactTable({
-        data: customers,
-        columns: customerColumns,
-        getCoreRowModel: getCoreRowModel(),
-    })
+    // const customersTable = useReactTable({
+    //     data: customers,
+    //     columns: customerColumns,
+    //     getCoreRowModel: getCoreRowModel(),
+    // })
 
     if (!barChartData.datasets[0].data.length) {
         salesByProductQuery.data?.forEach((saleByProduct) => {
