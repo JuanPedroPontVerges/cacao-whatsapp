@@ -198,13 +198,12 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
             </Disclosure>
             <Form form={form} onSubmitForm={onSubmitForm}>
                 <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8 mb-24">
-                    <div className="block">
+                    <div className="flex justify-center">
                         <Image
                             src={data[0]?.productStore.product?.imageUrl || Cursed}
                             alt={`Imagen para el product ${product?.name}`}
-                            width={'100%'}
-                            height={'100%'}
-                            layout={'responsive'}
+                            width={400}
+                            height={400}
                         />
                     </div>
                     <div className="mt-4">
