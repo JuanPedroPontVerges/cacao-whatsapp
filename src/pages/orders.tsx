@@ -14,8 +14,9 @@ import OrderDetail from "../components/OrderDetail";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
 import { NextPageWithLayout } from "./_app";
-import { FunnelIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, FunnelIcon } from "@heroicons/react/24/outline";
 import Select from "../components/Select";
+import { Listbox } from "@headlessui/react";
 
 const paymentStatus = [
   {
@@ -126,6 +127,7 @@ const Orders: NextPageWithLayout = () => {
                     {
                       paymentTypeQuery.data ? (
                         <Select
+                          isReport
                           name='paymentTypeId'
                           className="w-52"
                           form={form}
@@ -145,6 +147,7 @@ const Orders: NextPageWithLayout = () => {
                           form={form}
                           className="w-52"
                           options={orderStateQuery.data.map(({ id, name }) => ({ id, name }))}
+                          isReport
                         />
                       ) : null
                     }
@@ -158,6 +161,7 @@ const Orders: NextPageWithLayout = () => {
                       name={`paymentState`}
                       form={form}
                       options={paymentStatus.map(({ label, value }) => ({ id: value, name: label }))}
+                      isReport
                     />
                   </div>
                 </div>

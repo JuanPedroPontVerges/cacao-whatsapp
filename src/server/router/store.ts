@@ -26,7 +26,6 @@ export const storeRouter = createRouter()
   .query("getCategoriesByMenuId", {
     input: z.object({ id: z.string().nullish() }).nullish(),
     async resolve({ ctx, input }) {
-      console.log('input', input);
       if (input && input.id != null) {
         return await ctx.prisma.category.findMany({
           where: {

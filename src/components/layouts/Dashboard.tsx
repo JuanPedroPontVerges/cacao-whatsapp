@@ -76,7 +76,6 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                                                 ))}
                                             </div>
                                         </div>
-
                                     </div>
                                     <div className="hidden md:block">
                                         <div className="flex flex-row align-middle gap-x-6">
