@@ -258,7 +258,7 @@ const Reports: NextPageWithLayout = () => {
                 {
                     currentNav === 'Ordenes' ? (
                         <>
-                            <div className='flex gap-4'>
+                            <div className='flex gap-4 items-center'>
                                 <div className="basis-2/3">
                                     <h2 className="text-2xl mb-4">Ventas x Producto</h2>
                                     {

@@ -169,12 +169,12 @@ export const reportRouter = createProtectedRouter()
           },
           _count: true,
         })
-        const result = [];
-        for await (const paymentType of paymentTypes) {
-          const paymentTypeFound = await prisma?.paymentType.findFirst({ where: { id: paymentType.paymentTypeId } });
-          result.push({ ...paymentType, paymentTypeFound });
-        }
-        return result;
+        // const result = [];
+        // for await (const paymentType of paymentTypes) {
+        //   const paymentTypeFound = await prisma?.paymentType.findFirst({ where: { id: paymentType.paymentTypeId } });
+        //   result.push({ ...paymentType, paymentTypeFound });
+        // }
+        return paymentTypes;
       }
     },
   })
