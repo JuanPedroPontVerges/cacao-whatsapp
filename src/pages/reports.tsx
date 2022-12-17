@@ -226,7 +226,7 @@ const Reports: NextPageWithLayout = () => {
                 <section className='mb-6'>
                     <div className="flex justify-center mb-4">
                         <div className="mt-3 flex p-4 border border-1 justify-around">
-                            {chartNavigation.map((item, index) => (
+                            {chartNavigation.map((item) => (
                                 <div key={item.name} className='mx-4'>
                                     <div onClick={() => { setCurrentNav(item.name) }} className={`cursor-pointer ${classNames(
                                         item.current
@@ -261,11 +261,47 @@ const Reports: NextPageWithLayout = () => {
                             <div className='flex gap-4'>
                                 <div className="basis-2/3">
                                     <h2 className="text-2xl mb-4">Ventas x Producto</h2>
-                                    <Bar data={barChartData} />
+                                    {
+                                        barChartData.datasets[0].data.length > 0 ? (
+                                            <Bar data={barChartData} />
+                                        ) : (
+                                            salesByProductQuery.isLoading ? (
+                                                <div className="flex items-center justify-center h-64 border-2 rounded">
+                                                    <h4 className="text-xl font-medium">
+                                                        Cargando... ⏱️
+                                                    </h4>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center justify-center h-64 border-2 rounded">
+                                                    <h4 className="text-xl font-medium">
+                                                        No tenemos datos para mostrarte 😢
+                                                    </h4>
+                                                </div>
+                                            )
+                                        )
+                                    }
                                 </div>
                                 <div className="basis-1/3">
                                     <h2 className="text-2xl mb-4">Medios de pago</h2>
-                                    <Pie data={pieChartData} />
+                                    {
+                                        pieChartData.datasets[0].data.length > 0 ? (
+                                            <Pie data={pieChartData} />
+                                        ) : (
+                                            paymentTypesQuery.isLoading ? (
+                                                <div className="flex items-center justify-center h-64 border-2 rounded">
+                                                    <h4 className="text-xl font-medium">
+                                                        Cargando... ⏱️
+                                                    </h4>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center justify-center h-64 border-2 rounded">
+                                                    <h4 className="text-xl font-medium">
+                                                        No tenemos datos para mostrarte 😢
+                                                    </h4>
+                                                </div>
+                                            )
+                                        )
+                                    }
                                 </div>
                             </div>
                         </>
@@ -289,7 +325,25 @@ const Reports: NextPageWithLayout = () => {
                                     <div className="flex w-full">
                                         <div className="w-full">
                                             <h2 className="text-2xl mb-4">Facturación x Día</h2>
-                                            <Line data={lineCharData} options={lineChartOptions} />
+                                            {
+                                                lineCharData.datasets[0].data.length > 0 ? (
+                                                    <Line data={lineCharData} options={lineChartOptions} />
+                                                ) : (
+                                                    moneyPerDayQuery.isLoading ? (
+                                                        <div className="flex items-center justify-center h-64 border-2 rounded">
+                                                            <h4 className="text-xl font-medium">
+                                                                Cargando... ⏱️
+                                                            </h4>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center justify-center h-64 border-2 rounded">
+                                                            <h4 className="text-xl font-medium">
+                                                                No tenemos datos para mostrarte 😢
+                                                            </h4>
+                                                        </div>
+                                                    )
+                                                )
+                                            }
                                         </div>
                                     </div>
                                 </div>
