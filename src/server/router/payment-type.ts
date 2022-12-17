@@ -1,9 +1,18 @@
+import { z } from "zod";
 import { createRouter } from "./context";
 
-// Example router with queries that can only be hit if the user requesting is signed in
 export const paymentTypeRouter = createRouter()
   .query("findAll", {
-    async resolve({ ctx }) {
-      return await ctx.prisma.paymentType.findMany()
+    input: z.object({
+      isReport: z.boolean(),
+    }).nullish(),
+    async resolve({ ctx, input }) {
+      if (input?.isReport) {
+        const paymentTypes = await ctx.prisma.paymentType.findMany()
+        paymentTypes.unshift({ id: 'all', name: 'Todos' })
+        return paymentTypes;
+      } else {
+        return await ctx.prisma.paymentType.findMany()
+      }
     }
   })

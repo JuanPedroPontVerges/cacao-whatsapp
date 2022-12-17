@@ -8,18 +8,12 @@ interface ListProps {
     options: { id: string; name: string; }[]
     className?: string;
     label?: string;
-    isReport?: boolean;
 }
 
 
-const Select: React.FC<ListProps> = ({ name, options, form, label, isReport, className }) => {
+const Select: React.FC<ListProps> = ({ name, options, form, label, className }) => {
     const [selectedId, setSelectedId] = useState(options?.[0]?.id)
     const selected = options?.find(({ id }) => id == selectedId)
-
-    if (isReport && !Boolean(options.find((option) => option.name === 'Todos'))) {
-        // Pushes to the beginning of the array
-        options.unshift({ name: 'Todos', id: 'all' })
-    }
 
     useEffect(() => {
         if (!form.getValues(name) && options[0]) {

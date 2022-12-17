@@ -38,7 +38,7 @@ const Signin: NextPage<{ csrfToken: any, providers: any }> = ({ providers }) => 
                                                 Object.values(providers).map((provider: any) => (
                                                     <div key={provider?.name} style={{ marginBottom: 0 }}>
                                                         <button className='flex items-center gap-2' onClick={() => signIn(provider.id, { callbackUrl: '/' })}  >
-                                                            Iniciar sesión con {provider.name} <ArrowRightCircleIcon height={20} width={20} />
+                                                            Acceder con {provider.name} <ArrowRightCircleIcon height={20} width={20} />
                                                         </button>
                                                     </div>
                                                 ))}

@@ -16,9 +16,12 @@ import { trpc } from "../utils/trpc";
 import { NextPageWithLayout } from "./_app";
 import { CheckIcon, FunnelIcon } from "@heroicons/react/24/outline";
 import Select from "../components/Select";
-import { Listbox } from "@headlessui/react";
 
 const paymentStatus = [
+  {
+    label: "Todos",
+    value: "all",
+  },
   {
     label: "Pendiente",
     value: "PENDING",
@@ -43,13 +46,13 @@ const Orders: NextPageWithLayout = () => {
   const [paymentTypeId, setPaymentTypeId] = useState<string>();
   const [orderStateId, setOrderStateId] = useState<string>();
   const [paymentState, setPaymentState] = useState<PaymentState>();
-  const orderStateQuery = trpc.useQuery(["orderStateRouter.findAll"]);
+  const orderStateQuery = trpc.useQuery(["orderStateRouter.findAll", { isReport: true }]);
   const userQuery = trpc.useQuery([
     "userRouter.getVenues",
     { id: data?.user?.id },
   ]);
   const venueId = userQuery.data?.venueId;
-  const paymentTypeQuery = trpc.useQuery(["paymentTypeRouter.findAll"]);
+  const paymentTypeQuery = trpc.useQuery(["paymentTypeRouter.findAll", { isReport: true }]);
   const orderQuery = trpc.useQuery([
     "orderRouter.findByVenueId",
     { id: venueId, paymentState, paymentTypeId, orderStateId },
@@ -127,7 +130,6 @@ const Orders: NextPageWithLayout = () => {
                     {
                       paymentTypeQuery.data ? (
                         <Select
-                          isReport
                           name='paymentTypeId'
                           className="w-52"
                           form={form}
@@ -147,7 +149,6 @@ const Orders: NextPageWithLayout = () => {
                           form={form}
                           className="w-52"
                           options={orderStateQuery.data.map(({ id, name }) => ({ id, name }))}
-                          isReport
                         />
                       ) : null
                     }
@@ -161,7 +162,6 @@ const Orders: NextPageWithLayout = () => {
                       name={`paymentState`}
                       form={form}
                       options={paymentStatus.map(({ label, value }) => ({ id: value, name: label }))}
-                      isReport
                     />
                   </div>
                 </div>
