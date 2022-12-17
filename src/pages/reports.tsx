@@ -207,9 +207,9 @@ const Reports: NextPageWithLayout = () => {
 
     if (!pieChartData.datasets[0].data.length) {
         paymentTypesQuery.data?.forEach((paymentType) => {
-            if (!pieChartLabels.some((label) => label === paymentType?.paymentTypeFound?.name)) {
-                pieChartLabels.push(paymentType?.paymentTypeFound?.name);
-            }
+            // if (!pieChartLabels.some((label) => label === paymentType?.paymentTypeFound?.name)) {
+                // pieChartLabels.push(paymentType?.paymentTypeFound?.name);
+            // }
             pieChartData.datasets[0].data.push(paymentType._count)
         })
     }
