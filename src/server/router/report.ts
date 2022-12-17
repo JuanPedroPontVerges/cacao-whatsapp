@@ -1,4 +1,4 @@
-import { Product, ProductStoreCart } from "@prisma/client";
+import { Product } from "@prisma/client";
 import dayjs from "dayjs";
 import { z } from "zod";
 import { createProtectedRouter } from "./context";
@@ -169,11 +169,6 @@ export const reportRouter = createProtectedRouter()
           },
           _count: true,
         })
-        // const result = [];
-        // for await (const paymentType of paymentTypes) {
-        //   const paymentTypeFound = await prisma?.paymentType.findFirst({ where: { id: paymentType.paymentTypeId } });
-        //   result.push({ ...paymentType, paymentTypeFound });
-        // }
         return paymentTypes;
       }
     },
@@ -223,7 +218,7 @@ export const reportRouter = createProtectedRouter()
     async resolve({ ctx, input }) {
       if (input && input.venueId != null) {
         const { venueId, startDate, endDate } = input;
-        return await prisma?.order.findMany({
+        return await ctx.prisma.order.findMany({
           where: {
             State: {
               name: 'Despachado'
@@ -261,7 +256,7 @@ export const reportRouter = createProtectedRouter()
     async resolve({ ctx, input }) {
       if ((input && input.venueId != null) && (input?.startDate != null) && (input?.endDate != null)) {
         const { venueId, startDate, endDate } = input;
-        return await prisma?.order.aggregate({
+        return await ctx.prisma.order.aggregate({
           where: {
             State: {
               name: 'Despachado'
