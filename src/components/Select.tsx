@@ -17,7 +17,8 @@ const Select: React.FC<ListProps> = ({ name, options, form, label, isReport, cla
     const selected = options?.find(({ id }) => id == selectedId)
 
     if (isReport && !Boolean(options.find((option) => option.name === 'Todos'))) {
-        options.push({ name: 'Todos', id: 'all' })
+        // Pushes to the beginning of the array
+        options.unshift({ name: 'Todos', id: 'all' })
     }
 
     useEffect(() => {
