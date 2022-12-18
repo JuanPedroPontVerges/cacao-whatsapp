@@ -7,8 +7,7 @@ import { Chart as ChartJS, ArcElement, LineElement, Tooltip, Legend, LinearScale
 import { Bar, Line, Pie } from 'react-chartjs-2';
 import { trpc } from "../utils/trpc";
 import { useSession } from "next-auth/react";
-import Table from "../components/Table";
-import { ColumnDef, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { ColumnDef } from "@tanstack/react-table";
 import { ReactNode, useEffect, useState } from "react";
 import dayjs from 'dayjs';
 import Loader from "../components/Loader";
