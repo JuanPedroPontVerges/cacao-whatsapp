@@ -41,6 +41,15 @@ export const storeRouter = createRouter()
           },
           include: {
             products: true,
+            menu: {
+              select: {
+                venue: {
+                  select: {
+                    name: true
+                  }
+                },
+              }
+            }
           }
         });
       }

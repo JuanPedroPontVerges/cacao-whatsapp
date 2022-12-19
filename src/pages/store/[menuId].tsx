@@ -11,6 +11,7 @@ import Cursed from 'public/assets/pizza-margarita.jpg'
 import ShoppingCart from "../../components/ShoppingCart";
 import { useLocalSession } from "../../helpers/session.hooks";
 import Loader from "../../components/Loader";
+import WapiLogo from 'public/assets/wapi-logo.svg'
 
 function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ')
@@ -62,9 +63,7 @@ const Store: NextPageWithLayout = ({ query }) => {
                                 </div>
                                 <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                                     <div className="flex flex-shrink-0 items-center">
-                                        <span className={'text-white'}>
-                                            WAPI
-                                        </span>
+                                        <Image src={WapiLogo} alt='Icono de Wapi' />
                                     </div>
                                     <div className="hidden sm:ml-6 sm:block">
                                         <div className="flex space-x-4">
