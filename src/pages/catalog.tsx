@@ -348,7 +348,11 @@ const Catalog: NextPageWithLayout = () => {
             if (foundProduct?.productStore?.productStoreToOptionGroups) {
                 for (const productStoreToOptionGroups of foundProduct?.productStore?.productStoreToOptionGroups) {
                     productForm.setValue(`optionGroups.${productStoreToOptionGroups.optionGroupId}.displayTypeId`, productStoreToOptionGroups.displayTypeId);
-                    productForm.setValue(`optionGroups.${productStoreToOptionGroups.optionGroupId}.maxAmount`, productStoreToOptionGroups.amount || 0);
+                    if (productStoreToOptionGroups.amount === 15) {
+                        //
+                    } else {
+                        productForm.setValue(`optionGroups.${productStoreToOptionGroups.optionGroupId}.maxAmount`, productStoreToOptionGroups.amount || 0);
+                    }
                     productForm.setValue(`optionGroups.${productStoreToOptionGroups.optionGroupId}.multipleUnits`, productStoreToOptionGroups.multipleUnits);
                     productForm.setValue(`optionGroups.${productStoreToOptionGroups.optionGroupId}.enabled`, productStoreToOptionGroups.enabled);
                     for (const option of productStoreToOptionGroups.productOptions) {
@@ -462,7 +466,7 @@ const Catalog: NextPageWithLayout = () => {
                                             optionGroupId,
                                             productStoreId: productStore.id,
                                             displayTypeId: productStoreToOptionGroup?.displayTypeId,
-                                            amount: productStoreToOptionGroup.maxAmount,
+                                            amount: productStoreToOptionGroup.maxAmount || 15,
                                             enabled: productStoreToOptionGroup.enabled,
                                             multipleUnits: productStoreToOptionGroup.multipleUnits,
                                         })

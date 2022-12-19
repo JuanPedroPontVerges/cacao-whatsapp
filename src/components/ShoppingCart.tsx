@@ -129,10 +129,10 @@ const ShoppingCart: React.FC<{ visible: boolean, toggleShoppingCart: () => void 
                                                         <Link
                                                             href={`/store/checkout/${session.cartId}`}
                                                         >
-                                                            <a
+                                                            <div
                                                                 className="flex items-center justify-center rounded-md border border-transparent bg-indigo-600 px-6 py-3 text-base font-medium text-white shadow-sm hover:bg-indigo-700">
                                                                 Ir a pagar
-                                                            </a>
+                                                            </div>
                                                         </Link>
                                                     </div>
                                                 </>

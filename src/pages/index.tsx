@@ -238,14 +238,18 @@ const Index: NextPageWithLayout = ({ providers, csrfToken }) => {
       <div className="rounded-lg border-4 border-dashed border-gray-200 container mx-auto">
         <div className="flex justify-around my-4">
           <div>
-            <h2 className="text-3xl">Estado de tu local</h2>
-            <div className="mt-4">
-              Ahora te encuentras
+            <h2 className="text-3xl">Estado de {userQuery.data.venue?.name}</h2>
+            <div className="m-2 text-1xl">Dirección:
+              <h3 className="italic m-1">{userQuery.data.venue?.address}</h3>
+            </div>
+            <div className="mt-2">
+              <span className="text-xl">Ahora te encuentras</span>
               <span className={`${isOpen(schedules) ? 'text-green-600' : 'text-red-600'} text-2xl font-bold mx-2`}>
                 {isOpen(schedules) ? 'Abierto!' : 'Cerrado!'}
               </span>
             </div>
-            <div className='mt-4 border-green-600 border-4 p-4'>
+            <h2 className="text-3xl mt-4">Descargar informe</h2>
+            <div className='border-wapi-light-blue border-4 p-4 mt-4'>
               <h4>Rango de fechas: </h4>
               <DatePicker
                 className="mt-2"
@@ -260,8 +264,7 @@ const Index: NextPageWithLayout = ({ providers, csrfToken }) => {
                 <button
                   onClick={handleOnClickDownloadReport}
                   className="
-                    inline-flex justify-center rounded-md border border-transparent bg-green-600 py-2 px-4 text-sm font-medium 
-                    text-white shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2
+                  inline-flex justify-center rounded-md border border-white bg-blue-100 px-4 py-2 text-sm font-medium text-wapi-blue hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2
                     ">
                   Descargar informe semanal
                 </button>
@@ -305,8 +308,7 @@ const Index: NextPageWithLayout = ({ providers, csrfToken }) => {
                       <button
                         type="submit"
                         className="
-                      inline-flex justify-center rounded-md border border-transparent bg-indigo-600 py-2 px-4 text-sm font-medium 
-                    text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
+                        inline-flex justify-center rounded-md border border-white bg-blue-100 px-4 py-2 text-sm font-medium text-wapi-blue hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2
                     ">
                         Guardar cambios
                       </button>
