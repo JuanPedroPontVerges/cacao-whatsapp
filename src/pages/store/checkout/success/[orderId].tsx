@@ -3,7 +3,8 @@ import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import StoreNav from "../../../../components/layouts/StoreNav";
 import { trpc } from "../../../../utils/trpc";
 import { NextPageWithLayout } from "../../../_app";
-
+import WapiLogo from 'public/assets/wapi-logo.svg'
+import Image from "next/image";
 const Success: NextPageWithLayout = ({ query }) => {
     const orderId = query?.orderId;
     const orderQuery = trpc.useQuery(["orderRouter.findById", { id: orderId }]);
@@ -16,9 +17,7 @@ const Success: NextPageWithLayout = ({ query }) => {
                             <div className="relative flex h-16 items-center justify-between">
                                 <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                                     <div className="flex flex-shrink-0 items-center">
-                                        <span className={'text-white'}>
-                                            WAPI
-                                        </span>
+                                        <Image src={WapiLogo} alt='Icono de Wapi' />
                                     </div>
                                 </div>
                             </div>

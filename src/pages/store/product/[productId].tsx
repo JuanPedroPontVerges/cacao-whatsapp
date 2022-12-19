@@ -15,6 +15,7 @@ import { NextPageWithLayout } from "../../_app";
 import StoreNav from "../../../components/layouts/StoreNav";
 import { useLocalSession } from "../../../helpers/session.hooks";
 import Loader from "../../../components/Loader";
+import WapiLogo from 'public/assets/wapi-logo.svg'
 export type ProductStoreCartFormInput = {
     additionalInfo?: string,
     amount: number,
@@ -186,9 +187,7 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
                                 </div>
                                 <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                                     <div className="flex flex-shrink-0 items-center">
-                                        <span className={'text-white'}>
-                                            WAPI
-                                        </span>
+                                        <Image src={WapiLogo} alt='Icono de Wapi' />
                                     </div>
                                 </div>
                             </div>
