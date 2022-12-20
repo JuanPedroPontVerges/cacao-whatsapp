@@ -1,7 +1,8 @@
 import { PaymentState } from "@prisma/client";
+import dayjs from "dayjs";
 import { z } from "zod";
 import { NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER } from "../../pages/api/whatsapp/constants";
-import { sendCartDetail } from "../../pages/api/whatsapp/utils";
+import { sendCartDetail, sendTextMessage } from "../../pages/api/whatsapp/utils";
 import { createRouter } from "./context";
 
 // Example router with queries that can only be hit if the user requesting is signed in
@@ -15,13 +16,12 @@ export const orderRouter = createRouter()
       fullName: z.string(),
     }),
     async resolve({ ctx, input }) {
-      const { cartId, additionalInfo, phoneNumber, fullName, paymentTypeId  } = input;
+      const { cartId, additionalInfo, phoneNumber, fullName, paymentTypeId } = input;
       const cart = await ctx.prisma.cart.findFirst({
         where: { id: cartId },
         select: {
           productStoreCarts: {
-            select: {
-              finalPrice: true,
+            include: {
               productStore: {
                 select: {
                   product: {
@@ -65,7 +65,7 @@ export const orderRouter = createRouter()
         }
       }) || { id: '123' }
       let order: any;
-      const total: number = cart?.productStoreCarts.reduce((acc, value) => (value.finalPrice + acc), 0) || 42069
+      const total = cart?.productStoreCarts.reduce((acc: any, value: any) => ((value.finalPrice * value.amount) + acc), 0) || 42069
       const customer = await ctx.prisma.customer.findFirst({
         where: {
           venueId,
@@ -254,7 +254,7 @@ export const orderRouter = createRouter()
           id: true,
         }
       });
-      return await ctx.prisma.order.update({
+      const updatedOrder = await ctx.prisma.order.update({
         where: {
           id: orderId,
         },
@@ -263,9 +263,36 @@ export const orderRouter = createRouter()
             connect: {
               id: orderState?.id,
             }
-          }
+          },
+        },
+        include: {
+          customer: {
+            select: {
+              phoneNumber: true,
+            }
+          },
+          PaymentType: true,
         }
       })
+      if (action === 'En Preparación') {
+        await sendTextMessage(+updatedOrder.customer.phoneNumber, `¡Orden confirmada, se encuentra en preparación!
+
+⏱️Hora estimada: ${dayjs().add(30, 'minutes').format('hh:mm')}`)
+      } else if (action === 'Despachado' && updatedOrder.PaymentType.name === 'Efectivo') {
+        await ctx.prisma.order.update({
+          where: {
+            id: orderId
+          },
+          data: {
+            payment: {
+              update: {
+                status: 'APPROVED',
+              }
+            }
+          }
+        })
+      }
+      return orderState;
     },
   })
   .query("findById", {
@@ -310,7 +337,7 @@ export const orderRouter = createRouter()
                 }
               },
               {
-                stateId: orderStateId as string | undefined,
+                stateId: orderStateId as string | undefined
               }
             ]
           },

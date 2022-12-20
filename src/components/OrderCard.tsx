@@ -41,30 +41,30 @@ const OrderCard: React.FC<OrderCardProps> = ({
     state?.name === "Pendiente"
       ? "slate"
       : state?.name === "Cancelado"
-      ? "red"
-      : state?.name === "Confirmado" || state?.name === "Despachado"
-      ? "green"
-      : "purple";
+        ? "red"
+        : state?.name === "Confirmado" || state?.name === "Despachado"
+          ? "green"
+          : "purple";
   return (
     <div
       id={id}
       onClick={() => onClick(id)}
-      className="cursor-pointer duration-500 rounded-md motion-safe:hover:scale-105"
+      className={`cursor-pointer duration-500 rounded-md motion-safe:hover:scale-105 ${className}`}
     >
       <div
-        className={`border-2 rounded-lg w-auto bg-${bgColor}-300 ${className}`}
+        className={`border-2 rounded-lg w-auto bg-${bgColor}-300`}
       >
         <div className="flex flex-col gap-2 p-4">
           <div className="flex flex-row justify-center text-center text-bold text-xl">
             <div className="flex-auto">
-            <span className="text-sm">Orden</span>
+              <span className="text-sm">Orden</span>
               <p>#{id?.slice(4, 8)}</p>
             </div>
             <div className="flex-auto">
-            <span className="text-sm">Tiempo de espera:</span>
+              <span className="text-sm">Tiempo de espera:</span>
               <p>
                 {state?.name === "Despachado" ||
-                state?.name === "Cancelado" ? null : (
+                  state?.name === "Cancelado" ? null : (
                   <Timer createdAt={createdAt} />
                 )}
               </p>
@@ -79,21 +79,21 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 {payment?.status === "PENDING"
                   ? "Pendiente"
                   : payment?.status === "CANCELLED"
-                  ? "Cancelado"
-                  : payment?.status === "APPROVED"
-                  ? "Pagado"
-                  : payment?.status}
+                    ? "Cancelado"
+                    : payment?.status === "APPROVED"
+                      ? "Pagado"
+                      : payment?.status}
               </p>
             </div>
           </div>
 
           <div className="flex flex-row justify-center gap-4 text-bold text-xl">
             <div className="flex-auto">
-            <span className="text-sm">Cliente</span>
+              <span className="text-sm">Cliente</span>
               <p className="mb-2">{customer?.fullName}</p>
             </div>
             <div className="flex-auto">
-            <span className="text-sm">Total</span>
+              <span className="text-sm">Total</span>
               <p>${price}</p>
             </div>
           </div>
@@ -115,8 +115,8 @@ const OrderCard: React.FC<OrderCardProps> = ({
                 </button>
               </>
             ) : state?.name === "Cancelado" ? null : state?.name ===
-              "Despachada" ? (
-              "¡Entregada!"
+              "Despachado" ? (
+              "¡Entregado!"
             ) : (
               <button
                 onClick={(e) => onClickAction(e, "dispatch", id)}
@@ -128,7 +128,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 

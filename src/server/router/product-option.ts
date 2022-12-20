@@ -45,7 +45,6 @@ export const productOptionRouter = createProtectedRouter()
           optionId,
         },
       })
-      console.log('productOption', productOption);
       if (productOption) {
         await ctx.prisma.productOption.update({
           where: {

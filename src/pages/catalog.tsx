@@ -16,7 +16,7 @@ import {
 } from '@tanstack/react-table'
 import Table from "../components/Table";
 import Upload from "../components/Upload";
-import List from "../components/List";
+import Select from "../components/Select";
 import Dashboard from "../components/layouts/Dashboard";
 import { NextPageWithLayout } from "./_app";
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
@@ -151,13 +151,14 @@ const Catalog: NextPageWithLayout = () => {
     const optionDefaultColumns: ColumnDef<Option>[] = [
         {
             accessorKey: 'name',
+            header: 'Nombre',
             cell: info => info.getValue(),
         },
         {
             accessorFn: row => row.description,
             id: 'description',
             cell: info => info.getValue(),
-            header: () => <span>description</span>,
+            header: () => <span>Descripción</span>,
         },
         {
             header: 'Precio',
@@ -200,6 +201,7 @@ const Catalog: NextPageWithLayout = () => {
     ]
     const productDefaultColumns: ColumnDef<Product>[] = [
         {
+            header: 'Nombre',
             accessorKey: 'name',
             cell: info => info.getValue(),
         },
@@ -207,7 +209,7 @@ const Catalog: NextPageWithLayout = () => {
             accessorFn: row => row.description,
             id: 'description',
             cell: info => info.getValue(),
-            header: () => <span>description</span>,
+            header: () => <span>Descripción</span>,
         },
         {
             header: 'Precio',
@@ -814,10 +816,11 @@ const Catalog: NextPageWithLayout = () => {
                                                 <div className="flex flex-col">
                                                     {
                                                         displayTypeQuery.data ? (
-                                                            <List
+                                                            <Select
                                                                 name={`optionGroups.${id}.displayTypeId`}
                                                                 form={productForm}
                                                                 options={displayTypeQuery.data.map(({ id, name }) => ({ id, name }))}
+                                                                label={'Cantidad seleccionable'}
                                                             />
                                                         ) : ('...Loading')
                                                     }

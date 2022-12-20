@@ -15,6 +15,7 @@ import { NextPageWithLayout } from "../../_app";
 import StoreNav from "../../../components/layouts/StoreNav";
 import { useLocalSession } from "../../../helpers/session.hooks";
 import Loader from "../../../components/Loader";
+import WapiLogo from 'public/assets/wapi-logo.svg'
 export type ProductStoreCartFormInput = {
     additionalInfo?: string,
     amount: number,
@@ -186,9 +187,7 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
                                 </div>
                                 <div className="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
                                     <div className="flex flex-shrink-0 items-center">
-                                        <span className={'text-white'}>
-                                            WAPI
-                                        </span>
+                                        <Image src={WapiLogo} alt='Icono de Wapi' />
                                     </div>
                                 </div>
                             </div>
@@ -198,13 +197,12 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
             </Disclosure>
             <Form form={form} onSubmitForm={onSubmitForm}>
                 <div className="mx-auto max-w-2xl px-4 sm:px-6 lg:max-w-7xl lg:px-8 mb-24">
-                    <div className="block">
+                    <div className="flex justify-center">
                         <Image
                             src={data[0]?.productStore.product?.imageUrl || Cursed}
                             alt={`Imagen para el product ${product?.name}`}
-                            width={'100%'}
-                            height={'100%'}
-                            layout={'responsive'}
+                            width={400}
+                            height={400}
                         />
                     </div>
                     <div className="mt-4">
@@ -263,8 +261,8 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
                             <div className="w-full p-1">
                                 <div className="flex justify-around items-center">
                                     <Button type='button' onClick={handleOnClickSubstract}>-</Button>
-                                    <div className="border-2 p-1 border-white basis-1/3">
-                                        <input readOnly aria-readonly className="w-full" type="number" {...form.register('amount', { valueAsNumber: true })} />
+                                    <div className="p-1 basis-1/3">
+                                        <input readOnly aria-readonly className="w-full bg-slate-600 text-center text-white border-0 border-b-2 border-b-slate-50" type="number" {...form.register('amount', { valueAsNumber: true })} />
                                     </div>
                                     <Button type='button' onClick={handleOnClickAdd}>+</Button>
                                 </div>
@@ -274,6 +272,7 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
                             <Button className="w-full" type='submit'>
                                 <div className="flex justify-around items-center">
                                     <p>Agregar</p>
+                                    <span className="mr-[-12px] ml-2">$</span>
                                     <input
                                         readOnly
                                         aria-readonly

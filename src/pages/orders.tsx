@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Form from "../components/Form";
 import Dashboard from "../components/layouts/Dashboard";
@@ -14,9 +14,14 @@ import OrderDetail from "../components/OrderDetail";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
 import { NextPageWithLayout } from "./_app";
-import { FunnelIcon, TagIcon } from "@heroicons/react/24/outline";
+import { CheckIcon, FunnelIcon } from "@heroicons/react/24/outline";
+import Select from "../components/Select";
 
 const paymentStatus = [
+  {
+    label: "Todos",
+    value: "all",
+  },
   {
     label: "Pendiente",
     value: "PENDING",
@@ -41,13 +46,13 @@ const Orders: NextPageWithLayout = () => {
   const [paymentTypeId, setPaymentTypeId] = useState<string>();
   const [orderStateId, setOrderStateId] = useState<string>();
   const [paymentState, setPaymentState] = useState<PaymentState>();
+  const orderStateQuery = trpc.useQuery(["orderStateRouter.findAll", { isReport: true }]);
   const userQuery = trpc.useQuery([
     "userRouter.getVenues",
     { id: data?.user?.id },
   ]);
   const venueId = userQuery.data?.venueId;
-  const paymentTypeQuery = trpc.useQuery(["paymentTypeRouter.findAll"]);
-  const orderStateQuery = trpc.useQuery(["orderStateRouter.findAll"]);
+  const paymentTypeQuery = trpc.useQuery(["paymentTypeRouter.findAll", { isReport: true }]);
   const orderQuery = trpc.useQuery([
     "orderRouter.findByVenueId",
     { id: venueId, paymentState, paymentTypeId, orderStateId },
@@ -81,10 +86,10 @@ const Orders: NextPageWithLayout = () => {
       action === "confirm"
         ? "En Preparación"
         : action === "cancel"
-        ? "Cancelado"
-        : action === "dispatch"
-        ? "Despachado"
-        : "";
+          ? "Cancelado"
+          : action === "dispatch"
+            ? "Despachado"
+            : "";
     if (id) {
       await orderStateMutation.mutateAsync({
         orderId: id,
@@ -102,13 +107,6 @@ const Orders: NextPageWithLayout = () => {
     await orderQuery.refetch();
   };
 
-  if (
-    userQuery.isLoading ||
-    paymentTypeQuery.isLoading ||
-    orderStateQuery.isLoading ||
-    orderQuery.isLoading
-  )
-    return <Loader />;
   return (
     <>
       <Head>
@@ -129,49 +127,42 @@ const Orders: NextPageWithLayout = () => {
                 <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
                   <div className="flex flex-col">
                     <label>Tipo de pago</label>
-                    <select
-                      {...form.register("paymentTypeId")}
-                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                    >
-                      <option value={"all"}>Todos</option>
-                      {paymentTypeQuery.data?.map((type) => (
-                        <option value={type.id} key={type.id}>
-                          {type.name}
-                        </option>
-                      ))}
-                    </select>
+                    {
+                      paymentTypeQuery.data ? (
+                        <Select
+                          name='paymentTypeId'
+                          className="w-52"
+                          form={form}
+                          options={paymentTypeQuery.data.map(({ id, name }) => ({ id, name }))}
+                        />
+                      ) : null
+                    }
                   </div>
                 </div>
                 <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
                   <div className="flex flex-col">
                     <label>Estado de orden</label>
-                    <select
-                      {...form.register("orderStateId")}
-                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                    >
-                      <option value={"all"}>Todos</option>
-                      {orderStateQuery.data?.map((type) => (
-                        <option value={type.id} key={type.id}>
-                          {type.name}
-                        </option>
-                      ))}
-                    </select>
+                    {
+                      orderStateQuery.data ? (
+                        <Select
+                          name={`orderStateId`}
+                          form={form}
+                          className="w-52"
+                          options={orderStateQuery.data.map(({ id, name }) => ({ id, name }))}
+                        />
+                      ) : null
+                    }
                   </div>
                 </div>
                 <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
                   <div className="flex flex-col">
                     <label>Estado de pago</label>
-                    <select
-                      {...form.register("paymentState")}
-                      className="mt-1 block w-full rounded-md border border-gray-300 bg-white py-2 px-3 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-indigo-500 sm:text-sm"
-                    >
-                      <option value={"all"}>Todos</option>
-                      {paymentStatus.map((status) => (
-                        <option value={status.value} key={status.value}>
-                          {status.label}
-                        </option>
-                      ))}
-                    </select>
+                    <Select
+                      className="w-52"
+                      name={`paymentState`}
+                      form={form}
+                      options={paymentStatus.map(({ label, value }) => ({ id: value, name: label }))}
+                    />
                   </div>
                 </div>
                 <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
@@ -186,22 +177,35 @@ const Orders: NextPageWithLayout = () => {
             </Form>
           </div>
           <div className="p-2 w-full">
-            <h2 className="text-xl font-semibold">Órdenes</h2>
-            <div className="flex flex-row gap-6 mt-3">
-              {orderQuery.data?.map((order, index) => (
-                <OrderCard
-                  createdAt={dayjs(order.createdAt).toDate()}
-                  payment={order.payment}
-                  onClickAction={handleOnClickAction}
-                  onClick={onClickOrder}
-                  key={index}
-                  price={order.total}
-                  state={order.State}
-                  customer={order.customer}
-                  id={order.id}
-                />
-              ))}
-            </div>
+            <h2 className="text-xl font-semibold mb-4">Órdenes</h2>
+            {
+              userQuery.isLoading ||
+                paymentTypeQuery.isLoading ||
+                orderStateQuery.isLoading ||
+                orderQuery.isLoading ? <Loader /> : (
+                orderQuery.data?.length || 0 > 0 ? (
+                  <div className="flex flex-wrap justify-start gap-4">
+                    {orderQuery.data?.map((order, index) => (
+                      <OrderCard
+                        createdAt={dayjs(order.createdAt).toDate()}
+                        payment={order.payment}
+                        onClickAction={handleOnClickAction}
+                        onClick={onClickOrder}
+                        key={index}
+                        price={order.Cart.productStoreCarts?.reduce((acc, value) => ((value.finalPrice * value.amount) + acc), 0)}
+                        state={order.State}
+                        customer={order.customer}
+                        id={order.id}
+                        className='flex-none w-[280px]'
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex justify-center items-center align-middle">
+                    <h4 className="text-2xl">No hay datos... 😢</h4>
+                  </div>
+                )
+              )}
           </div>
           <Modal
             isOpen={isModalOpen}
@@ -212,8 +216,8 @@ const Orders: NextPageWithLayout = () => {
                   {selectedOrder?.payment?.status === "APPROVED"
                     ? "Pagado"
                     : selectedOrder?.payment?.status === "PENDING"
-                    ? "Por cobrar"
-                    : "Cancelado"}
+                      ? "Por cobrar"
+                      : "Cancelado"}
                 </p>
               </div>
             }
@@ -228,7 +232,6 @@ const Orders: NextPageWithLayout = () => {
                   payment={selectedOrder?.payment}
                   customer={selectedOrder?.customer}
                   additionalInfo={selectedOrder?.additionalInfo}
-                  finalAmount={selectedOrder?.total}
                   productStoreCarts={selectedOrder?.Cart.productStoreCarts}
                 />
               </div>

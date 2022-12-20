@@ -8,7 +8,6 @@ type OrderDetailProps = {
         id: string;
         fullName: string;
     };
-    finalAmount?: number;
     payment?: {
         id: string;
         status: PaymentState;
@@ -30,11 +29,11 @@ type OrderDetailProps = {
                 name: string;
             }
         }
-
     }[],
 }
 
-const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCarts, additionalInfo, createdAt, finalAmount, payment, paymentType, className }) => {
+const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCarts, additionalInfo, createdAt, payment, paymentType, className }) => {
+    const finalAmount = productStoreCarts?.reduce((acc, value) => ((value.finalPrice * value.amount) + acc), 0)
     return (
         <div className="flex flex-col w-full gap-2">
             <div className="flex justify-between p-2">

@@ -1,32 +1,56 @@
 import { GetServerSideProps, GetServerSidePropsContext, NextPage } from "next";
 import { getCsrfToken, getProviders, signIn } from "next-auth/react";
 import { getServerAuthSession } from "../../server/common/get-server-auth-session";
+import WapiLogo from 'public/assets/wapi-logo.svg'
+import Image from "next/image";
+import { ArrowRightCircleIcon } from "@heroicons/react/24/outline";
 
-
-const Signin: NextPage<{ csrfToken: any, providers: any }> = ({ csrfToken, providers }) => {
-    console.log({ csrfToken, providers });
-    // const { providers, csrfToken } = props;
+const Signin: NextPage<{ csrfToken: any, providers: any }> = ({ providers }) => {
     return (
-        <div style={{ overflow: 'hidden', position: 'relative' }}>
-            {/* <Header /> */}
-            <div />
-            <div>
-                <div>
-                    {/* <Image src='/katalog_full.svg' width="196px" height="64px" alt='App Logo' style={{ height: '85px', marginBottom: '20px' }} /> */}
-                    <div>
-                        {providers &&
-                            Object.values(providers).map((provider: any) => (
-                                <div key={provider?.name} style={{ marginBottom: 0 }}>
-                                    <button onClick={() => signIn(provider.id)} >
-                                        Sign in with{' '} {provider.name}
-                                    </button>
+        <div>
+            <header>
+                <div className="w-full flex bg-gray-800 min-h-full">
+                    <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                        <div className="flex h-16 items-center justify-between">
+                            <div className="flex items-center">
+                                <div className="flex-shrink-0">
+                                    <Image src={WapiLogo} alt='Icono de Wapi' />
                                 </div>
-                            ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            {/* <img src='/login_pattern.svg' alt='Pattern Background' layout='fill' className={styles.styledPattern} /> */}
+            </header>
+            <section>
+                <div className="flex justify-center items-center h-[400px]">
+                    <div className="mt-10 sm:mt-0">
+                        <div className="md:grid md:grid-cols-2 md:gap-6">
+                            <div className="mt-5 md:col-span-2 md:mt-0">
+                                <div className="sm:rounded-md px-4 py-5 sm:p-6 border-4">
+                                    <div>
+                                        <h3 className="text-2xl font-medium">
+                                            Bienvenido!
+                                        </h3>
+                                    </div>
+                                    <div className="overflow-hidden shadow px-4 py-2 sm:p-4 mt-6">
+                                        <div className="bg-white">
+                                            {providers &&
+                                                Object.values(providers).map((provider: any) => (
+                                                    <div key={provider?.name} style={{ marginBottom: 0 }}>
+                                                        <button className='flex items-center gap-2' onClick={() => signIn(provider.id, { callbackUrl: '/' })}  >
+                                                            Acceder con {provider.name} <ArrowRightCircleIcon height={20} width={20} />
+                                                        </button>
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
         </div>
     )
 }
@@ -42,7 +66,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx: GetServerSideP
         props: {
             session,
             providers,
-            csrfToken
+            csrfToken,
         }
     }
 }

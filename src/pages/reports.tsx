@@ -7,8 +7,7 @@ import { Chart as ChartJS, ArcElement, LineElement, Tooltip, Legend, LinearScale
 import { Bar, Line, Pie } from 'react-chartjs-2';
 import { trpc } from "../utils/trpc";
 import { useSession } from "next-auth/react";
-import Table from "../components/Table";
-import { ColumnDef, getCoreRowModel, useReactTable } from "@tanstack/react-table";
+import { ColumnDef } from "@tanstack/react-table";
 import { ReactNode, useEffect, useState } from "react";
 import dayjs from 'dayjs';
 import Loader from "../components/Loader";
@@ -29,7 +28,7 @@ ChartJS.register(
     Legend,
 );
 const barChartLabels: any[] = [];
-const pieChartLabels: any[] = [];
+const pieChartLabels = ['Efectivo', 'Mercado Pago'];
 
 const lineChartOptions = {
     responsive: true,
@@ -88,7 +87,7 @@ const Reports: NextPageWithLayout = () => {
     const customerQuery = trpc.useQuery(["reportRouter.customersByVenueId", { venueId: userQuery.data?.venueId }]);
     const [customerColumns] = useState(() => [...customerDefaultColumns]);
     const [customers, setCustomers] = useState(() => customerQuery.data ? [...customerQuery.data] : []);
-    const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([dayjs().set('month', dayjs().month() - 1).startOf('month').toDate(), new Date()]);
+    const [dateRange, setDateRange] = useState<[Date | null, Date | null]>([dayjs().set('days', -7).toDate(), new Date()]);
     const [startDate, endDate] = dateRange;
     const [currentNav, setCurrentNav] = useState('Ventas')
     const totalSalesQuery = trpc.useQuery(["reportRouter.totalSales", { venueId: userQuery.data?.venueId, startDate, endDate }]);
@@ -190,11 +189,11 @@ const Reports: NextPageWithLayout = () => {
     }
     while (!lineCharData.datasets[0].data);
 
-    const customersTable = useReactTable({
-        data: customers,
-        columns: customerColumns,
-        getCoreRowModel: getCoreRowModel(),
-    })
+    // const customersTable = useReactTable({
+    //     data: customers,
+    //     columns: customerColumns,
+    //     getCoreRowModel: getCoreRowModel(),
+    // })
 
     if (!barChartData.datasets[0].data.length) {
         salesByProductQuery.data?.forEach((saleByProduct) => {
@@ -207,9 +206,6 @@ const Reports: NextPageWithLayout = () => {
 
     if (!pieChartData.datasets[0].data.length) {
         paymentTypesQuery.data?.forEach((paymentType) => {
-            if (!pieChartLabels.some((label) => label === paymentType?.paymentTypeFound?.name)) {
-                pieChartLabels.push(paymentType?.paymentTypeFound?.name);
-            }
             pieChartData.datasets[0].data.push(paymentType._count)
         })
     }
@@ -226,7 +222,7 @@ const Reports: NextPageWithLayout = () => {
                 <section className='mb-6'>
                     <div className="flex justify-center mb-4">
                         <div className="mt-3 flex p-4 border border-1 justify-around">
-                            {chartNavigation.map((item, index) => (
+                            {chartNavigation.map((item) => (
                                 <div key={item.name} className='mx-4'>
                                     <div onClick={() => { setCurrentNav(item.name) }} className={`cursor-pointer ${classNames(
                                         item.current
@@ -258,14 +254,50 @@ const Reports: NextPageWithLayout = () => {
                 {
                     currentNav === 'Ordenes' ? (
                         <>
-                            <div className='flex gap-4'>
+                            <div className='flex gap-4 items-center'>
                                 <div className="basis-2/3">
                                     <h2 className="text-2xl mb-4">Ventas x Producto</h2>
-                                    <Bar data={barChartData} />
+                                    {
+                                        barChartData.datasets[0].data.length > 0 ? (
+                                            <Bar data={barChartData} />
+                                        ) : (
+                                            salesByProductQuery.isLoading ? (
+                                                <div className="flex items-center justify-center h-64 border-2 rounded">
+                                                    <h4 className="text-xl font-medium">
+                                                        Cargando... ⏱️
+                                                    </h4>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center justify-center h-64 border-2 rounded">
+                                                    <h4 className="text-xl font-medium">
+                                                        No tenemos datos para mostrarte 😢
+                                                    </h4>
+                                                </div>
+                                            )
+                                        )
+                                    }
                                 </div>
                                 <div className="basis-1/3">
                                     <h2 className="text-2xl mb-4">Medios de pago</h2>
-                                    <Pie data={pieChartData} />
+                                    {
+                                        pieChartData.datasets[0].data.length > 0 ? (
+                                            <Pie data={pieChartData} />
+                                        ) : (
+                                            paymentTypesQuery.isLoading ? (
+                                                <div className="flex items-center justify-center h-64 border-2 rounded">
+                                                    <h4 className="text-xl font-medium">
+                                                        Cargando... ⏱️
+                                                    </h4>
+                                                </div>
+                                            ) : (
+                                                <div className="flex items-center justify-center h-64 border-2 rounded">
+                                                    <h4 className="text-xl font-medium">
+                                                        No tenemos datos para mostrarte 😢
+                                                    </h4>
+                                                </div>
+                                            )
+                                        )
+                                    }
                                 </div>
                             </div>
                         </>
@@ -289,7 +321,25 @@ const Reports: NextPageWithLayout = () => {
                                     <div className="flex w-full">
                                         <div className="w-full">
                                             <h2 className="text-2xl mb-4">Facturación x Día</h2>
-                                            <Line data={lineCharData} options={lineChartOptions} />
+                                            {
+                                                lineCharData.datasets[0].data.length > 0 ? (
+                                                    <Line data={lineCharData} options={lineChartOptions} />
+                                                ) : (
+                                                    moneyPerDayQuery.isLoading ? (
+                                                        <div className="flex items-center justify-center h-64 border-2 rounded">
+                                                            <h4 className="text-xl font-medium">
+                                                                Cargando... ⏱️
+                                                            </h4>
+                                                        </div>
+                                                    ) : (
+                                                        <div className="flex items-center justify-center h-64 border-2 rounded">
+                                                            <h4 className="text-xl font-medium">
+                                                                No tenemos datos para mostrarte 😢
+                                                            </h4>
+                                                        </div>
+                                                    )
+                                                )
+                                            }
                                         </div>
                                     </div>
                                 </div>
@@ -297,12 +347,12 @@ const Reports: NextPageWithLayout = () => {
                         </>
                     )
                 }
-                <div className="flex justify-around w-full">
+                {/* <div className="flex justify-around w-full">
                     <div>
                         <h2 className="text-2xl mb-4">Clientes</h2>
                         <Table table={customersTable} className='border border-1 border-black p-6' />
                     </div>
-                </div>
+                </div> */}
             </div>
         </>
     );

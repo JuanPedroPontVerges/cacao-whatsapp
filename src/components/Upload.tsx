@@ -52,7 +52,7 @@ const Upload: React.FC<UploadProps> = ({ label, form }) => {
                             <input
                                 hidden
                                 {...form.register('imageUrl')}
-                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                className="mt-1 hidden w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                             />
                             <Image src={imageUrl} height={150} width={150} alt={'Foto del producto'} className='rounded-xl' />
                             <div className="flex text-sm text-gray-600">

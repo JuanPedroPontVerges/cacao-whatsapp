@@ -96,7 +96,6 @@ const Index: NextPageWithLayout = ({ providers, csrfToken }) => {
   }, [userQuery.data])
 
   const onSubmitForm: SubmitHandler<ICreateVenueFormValues> = async (input) => {
-    console.log('input', input);
     if (data?.user?.id) {
       venueMutation.mutateAsync({ ...input, userId: data?.user.id })
       toggleVisibility();

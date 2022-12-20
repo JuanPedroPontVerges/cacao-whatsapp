@@ -7,11 +7,10 @@ export default async function handler(
     res: NextApiResponse
 ) {
     if (req.method === 'POST') {
+        console.log('req.body', req.body);
         if (req.body.action) {
             console.log('Mercadopago Webhook', req.body);
-            if (req.body.action === 'payment.created') {
-                // Se creo link de pago
-            } else if (req.body.action === 'payment.updated') {
+            if (req.body.action.includes('payment')) {
                 const id = req.body.data.id;
                 try {
                     const response = await fetch(`https://api.mercadopago.com/v1/payments/${id}`, {
@@ -54,6 +53,8 @@ export default async function handler(
                                 }
                             }
                         })
+                        console.log('customer', customer);
+                        console.log('status', status);
                         if (customer && status === 'APPROVED') {
                             sendTextMessage(+customer.phoneNumber, `¡Pago recibido! Muchas gracias por su compra, para conocer el estado de su pedido, elija la opción *Status del pedido* en nuestro menú`)
                         }
