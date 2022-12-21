@@ -9,6 +9,7 @@ import { HTML5Backend } from "react-dnd-html5-backend";
 import { trpc } from '../../utils/trpc';
 import Image from "next/image";
 import WapiLogo from 'public/assets/wapi-logo.svg'
+import { useRouter } from 'next/router';
 
 const user = {
     name: 'Tom Cook',
@@ -26,24 +27,27 @@ function classNames(...classes: string[]) {
     return classes.filter(Boolean).join(' ')
 }
 
+type RouterType = 'orders' | 'catalog' | 'reports' | undefined | string
 
 type DashboardProps = {
     children: React.ReactNode;
 }
 const Dashboard: React.FC<DashboardProps> = ({ children }) => {
-    const [current, setCurrent] = useState(0);
     const killSession = () => {
         signOut({ callbackUrl: 'localhost:3000' });
     }
+    const router = useRouter()
     const session = useSession();
     const venueQuery = trpc.useQuery(["storeRouter.getVenueByUser", { id: session.data?.user?.id }])
+    const currentRouter: RouterType = router.pathname.split('/')[1];
     const navigation = [
-        { name: 'Inicio', href: '/', current: current == 0 ? true : false },
-        { name: 'Catálogo', href: '/catalog', current: current == 1 ? true : false },
-        { name: 'Órdenes', href: '/orders', current: current == 2 ? true : false },
-        { name: 'Reportes', href: '/reports', current: current == 3 ? true : false },
+        { name: 'Inicio', href: '/', current: !currentRouter ? true : false },
+        { name: 'Catálogo', href: '/catalog', current: currentRouter === 'catalog' ? true : false },
+        { name: 'Órdenes', href: '/orders', current: currentRouter === 'orders' ? true : false },
+        { name: 'Reportes', href: '/reports', current: currentRouter === 'reports' ? true : false },
 
     ]
+    const current = navigation.find((nav) => nav.current === true)
     return (
         <DndProvider backend={HTML5Backend}>
             <div className="min-h-full">
@@ -64,7 +68,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                                                         href={item.href}
                                                         aria-current={item.current ? 'page' : undefined}
                                                     >
-                                                        <div onClick={() => setCurrent(index)} className={`cursor-pointer ${classNames(
+                                                        <div className={`cursor-pointer ${classNames(
                                                             item.current
                                                                 ? 'bg-gray-900 text-white'
                                                                 : 'text-gray-300 hover:bg-gray-700 hover:text-white',
@@ -197,7 +201,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
 
                 <header className="bg-white shadow">
                     <div className="mx-auto max-w-7xl py-6 px-4 sm:px-6 lg:px-8">
-                        <h1 className="text-3xl font-bold tracking-tight text-gray-900">{navigation[current]?.name}</h1>
+                        <h1 className="text-3xl font-bold tracking-tight text-gray-900">{current?.name}</h1>
                     </div>
                 </header>
                 <main>
