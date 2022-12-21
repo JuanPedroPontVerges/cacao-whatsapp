@@ -3,7 +3,7 @@ import dayjs from "dayjs";
 import { GetServerSideProps, GetServerSidePropsContext } from "next";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import Form from "../components/Form";
 import Dashboard from "../components/layouts/Dashboard";
@@ -46,6 +46,7 @@ const Orders: NextPageWithLayout = () => {
   const [paymentTypeId, setPaymentTypeId] = useState<string>();
   const [orderStateId, setOrderStateId] = useState<string>();
   const [paymentState, setPaymentState] = useState<PaymentState>();
+  const [timer, setTimer] = useState<string>();
   const orderStateQuery = trpc.useQuery(["orderStateRouter.findAll", { isReport: true }]);
   const userQuery = trpc.useQuery([
     "userRouter.getVenues",
@@ -178,6 +179,14 @@ const Orders: NextPageWithLayout = () => {
           </div>
           <div className="p-2 w-full">
             <h2 className="text-xl font-semibold mb-4">Órdenes</h2>
+            <div>
+              <button
+                onClick={() => orderQuery.refetch()}
+                className="inline-flex justify-center rounded-md border mb-4 border-white bg-blue-100 px-4 py-2 text-sm font-medium text-wapi-blue hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+              >
+                Buscar ordenes
+              </button>
+            </div>
             {
               userQuery.isLoading ||
                 paymentTypeQuery.isLoading ||

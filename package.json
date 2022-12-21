@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "start-prisma": "start npm run dev && start npm run studio && start pscale connect wapi main --port 3306",
     "lint": "next lint",
     "postinstall": "prisma generate",
     "studio": "prisma studio"
