@@ -14,7 +14,7 @@ import OrderDetail from "../components/OrderDetail";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
 import { NextPageWithLayout } from "./_app";
-import { CheckIcon, FunnelIcon } from "@heroicons/react/24/outline";
+import { BanknotesIcon, FunnelIcon, DocumentTextIcon} from "@heroicons/react/24/outline";
 import Select from "../components/Select";
 
 const paymentStatus = [
@@ -211,19 +211,26 @@ const Orders: NextPageWithLayout = () => {
             isOpen={isModalOpen}
             title={
               <div className="flex justify-between mb-1">
-                <p>Detalle de orden</p>
-                <p>
-                  {selectedOrder?.payment?.status === "APPROVED"
+                {/* <div className="flex flex-row mb-2">
+                <DocumentTextIcon className="w-6 mr-2" />
+                <p className="text-xl">Detalle</p>
+              </div> */}
+              <div className="flex flex-row mb-2">
+                <BanknotesIcon className="w-6 mr-2" />
+                <p className="text-xl">
+                {selectedOrder?.payment?.status === "APPROVED"
                     ? "Pagado"
                     : selectedOrder?.payment?.status === "PENDING"
                       ? "Por cobrar"
                       : "Cancelado"}
                 </p>
               </div>
+            
+              </div>
             }
             onClose={toggleModalVisiblity}
           >
-            <div className="mx-2 border">
+            <div className="border rounded-md">
               <div className="flex">
                 <OrderDetail
                   id={selectedOrder?.id}
