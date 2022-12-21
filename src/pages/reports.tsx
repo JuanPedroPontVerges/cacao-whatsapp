@@ -99,7 +99,7 @@ const Reports: NextPageWithLayout = () => {
 
     const chartNavigation = [
         { name: 'Ventas', current: currentNav === 'Ventas' },
-        { name: 'Ordenes', current: currentNav === 'Ordenes' },
+        { name: 'Órdenes', current: currentNav === 'Órdenes' },
     ]
     // Chart data
     const lineCharData: { labels: any[]; datasets: any[] } = {
@@ -252,11 +252,11 @@ const Reports: NextPageWithLayout = () => {
                     </div>
                 </section>
                 {
-                    currentNav === 'Ordenes' ? (
+                    currentNav === 'Órdenes' ? (
                         <>
                             <div className='flex gap-4 items-center'>
                                 <div className="basis-2/3">
-                                    <h2 className="text-2xl mb-4">Ventas x Producto</h2>
+                                    <h2 className="text-2xl mb-4">Cantidad de ventas por producto</h2>
                                     {
                                         barChartData.datasets[0].data.length > 0 ? (
                                             <Bar data={barChartData} />
@@ -310,10 +310,10 @@ const Reports: NextPageWithLayout = () => {
                                     </div>
                                     <div className='flex justify-between'>
                                         <div className='w-full'>
-                                            <ReportCard title={'Cantidad de operaciones'} value={amountOfOperationsQuery.isLoading ? <Loader /> : (amountOfOperationsQuery.data?.toString() || '0')} />
+                                            <ReportCard title={'Cantidad de órdenes'} value={amountOfOperationsQuery.isLoading ? <Loader /> : (amountOfOperationsQuery.data?.toString() || '0')} />
                                         </div>
                                         <div className="w-full">
-                                            <ReportCard title={'Venta promedio'} value={averageSalesPerDayQuery.isLoading ? <Loader /> : (`$ ${averageSalesPerDayQuery.data?._avg?.total?.toString() || '0'}`)} />
+                                            <ReportCard title={'Ventas promedio por día'} value={averageSalesPerDayQuery.isLoading ? <Loader /> : (`$ ${averageSalesPerDayQuery.data?._avg?.total?.toString() || '0'}`)} />
                                         </div>
                                     </div>
                                 </div>

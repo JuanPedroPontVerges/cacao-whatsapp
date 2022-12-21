@@ -61,16 +61,17 @@ const OrderCard: React.FC<OrderCardProps> = ({
               <p>#{id?.slice(4, 8)}</p>
             </div>
             <div className="flex-auto">
-              <span className="text-sm">Tiempo de espera:</span>
               <p>
                 {state?.name === "Despachado" ||
                   state?.name === "Cancelado" ? null : (
-                  <Timer createdAt={createdAt} />
+                  <div>
+                    <span className="text-sm">Tiempo de espera:</span>
+                    <Timer createdAt={createdAt} />
+                  </div>
                 )}
               </p>
             </div>
           </div>
-
           <div className="flex justify-center my-2">
             <div className="text-center text-bold text-xl">
               <span className="text-sm">Pago</span>

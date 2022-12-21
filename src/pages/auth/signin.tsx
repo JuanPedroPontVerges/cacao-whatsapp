@@ -29,7 +29,7 @@ const Signin: NextPage<{ csrfToken: any, providers: any }> = ({ providers }) => 
                                 <div className="sm:rounded-md px-4 py-5 sm:p-6 border-4">
                                     <div>
                                         <h3 className="text-2xl font-medium">
-                                            Bienvenido!
+                                            Te damos la bienvenida!
                                         </h3>
                                     </div>
                                     <div className="overflow-hidden shadow px-4 py-2 sm:p-4 mt-6">

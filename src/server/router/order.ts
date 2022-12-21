@@ -363,7 +363,11 @@ export const orderRouter = createRouter()
                   include: {
                     productStoreCartToOptions: {
                       include: {
-                        option: true,
+                        option: {
+                          include: {
+                            optionGroup: true,
+                          }
+                        }
                       }
                     },
                     productStore: {

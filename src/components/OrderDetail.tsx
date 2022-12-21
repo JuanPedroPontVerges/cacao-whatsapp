@@ -7,6 +7,7 @@ import {
   FunnelIcon,
   DocumentTextIcon,
 } from "@heroicons/react/24/outline";
+import dayjs from "dayjs";
 
 type OrderDetailProps = {
   customer?: {
@@ -65,7 +66,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({
           </div>
           <div className="flex-auto">
             <span className="text-sm">Fecha</span>
-            <p className="mb-2">{createdAt?.toString()}</p>
+            <p className="mb-2">{dayjs(createdAt).format('DD-MM-YY')}</p>
           </div>
         </div>
 
@@ -82,9 +83,12 @@ const OrderDetail: React.FC<OrderDetailProps> = ({
                   {productStoreCart?.productStoreCartToOptions?.map((option: any, index: number) => {
                     if (option.amount > 0) {
                       return (
-                        <p key={index} className='m-2'>
-                          x{option.amount} {option.option.name}
-                        </p>
+                        <div key={index}>
+                          <p>{option.option.optionGroup?.name}: </p>
+                          <p className='m-1'>
+                            x{option.amount} {option.option.name}
+                          </p>
+                        </div>
                       )
                     }
                   })}

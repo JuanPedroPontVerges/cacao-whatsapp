@@ -14,7 +14,7 @@ import OrderDetail from "../components/OrderDetail";
 import { getServerAuthSession } from "../server/common/get-server-auth-session";
 import { trpc } from "../utils/trpc";
 import { NextPageWithLayout } from "./_app";
-import { BanknotesIcon, FunnelIcon, DocumentTextIcon} from "@heroicons/react/24/outline";
+import { BanknotesIcon, FunnelIcon, DocumentTextIcon } from "@heroicons/react/24/outline";
 import Select from "../components/Select";
 
 const paymentStatus = [
@@ -129,21 +129,6 @@ const Orders: NextPageWithLayout = () => {
               <div className="flex flex-row gap-x-12 p-4 border rounded-md bg-gray-50 border-gray-50">
                 <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
                   <div className="flex flex-col">
-                    <label>Tipo de pago</label>
-                    {
-                      paymentTypeQuery.data ? (
-                        <Select
-                          name='paymentTypeId'
-                          className="w-52"
-                          form={form}
-                          options={paymentTypeQuery.data.map(({ id, name }) => ({ id, name }))}
-                        />
-                      ) : null
-                    }
-                  </div>
-                </div>
-                <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
-                  <div className="flex flex-col">
                     <label>Estado de orden</label>
                     {
                       orderStateQuery.data ? (
@@ -157,6 +142,22 @@ const Orders: NextPageWithLayout = () => {
                     }
                   </div>
                 </div>
+                <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
+                  <div className="flex flex-col">
+                    <label>Tipo de pago</label>
+                    {
+                      paymentTypeQuery.data ? (
+                        <Select
+                          name='paymentTypeId'
+                          className="w-52"
+                          form={form}
+                          options={paymentTypeQuery.data.map(({ id, name }) => ({ id, name }))}
+                        />
+                      ) : null
+                    }
+                  </div>
+                </div>
+
                 <div className="items-center justify-center md:flex md:space-x-6 md:space-y-0">
                   <div className="flex flex-col">
                     <label>Estado de pago</label>
@@ -226,17 +227,17 @@ const Orders: NextPageWithLayout = () => {
                 <DocumentTextIcon className="w-6 mr-2" />
                 <p className="text-xl">Detalle</p>
               </div> */}
-              <div className="flex flex-row mb-2">
-                <BanknotesIcon className="w-6 mr-2" />
-                <p className="text-xl">
-                {selectedOrder?.payment?.status === "APPROVED"
-                    ? "Pagado"
-                    : selectedOrder?.payment?.status === "PENDING"
-                      ? "Por cobrar"
-                      : "Cancelado"}
-                </p>
-              </div>
-            
+                <div className="flex flex-row mb-2">
+                  <BanknotesIcon className="w-6 mr-2" />
+                  <p className="text-xl">
+                    {selectedOrder?.payment?.status === "APPROVED"
+                      ? "Pagado"
+                      : selectedOrder?.payment?.status === "PENDING"
+                        ? "Por cobrar"
+                        : "Cancelado"}
+                  </p>
+                </div>
+
               </div>
             }
             onClose={toggleModalVisiblity}
