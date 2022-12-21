@@ -26,22 +26,23 @@ const Success: NextPageWithLayout = ({ query }) => {
                 )}
             </Disclosure>
             <div className='container mx-auto'>
-                <div className="flex justify-center">
-                    <div className="lg:text-center">
-                        <h2 className="text-3xl font-semibold text-green-600 text-center">¡Orden realizada con éxito!</h2>
-                        <p className="mt-2 text-2xl font-bold leading-8 tracking-tight text-gray-900 text-center">
+                <div className="lg:text-center mt-6">
+                    <h2 className="text-4xl font-semibold text-green-600 text-center">¡Orden realizada con éxito!</h2>
+                    <div className="my-12">
+                        <p className="text-2xl font-bold leading-8 tracking-tight text-gray-900 text-center">
                             Gracias, {orderQuery.data?.customer.fullName}
                         </p>
-                        <p className="mt-4 max-w-2xl text-xl text-gray-500 mx-auto text-center">
-                            <a
-                                target={'_blank'}
-                                style={{ color: 'green', fontSize: '20px' }}
-                                href={`https://wa.me/${orderQuery.data?.customer?.phoneNumber}`}
-                                rel="noreferrer">
-                                <button className="bg-green-600 p-4 text-lg rounded text-white">Ir a whatsapp</button>
-                            </a>
-                        </p>
                     </div>
+                    <div className="mt-4"></div>
+                    <p className="mt-6 max-w-2xl text-xl text-gray-500 mx-auto text-center">
+                        <a
+                            target={'_blank'}
+                            style={{ color: 'green', fontSize: '20px' }}
+                            href={`https://wa.me/15550477820`}
+                            rel="noreferrer">
+                            <button className="bg-green-600 p-4 text-lg rounded text-white">Ir a whatsapp</button>
+                        </a>
+                    </p>
                 </div>
             </div>
         </>

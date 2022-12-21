@@ -291,6 +291,8 @@ export const orderRouter = createRouter()
             }
           }
         })
+      } else if (action === 'Listo para despachar') {
+        await sendTextMessage(+updatedOrder.customer.phoneNumber, `¡Orden lista para ser retirada! Te esperamos 😊`)
       }
       return orderState;
     },
@@ -354,6 +356,11 @@ export const orderRouter = createRouter()
               include: {
                 productStoreCarts: {
                   include: {
+                    productStoreCartToOptions: {
+                      include: {
+                        option: true,
+                      }
+                    },
                     productStore: {
                       select: {
                         product: true,

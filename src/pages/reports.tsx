@@ -179,7 +179,7 @@ const Reports: NextPageWithLayout = () => {
         if (moneyPerDayQuery.data) {
             for (const day of lineCharData.labels) {
                 if (moneyPerDayQuery.data[day]) {
-                    const finalPrice = moneyPerDayQuery.data[day].reduce((acc: number, value: { finalPrice: number, amount: number }) => ((value.finalPrice * value.amount) + acc), 0)
+                    const finalPrice = moneyPerDayQuery.data[day].reduce((acc: number, value: { total: number }) => (value.total + acc), 0)
                     lineCharData.datasets[0].data.push(finalPrice)
                 } else {
                     lineCharData.datasets[0].data.push(0)

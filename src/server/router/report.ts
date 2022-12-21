@@ -67,35 +67,26 @@ export const reportRouter = createProtectedRouter()
     async resolve({ ctx, input }) {
       if (input && input.venueId != null) {
         const { venueId, startDate, endDate } = input;
-        const productStoreCarts = await ctx.prisma.productStoreCart.findMany({
+        const orders = await ctx.prisma.order.groupBy({
+          by: ['createdAt', 'total'],
           where: {
-            productStore: {
-              product: {
-                category: {
-                  menu: {
-                    venueId,
-                  }
-                }
-              }
+            customer: {
+              venueId,
             },
             createdAt: {
               lt: endDate || dayjs().set('day', 1).toDate(),
               gt: startDate || dayjs().set('day', -1).toDate(),
             },
-            cart: {
-              order: {
-                payment: {
-                  status: 'APPROVED'
-                }
-              }
+            payment: {
+              status: 'APPROVED'
             }
           },
         })
-        const newProductStoreCarts = [];
-        for (const productStoreCart of productStoreCarts) {
-          newProductStoreCarts.push({ ...productStoreCart, dayOfTheMonth: dayjs(productStoreCart.createdAt).format('DD-MM') })
+        const parsedOrders = [];
+        for (const order of orders) {
+          parsedOrders.push({ ...order, dayOfTheMonth: dayjs(order.createdAt).format('DD-MM') })
         }
-        return groupBy(newProductStoreCarts, 'dayOfTheMonth')
+        return groupBy(parsedOrders, 'dayOfTheMonth')
       }
     },
   })

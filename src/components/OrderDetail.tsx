@@ -1,7 +1,5 @@
 import { PaymentState } from "@prisma/client";
 import React from "react"
-import Image from "next/image";
-import WapiLogo from 'public/assets/wapi-logo.svg'
 
 type OrderDetailProps = {
     customer?: {
@@ -17,6 +15,7 @@ type OrderDetailProps = {
         id: string;
         name: string;
     };
+    total?: number | null;
     createdAt?: Date;
     className?: string;
     additionalInfo?: string | null;
@@ -24,6 +23,7 @@ type OrderDetailProps = {
         additionalInfo: string | null;
         amount: number;
         finalPrice: number;
+        productStoreCartToOptions?: any
         productStore: {
             product: {
                 name: string;
@@ -32,7 +32,7 @@ type OrderDetailProps = {
     }[],
 }
 
-const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCarts, additionalInfo, createdAt, payment, paymentType, className }) => {
+const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCarts, additionalInfo, createdAt, payment, total, paymentType, className }) => {
     const finalAmount = productStoreCarts?.reduce((acc, value) => ((value.finalPrice * value.amount) + acc), 0)
     return (
         <div className="flex flex-col w-full gap-2">
@@ -54,6 +54,17 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCar
                                 <p className="text-md">
                                     {productStoreCart.amount} {productStoreCart.productStore.product.name}
                                 </p>
+                                <div>
+                                    {productStoreCart?.productStoreCartToOptions?.map((option: any, index: number) => {
+                                        if (option.amount > 0) {
+                                            return (
+                                                <p key={index} className='m-2'>
+                                                    x{option.amount} {option.option.name}
+                                                </p>
+                                            )
+                                        }
+                                    })}
+                                </div>
                                 <p className="text-sm">Obs: {productStoreCart.additionalInfo ? productStoreCart.additionalInfo : '/'}</p>
                             </div>
                             <div>
@@ -66,7 +77,7 @@ const OrderDetail: React.FC<OrderDetailProps> = ({ id, customer, productStoreCar
                 ))
             }
             <div className="flex justify-center">
-                <p className="text-1xl">Total: ${finalAmount}</p>
+                <p className="text-1xl">Total: ${total}</p>
             </div>
         </div>
     )

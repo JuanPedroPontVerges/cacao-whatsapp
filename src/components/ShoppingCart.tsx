@@ -16,7 +16,7 @@ const ShoppingCart: React.FC<{ visible: boolean, toggleShoppingCart: () => void 
     if (cartQuery.isLoading) return <>Cargando...</>
     if (cartQuery.error) return <>Error!</>
     const onClickDelete = (e: React.MouseEvent, productStoreCartId: string) => {
-        e.stopPropagation();
+        e.preventDefault();
         cartProductDelete.mutate({ productStoreCartId })
     }
     const finalPrice = cartQuery.data?.productStoreCarts.reduce((acc, value) => ((value.finalPrice * value.amount) + acc), 0)
@@ -69,7 +69,7 @@ const ShoppingCart: React.FC<{ visible: boolean, toggleShoppingCart: () => void 
                                                     <ul role="list" className="-my-6 divide-y divide-gray-200">
                                                         {cartQuery.data?.productStoreCarts.length || 0 > 0 ? (
                                                             cartQuery.data?.productStoreCarts.map((productStoreCart) => (
-                                                                <Link href={`/store/product/${productStoreCart.productStore.product.id}?productStoreCartId=${productStoreCart.id}`} key={productStoreCart.id}>
+                                                                <Link href={`/store/product/${productStoreCart.productStore.product.id}?productStoreCartId=${productStoreCart.id}`} key={productStoreCart.id} onClick={(e) => e.stopPropagation()}>
                                                                     <li className="flex py-6">
                                                                         <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border border-gray-200">
                                                                             <Image
@@ -92,7 +92,7 @@ const ShoppingCart: React.FC<{ visible: boolean, toggleShoppingCart: () => void 
                                                                                 </div>
                                                                             </div>
                                                                             <div className="flex flex-1 items-end justify-between text-sm">
-                                                                                <p className="text-gray-500">Qty {productStoreCart.amount}</p>
+                                                                                <p className="text-gray-500">Cant. {productStoreCart.amount}</p>
 
                                                                                 <div className="flex">
                                                                                     <button

@@ -90,7 +90,9 @@ const Orders: NextPageWithLayout = () => {
           ? "Cancelado"
           : action === "dispatch"
             ? "Despachado"
-            : "";
+            : action === "ready-to-dispatch"
+              ? "Listo para despachar"
+              : "";
     if (id) {
       await orderStateMutation.mutateAsync({
         orderId: id,
@@ -236,6 +238,7 @@ const Orders: NextPageWithLayout = () => {
               <div className="flex">
                 <OrderDetail
                   id={selectedOrder?.id}
+                  total={selectedOrder?.total}
                   createdAt={selectedOrder?.createdAt}
                   paymentType={selectedOrder?.PaymentType}
                   payment={selectedOrder?.payment}

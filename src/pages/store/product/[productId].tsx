@@ -117,6 +117,7 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
     }
 
     const handleOnClickAdd = () => {
+        console.log('productPrice', productPrice);
         if (productPrice) {
             const amount = form.getValues('amount')
             form.setValue('amount', amount + 1);
@@ -127,11 +128,26 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
     const onSubmitForm: SubmitHandler<ProductStoreCartFormInput> = async (input) => {
         setIsLoading(true)
         const { additionalInfo, amount, finalPrice, productStoreToOptionGroups } = input;
-        if (query.productStoreCartId) { /* If is edit */
+        let sum = 0;
+        for (const productStoreToOptionGroupId in productStoreToOptionGroups) {
+            const options = productStoreToOptionGroups[productStoreToOptionGroupId]?.option
+            if (options) {
+                for (const optionId in options) {
+                    sum += options[optionId]?.amount || 0;
+                }
+            }
+        }
+        if (sum < 1) {
+            alert('Debes seleccionar por lo menos 1 opción')
+            setIsLoading(false)
+            return;
+        }
+        /* If is edit */
+        if (query.productStoreCartId) {
             await productStoreCartUpdate.mutateAsync({ id: query.productStoreCartId, additionalInfo, amount, finalPrice: finalPrice / amount })
             for (const productStoreToOptionGroupId in productStoreToOptionGroups) {
                 const options = productStoreToOptionGroups[productStoreToOptionGroupId]?.option
-                if (options && query.productStoreCartId) {
+                if (options) {
                     for (const optionId in options) {
                         const amount = options[optionId]?.amount || 0;
                         await productStoreCartToOptionMutation.mutateAsync({ amount, optionId, productStoreCartId: query.productStoreCartId })

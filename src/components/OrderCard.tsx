@@ -1,6 +1,6 @@
 import React from "react";
 import Timer from "./Timer";
-export type Action = "confirm" | "cancel" | "dispatch";
+export type Action = "confirm" | "cancel" | "dispatch" | "ready-to-dispatch";
 type OrderCardProps = {
   customer?: {
     id: string;
@@ -114,17 +114,22 @@ const OrderCard: React.FC<OrderCardProps> = ({
                   Confirmar
                 </button>
               </>
-            ) : state?.name === "Cancelado" ? null : state?.name ===
-              "Despachado" ? (
-              "¡Entregado!"
-            ) : (
-              <button
-                onClick={(e) => onClickAction(e, "dispatch", id)}
-                className="inline-flex justify-center rounded-md border border-white bg-blue-100 px-4 py-2 text-sm font-medium text-wapi-blue hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
-              >
-                Despachar
-              </button>
-            )}
+            ) : state?.name === "Cancelado" ? null
+              : state?.name === 'Listo para retirar' ? (
+                <button
+                  onClick={(e) => onClickAction(e, "ready-to-dispatch", id)}
+                  className="inline-flex justify-center rounded-md border border-white bg-blue-100 px-4 py-2 text-sm font-medium text-wapi-blue hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                >
+                  Despachar
+                </button>
+              ) : state?.name === 'Confirmado' ? (
+                <button
+                  onClick={(e) => onClickAction(e, "dispatch", id)}
+                  className="inline-flex justify-center rounded-md border border-white bg-blue-100 px-4 py-2 text-sm font-medium text-wapi-blue hover:bg-blue-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2"
+                >
+                  Despachar
+                </button>
+              ) : null}
           </div>
         </div>
       </div>
