@@ -55,12 +55,17 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
     }, [data])
 
     useEffect(() => {
+        console.log('productPrice', productPrice);
+    }, [productPrice])
+
+    useEffect(() => {
         if (productStoreCartQuery.data) {
             if (!isLoaded) {
                 const { additionalInfo, amount, finalPrice, productStoreCartToOptions } = productStoreCartQuery.data
                 form.setValue('additionalInfo', additionalInfo as string)
                 form.setValue('amount', amount)
-                form.setValue('finalPrice', finalPrice)
+                form.setValue('finalPrice', finalPrice * amount)
+                setProductPrice(finalPrice);
                 const formFields = form.getValues();
                 for (const productStoreToOptionGroupId in formFields.productStoreToOptionGroups) {
                     for (const optionId in formFields.productStoreToOptionGroups[productStoreToOptionGroupId]?.option) {
@@ -96,11 +101,23 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
 
     const handleSetPrice = (price: number) => {
         const amount = form.getValues('amount');
+        console.log('amount', amount);
+        console.log('productPrice', productPrice);
+        console.log('price', price);
         if (productPrice) {
-            setProductPrice(() => {
-                const total = productPrice + price;
-                form.setValue('finalPrice', total * amount);
-                return total;
+            setProductPrice((prevValue) => {
+                if (prevValue) {
+                    /* Very ugly fix */
+                    const finalPrice = form.getValues('finalPrice');
+                    if (query.productStoreCartId) {
+                        const total = finalPrice + (price * amount);
+                        form.setValue('finalPrice', total);
+                        return prevValue + price;
+                    } else {
+                        form.setValue('finalPrice', (prevValue + price) * amount);
+                        return prevValue + price;
+                    }
+                } else return 0;
             });
         }
     }
@@ -117,7 +134,6 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
     }
 
     const handleOnClickAdd = () => {
-        console.log('productPrice', productPrice);
         if (productPrice) {
             const amount = form.getValues('amount')
             form.setValue('amount', amount + 1);

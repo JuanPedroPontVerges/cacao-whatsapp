@@ -268,6 +268,11 @@ export const orderRouter = createRouter()
         include: {
           customer: {
             select: {
+              venue: {
+                select: {
+                  address: true,
+                },
+              },
               phoneNumber: true,
             }
           },
@@ -292,7 +297,7 @@ export const orderRouter = createRouter()
           }
         })
       } else if (action === 'Listo para despachar') {
-        await sendTextMessage(+updatedOrder.customer.phoneNumber, `¡Orden lista para ser retirada! Te esperamos 😊`)
+        await sendTextMessage(+updatedOrder.customer.phoneNumber, `¡Orden lista para ser retirada! Te esperamos en ${updatedOrder.customer.venue.address} 😊`)
       }
       return orderState;
     },
