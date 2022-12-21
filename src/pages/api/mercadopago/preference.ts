@@ -22,7 +22,7 @@ export default async function handler(
         const { items, external_reference } = req.body;
         const data = {
             additional_info: 'Compra de producto Wapi',
-            notification_url: 'https://05c6-186-136-6-251.ngrok.io/api/mercadopago/webhook',
+            notification_url: 'https://utn-trabajo-final.vercel.app//api/mercadopago/webhook',
             items,
             payment_methods: {
                 installments: 1,
@@ -30,8 +30,8 @@ export default async function handler(
             },
             external_reference,
             back_urls: {
-                success: `https://05c6-186-136-6-251.ngrok.io/payment/success`,
-                failure: 'https://05c6-186-136-6-251.ngrok.io/payment/failure',
+                success: `https://utn-trabajo-final.vercel.app//payment/success`,
+                failure: 'https://utn-trabajo-final.vercel.app//payment/failure',
             },
         }
         try {
