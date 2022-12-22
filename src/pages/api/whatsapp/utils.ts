@@ -50,6 +50,9 @@ export const isOpen = (schedules?: Schedule[]) => {
     const dayOfTheWeek = dayjs().tz("America/Argentina/Cordoba").day();
     const dayOfTheWeekAsString = parseDayAsNumberToString(dayOfTheWeek)
     const currentDaySchedule = schedules?.find((schedule) => schedule.day === dayOfTheWeekAsString)
+    console.log('currentDaySchedule', currentDaySchedule);
+    console.log('dayOfTheWeekAsString', dayOfTheWeekAsString);
+    console.log('dayOfTheWeek', dayOfTheWeek);
     if (currentDaySchedule) {
         const from = dayjs({ hour: currentDaySchedule.fromHour || 0, minute: currentDaySchedule.fromMinute || 0 }).tz("America/Argentina/Cordoba")
         const to = dayjs({ hour: currentDaySchedule.toHour || 0, minute: currentDaySchedule.toMinute || 0 }).tz("America/Argentina/Cordoba")
