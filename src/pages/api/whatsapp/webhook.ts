@@ -45,26 +45,26 @@ export default async function handler(
                         }
                     })
                     if (!venue || !customer) return;
-                    const isVenueOpen = isOpen(venue.menus[0]?.setting?.schedules)
-                    if (!isVenueOpen) {
-                        await sendTextMessage(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, `Hola! El local se encuentra cerrado, no dudes contactarnos en nuestros días habilitados!👇🏽
-${venue.menus[0]?.setting?.schedules.map(({ day, fromHour, fromMinute, toHour, toMinute }) => {
-                            if (fromHour === '0' && fromMinute === '0' && toHour === '0' && toMinute === '0') { }
-                            else {
-                                return (`
-${day === 'monday' ? 'Lunes'
-                                        : day === 'tuesday' ? 'Martes'
-                                            : day === 'wendsday' ? 'Miércoles'
-                                                : day === 'thursday' ? 'Jueves'
-                                                    : day === 'friday' ? 'Viernes'
-                                                        : day === 'saturday' ? 'Sabado'
-                                                            : 'Domingo'
-                                    }: ${fromHour}:${fromMinute} => ${toHour}:${toMinute}
-`)
-                            }
-                        }).join('')}`);
-                        return res.status(200).end();
-                    }
+                    // const isVenueOpen = isOpen(venue.menus[0]?.setting?.schedules)
+//                     if (!isVenueOpen) {
+//                         await sendTextMessage(NOT_SURE_HARDCODED_CUSTOMER_PHONE_NUMBER, `Hola! El local se encuentra cerrado, no dudes contactarnos en nuestros días habilitados!👇🏽
+// ${venue.menus[0]?.setting?.schedules.map(({ day, fromHour, fromMinute, toHour, toMinute }) => {
+//                             if (fromHour === '0' && fromMinute === '0' && toHour === '0' && toMinute === '0') { }
+//                             else {
+//                                 return (`
+// ${day === 'monday' ? 'Lunes'
+//                                         : day === 'tuesday' ? 'Martes'
+//                                             : day === 'wendsday' ? 'Miércoles'
+//                                                 : day === 'thursday' ? 'Jueves'
+//                                                     : day === 'friday' ? 'Viernes'
+//                                                         : day === 'saturday' ? 'Sabado'
+//                                                             : 'Domingo'
+//                                     }: ${fromHour}:${fromMinute} => ${toHour}:${toMinute}
+// `)
+//                             }
+//                         }).join('')}`);
+//                         return res.status(200).end();
+//                     }
                     if (message.interactive.list_reply) {
                         const id = message.interactive.list_reply.id as 'status' | 'order';
                         if (id === 'status') {

@@ -47,22 +47,15 @@ export const sendTextMessage = async (to: number, message: string) => {
 }
 
 export const isOpen = (schedules?: Schedule[]) => {
-    console.log('schedules', schedules);
     const dayOfTheWeek = dayjs().tz("America/Argentina/Cordoba").day();
     const dayOfTheWeekAsString = parseDayAsNumberToString(dayOfTheWeek)
     const currentDaySchedule = schedules?.find((schedule) => schedule.day === dayOfTheWeekAsString)
-    console.log('currentDaySchedule', currentDaySchedule);
-    console.log('dayOfTheWeekAsString', dayOfTheWeekAsString);
-    console.log('dayOfTheWeek', dayOfTheWeek);
     if (currentDaySchedule) {
-        const from = dayjs({ hour: currentDaySchedule.fromHour || 0, minute: currentDaySchedule.fromMinute || 0, day: dayOfTheWeek }, "America/Argentina/Cordoba")
-        const to = dayjs({ hour: currentDaySchedule.toHour || 0, minute: currentDaySchedule.toMinute || 0, day: dayOfTheWeek }, "America/Argentina/Cordoba")
+        const from = dayjs({ hour: currentDaySchedule.fromHour || 0, minute: currentDaySchedule.fromMinute || 0 })
+        const to = dayjs({ hour: currentDaySchedule.toHour || 0, minute: currentDaySchedule.toMinute || 0 })
         const now = dayjs().tz("America/Argentina/Cordoba")
-        console.log({ to });
-        console.log({ from });
-        console.log('now', now);
-        console.log('now.isBetween(from, to)', now.isBetween(from, to, 'hour'));
-        return now.isBetween(from, to, 'hour')
+        const result = now.isBetween(from, to, 'hour')
+        return result;
     } else return false;
 }
 
