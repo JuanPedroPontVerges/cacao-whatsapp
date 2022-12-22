@@ -214,6 +214,7 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                     </div>
                 </main>
             </div>
+            <div className=' mt-60'></div>
             <footer className="
             w-full 
             h-16 bg-gray-600 border-t-2 border-white
