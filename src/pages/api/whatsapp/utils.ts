@@ -61,8 +61,8 @@ export const isOpen = (schedules?: Schedule[]) => {
         console.log({ to });
         console.log({ from });
         console.log('now', now);
-        console.log('now.isBetween(from, to)', now.isBetween(from, to, 'hours'));
-        return now.isBetween(from, to)
+        console.log('now.isBetween(from, to)', now.isBetween(from, to, 'hour'));
+        return now.isBetween(from, to, 'hour')
     } else return false;
 }
 
