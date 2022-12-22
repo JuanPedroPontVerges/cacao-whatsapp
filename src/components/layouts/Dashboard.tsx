@@ -214,6 +214,46 @@ const Dashboard: React.FC<DashboardProps> = ({ children }) => {
                     </div>
                 </main>
             </div>
+            <footer className="
+            w-full 
+            h-16 bg-gray-600 border-t-2 border-white
+            fixed left-0 bottom-0
+            flex justify-center items-center
+            text-white text-2xl
+            ">
+                <ul className="flex flex-wrap mt-3 text-sm text-gray-500 dark:text-gray-400 sm:mt-0">
+                    <li>
+                        <Link href={`/`} passHref className="text-gray-400 cursor-pointer hover:text-white">
+                            <div className="mr-4 hover:underline md:mr-6 ">Inicio</div>
+                        </Link>
+                    </li>
+                    <li>
+                        <Link href={`/catalog`} passHref className="text-gray-400 cursor-pointer hover:text-white">
+                            <div className="mr-4 hover:underline md:mr-6 ">Catálogo</div>
+                        </Link>
+                    </li>
+                    <li>
+                        <Link href={`/orders`} passHref className="text-gray-400 cursor-pointer hover:text-white">
+                            <div className="mr-4 hover:underline md:mr-6 ">Órdenes</div>
+                        </Link>
+                    </li>
+                    <li>
+                        <Link href={`/reports`} passHref className="text-gray-400 cursor-pointer hover:text-white">
+                            <div className="mr-4 hover:underline md:mr-6 ">Reportes</div>
+                        </Link>
+                    </li>
+                    <li>
+                        <Link href={`/privacy`} passHref className="text-gray-400 cursor-pointer hover:text-white">
+                            <div className="mr-4 hover:underline md:mr-6 ">Políticas de privacidad</div>
+                        </Link>
+                    </li>
+                    <li>
+                        <Link href={`/terms`} passHref className="text-gray-400 cursor-pointer hover:text-white">
+                            <div className="mr-4 hover:underline md:mr-6 ">Términos y condiciónes</div>
+                        </Link>
+                    </li>
+                </ul>
+            </footer>
         </DndProvider>
     )
 }
