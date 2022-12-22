@@ -282,7 +282,7 @@ export const orderRouter = createRouter()
       if (action === 'En Preparación') {
         await sendTextMessage(+updatedOrder.customer.phoneNumber, `¡Orden confirmada, se encuentra en preparación!
 
-⏱️Hora estimada: ${dayjs().set('h', -3).add(30, 'minutes').format('hh:mm')}`)
+⏱️Hora estimada: Dentro de 30 minutos!`)
       } else if (action === 'Despachado' && updatedOrder.PaymentType.name === 'Efectivo') {
         await ctx.prisma.order.update({
           where: {
