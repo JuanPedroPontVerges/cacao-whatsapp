@@ -4,9 +4,14 @@ import { BuildInteractiveMessageInput, SendRequestInput, TButtonsType, TInteract
 import dayjs from 'dayjs';
 import isBetween from 'dayjs/plugin/isBetween';
 import objectSupport from 'dayjs/plugin/objectSupport';
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
 import { DaysType } from "../..";
 dayjs.extend(objectSupport)
 dayjs.extend(isBetween)
+dayjs.extend(utc)
+dayjs.extend(timezone)
+
 
 export const sendRequest = async (input: SendRequestInput) => {
     const { data } = input;
@@ -42,18 +47,14 @@ export const sendTextMessage = async (to: number, message: string) => {
 }
 
 export const isOpen = (schedules?: Schedule[]) => {
-    const dayOfTheWeek = dayjs().day();
+    const dayOfTheWeek = dayjs().tz("America/Argentina/Cordoba").day();
     const dayOfTheWeekAsString = parseDayAsNumberToString(dayOfTheWeek)
     const currentDaySchedule = schedules?.find((schedule) => schedule.day === dayOfTheWeekAsString)
     if (currentDaySchedule) {
-        const from = dayjs({ hour: currentDaySchedule.fromHour || 0, minute: currentDaySchedule.fromMinute || 0 })
-        const to = dayjs({ hour: currentDaySchedule.toHour || 0, minute: currentDaySchedule.toMinute || 0 })
-        const now = dayjs()
-        console.log({ now });
-        console.log({ from });
-        console.log({ to });
-        const isOpen = dayjs(now).isBetween(from, to)
-        return isOpen;
+        const from = dayjs({ hour: currentDaySchedule.fromHour || 0, minute: currentDaySchedule.fromMinute || 0 }).tz("America/Argentina/Cordoba")
+        const to = dayjs({ hour: currentDaySchedule.toHour || 0, minute: currentDaySchedule.toMinute || 0 }).tz("America/Argentina/Cordoba")
+        const now = dayjs().tz("America/Argentina/Cordoba")
+        return now.isBetween(from, to)
     } else return false;
 }
 
