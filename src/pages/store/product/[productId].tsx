@@ -55,10 +55,6 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
     }, [data])
 
     useEffect(() => {
-        console.log('productPrice', productPrice);
-    }, [productPrice])
-
-    useEffect(() => {
         if (productStoreCartQuery.data) {
             if (!isLoaded) {
                 const { additionalInfo, amount, finalPrice, productStoreCartToOptions } = productStoreCartQuery.data
@@ -101,9 +97,6 @@ const ProductDetail: NextPageWithLayout = ({ query }) => {
 
     const handleSetPrice = (price: number) => {
         const amount = form.getValues('amount');
-        console.log('amount', amount);
-        console.log('productPrice', productPrice);
-        console.log('price', price);
         if (productPrice) {
             setProductPrice((prevValue) => {
                 if (prevValue) {

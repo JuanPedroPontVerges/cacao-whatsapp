@@ -53,8 +53,6 @@ export default async function handler(
                                 }
                             }
                         })
-                        console.log('customer', customer);
-                        console.log('status', status);
                         if (customer && status === 'APPROVED') {
                             sendTextMessage(+customer.phoneNumber, `¡Pago recibido! Muchas gracias por su compra, para conocer el estado de su pedido, elija la opción *Status del pedido* en nuestro menú`)
                         }
