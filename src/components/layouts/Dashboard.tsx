@@ -34,7 +34,7 @@ type DashboardProps = {
 }
 const Dashboard: React.FC<DashboardProps> = ({ children }) => {
     const killSession = () => {
-        signOut({ callbackUrl: 'localhost:3000' });
+        signOut({ callbackUrl: process.env.NEXTAUTH_URL });
     }
     const router = useRouter()
     const session = useSession();

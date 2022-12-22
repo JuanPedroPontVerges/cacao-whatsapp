@@ -46,15 +46,18 @@ export const isOpen = (schedules?: Schedule[]) => {
     const dayOfTheWeekAsString = parseDayAsNumberToString(dayOfTheWeek)
     const currentDaySchedule = schedules?.find((schedule) => schedule.day === dayOfTheWeekAsString)
     if (currentDaySchedule) {
-      const from = dayjs({ hour: currentDaySchedule.fromHour || 0, minute: currentDaySchedule.fromMinute || 0 })
-      const to = dayjs({ hour: currentDaySchedule.toHour || 0, minute: currentDaySchedule.toMinute || 0 })
-      const now = dayjs()
-      const isOpen = dayjs(now).isBetween(from, to)
-      return isOpen;
+        const from = dayjs({ hour: currentDaySchedule.fromHour || 0, minute: currentDaySchedule.fromMinute || 0 })
+        const to = dayjs({ hour: currentDaySchedule.toHour || 0, minute: currentDaySchedule.toMinute || 0 })
+        const now = dayjs()
+        console.log({ now });
+        console.log({ from });
+        console.log({ to });
+        const isOpen = dayjs(now).isBetween(from, to)
+        return isOpen;
     } else return false;
-  }
+}
 
-  const parseDayAsNumberToString = (dayAsnumber: number): DaysType => {
+const parseDayAsNumberToString = (dayAsnumber: number): DaysType => {
     if (dayAsnumber === 0) return 'sunday'
     else if (dayAsnumber === 1) return 'monday'
     else if (dayAsnumber === 2) return 'tuesday'
@@ -62,7 +65,7 @@ export const isOpen = (schedules?: Schedule[]) => {
     else if (dayAsnumber === 4) return 'thursday'
     else if (dayAsnumber === 5) return 'friday'
     else return 'saturday'
-  }
+}
 
 
 export const sendCartDetail = async (to: number, productStoreCarts: WhatsappProductStoreCartInput[]) => {
