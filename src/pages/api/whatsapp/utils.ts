@@ -55,13 +55,13 @@ export const isOpen = (schedules?: Schedule[]) => {
     console.log('dayOfTheWeekAsString', dayOfTheWeekAsString);
     console.log('dayOfTheWeek', dayOfTheWeek);
     if (currentDaySchedule) {
-        const from = dayjs({ hour: currentDaySchedule.fromHour || 0, minute: currentDaySchedule.fromMinute || 0 }).tz("America/Argentina/Cordoba")
-        const to = dayjs({ hour: currentDaySchedule.toHour || 0, minute: currentDaySchedule.toMinute || 0 }).tz("America/Argentina/Cordoba")
+        const from = dayjs({ hour: currentDaySchedule.fromHour || 0, minute: currentDaySchedule.fromMinute || 0 }, "America/Argentina/Cordoba")
+        const to = dayjs({ hour: currentDaySchedule.toHour || 0, minute: currentDaySchedule.toMinute || 0 }, "America/Argentina/Cordoba")
         const now = dayjs().tz("America/Argentina/Cordoba")
         console.log({ to });
         console.log({ from });
         console.log('now', now);
-        console.log('now.isBetween(from, to)', now.isBetween(from, to));
+        console.log('now.isBetween(from, to)', now.isBetween(from, to, ''));
         return now.isBetween(from, to)
     } else return false;
 }
