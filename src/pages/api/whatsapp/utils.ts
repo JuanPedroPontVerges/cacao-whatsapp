@@ -47,6 +47,7 @@ export const sendTextMessage = async (to: number, message: string) => {
 }
 
 export const isOpen = (schedules?: Schedule[]) => {
+    console.log('schedules', schedules);
     const dayOfTheWeek = dayjs().tz("America/Argentina/Cordoba").day();
     const dayOfTheWeekAsString = parseDayAsNumberToString(dayOfTheWeek)
     const currentDaySchedule = schedules?.find((schedule) => schedule.day === dayOfTheWeekAsString)
